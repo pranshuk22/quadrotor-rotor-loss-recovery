@@ -10,7 +10,7 @@ import numpy as np
 from scipy.optimize import brentq, fsolve
 
 from .dynamics import body_rate_derivative
-from .params import QuadParams
+from .params import G, QuadParams
 
 FAILED_ROTOR = 3  # zero-based index: rotor 4
 
@@ -32,7 +32,7 @@ class RelaxedHover:
         """Radius of the horizontal circle the centre of mass follows, eq. (20)."""
         wn = np.linalg.norm(self.w)
         nz = self.n[2]
-        return float(np.sqrt(1 - nz ** 2) / nz * 9.81 / wn ** 2)
+        return float(np.sqrt(1 - nz ** 2) / nz * G / wn ** 2)
 
 
 def _rates_for_thrust(f: np.ndarray, p: QuadParams, w0: np.ndarray) -> np.ndarray:
@@ -43,7 +43,7 @@ def _rates_for_thrust(f: np.ndarray, p: QuadParams, w0: np.ndarray) -> np.ndarra
       q = l f2 / ((Izz_T - Ixx_T) r + Izz_P w_Sigma).
     Falls back to a numerical solve for other thrust patterns.
     """
-    if np.isclose(f[0], f[2]) and f[3] == 0.0:
+    if np.isclose(f[0], f[2]) and f[3] == 0.0 and p.thrust_loss == 0.0:
         r = p.kappa_tau * (f[0] - f[1] + f[2]) / p.gamma
         w_sigma = np.sum(p.prop_speeds(f))
         q = p.l * f[1] / ((p.Izz_T - p.Ixx_T) * r + p.Izz_P * w_sigma)
@@ -67,7 +67,7 @@ def relaxed_hover(p: QuadParams, rho: float = 0.5, w_guess=None) -> RelaxedHover
         f = thrusts(f1)
         w = _rates_for_thrust(f, p, w_guess)
         n = w / np.linalg.norm(w) * np.sign(w[2])
-        return np.sum(f) * n[2] - p.weight
+        return np.sum(f) * p.thrust_efficiency(w) * n[2] - p.weight
 
     f_lo = p.weight / (2 + rho)  # lower bound: n_z = 1
     f1 = brentq(residual, f_lo * (1 + 1e-9), 6 * f_lo, xtol=1e-14)
