@@ -15,10 +15,10 @@
 
 ## Our reproduction (E1)
 - f, r, n_z within 0.5%. q̄ and n̄_y are 6% lower. The paper's two-rotor (eqs. 57–59) and single-rotor (eqs. 62–64) equilibria ARE reproduced to every published digit with the same parameters, and the published one-rotor values leave a −0.011 N·m residual in the paper's own eq. (12). So this is most likely an inconsistency in that one published case.
-- IJRR 2016 hover solutions (5 failure cases) reproduced with an independent implementation of its model (air-relative thrust, quadratic drag): within 0–4%, within 0.7% with I_xx = 2.75e-3 (inside rounding). See `results/tables/validation_report.md`.
-- Flight vs model: spin-up to 10 rad/s 0.80 s (model) vs 0.62 s (flight); IJRR reports flight spin 15.8 vs simulated 19.9 rad/s.
+- IJRR 2016 hover solutions (5 failure cases) reproduced with an independent implementation of its model (air-relative thrust, quadratic drag): body-rate vector within 4% with the published parameters; as a sensitivity check (fitted to the same cases), within 0.7% with I_xx = 2.75e-3 (inside rounding). See `results/tables/validation_report.md`.
+- Flight vs model: spin-up to 10 rad/s at the flight thrust (≈ 2.95 N per rotor, read from Fig. 4) 0.65 s (model) vs 0.62 s (flight); 0.81 s at mg/2. IJRR reports flight spin 15.8 vs simulated 19.9 rad/s.
 - The paper's eq. (27) (verified on the PDF page) uses r̄ in the ṅ rows; the exact coefficient (with q̄ ≠ 0) is r̄ + q̄ n̄_y / n̄_z (20.3 vs 18.8). We use exact Jacobians.
-- With the paper's strategy and instantaneous detection, our simulator gives 0.4 m altitude loss, consistent with their flight. With 30–50 ms of detection delay it fails (E4).
+- With the paper's strategy, the flight thrust and instantaneous detection, our simulator climbs 0.40 m and drops 0.03 m below the start, qualitatively like their flight. P(safe) falls below 0.5 at about 19 ms of detection delay (E4).
 
 ## Use in v4
 - Source of the vehicle, the model and the baseline controller/strategy.

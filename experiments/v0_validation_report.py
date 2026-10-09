@@ -87,7 +87,7 @@ def main():
         g = np.array(c["w"]) + np.array([1.0, -1.0, 3.0])
         w0, w1 = M0.hover_rates(Om, g), M1.hover_rates(Om, g)
         L.append(f"| {name} | {c['Omega']} | {vec(c['w'])} | {vec(w0)} | {vec(w1)} | {M1.vertical_force_ratio(Om, w1):.3f} |")
-    L += ["", "**Reading.** With the published parameters, the hover solutions are within 0–4%. The two high-rate cases "
+    L += ["", "**Reading.** With the published parameters, the body-rate vectors of the hover solutions are within 4%. The two high-rate cases "
           "are the most sensitive to the drag and inertia values, which are published to 1–2 significant figures. "
           "As a sensitivity check, I_xx = 2.75e-3 (the upper end of the rounding interval of the published 2.7e-3) brings all five cases within 0.7% "
           "in ω and 0.6% in force balance; because this value was chosen to fit the same cases, it is not an independent "
