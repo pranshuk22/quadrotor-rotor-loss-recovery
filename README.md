@@ -1,71 +1,93 @@
-# EE650 Course Project: Quadrotor Recovery After Complete Rotor Loss
+# Quadrotor Rotor-Loss Recovery
 
-**Proposal (v5):** *Fault-Tolerant Control Under Complete Rotor Loss via Physics-Informed Residual Koopman MPC, with Certified Fault-Detection-Delay Budgets*
+Fault-tolerant control of a quadrotor after the complete loss of one rotor. Course project for **EE650: Basics of Modern Control Systems** (simulation only).
 
-- **RQ1 (the presented proposal PDF):** does a residual EDMDc model built on the Mueller–D'Andrea spinning-equilibrium model predict, and control via MPC, better than the analytical model or a full-state Koopman model?
-- **RQ2 (added):** a real fault detector needs 30–130 ms to notice a dead rotor. What is the **largest detection delay τ\* with guaranteed recovery**, certified with Lyapunov/LMI tools, and how do the RQ1 controllers change it?
+After a rotor fails, a quadrotor can no longer hover level. Its only steady state is a constant spin about a tilted body axis, the *relaxed hover* of Mueller and D'Andrea. This project studies how to recover the vehicle into that state reliably:
 
-## Results so far (progress presentation 1)
+- **Physics-informed learning for control.** Keep the known model of the spinning vehicle and learn only its mismatch with a Koopman (EDMDc) model. Then use the corrected linear predictor inside a convex MPC.
+- **Detection delay.** A fault detector needs time to notice the failure. We study how long detection may take before recovery can no longer be guaranteed, and work towards certifying that limit with Lyapunov and LMI methods.
 
-- Simulator and equilibrium **validated** against Mueller & D'Andrea (ICRA 2014): thrusts, spin rate and n_z within 0.5%.
-- Structural analysis: both models controllable. After the failure, **gyro + barometer makes the tilt observable**, but only weakly.
-- **Empirical delay tolerance of the published recovery strategy ≈ 10 ms** (SAFE in 20/20 runs at 0 ms, 6/20 at 20 ms, 0/20 at 50 ms), against 30–130 ms for real detectors. Cause: the idle thrust of the opposite rotor gives an uncancellable roll acceleration ≥ 10.6 rad/s² during the undetected phase.
-- **First saturation-aware LMI certificate**: covers 22% of the way to the hover-onset state, against 70% recovered in nonlinear simulation → an r-robust (LPV) certificate is needed (next phase).
-- **RQ1, prediction:** residual EDMDc gives the lowest multi-step error on the training mismatch family (1 s: 0.42 vs full-state 0.70 vs analytical 5.1). Full-state EDMDc has eigenvalues outside the unit circle and falls behind the no-change predictor between 2 and 3 s, as the proposal predicted. Neither learned model generalizes to an unseen mismatch family.
-- **RQ1, control:** residual-Koopman MPC cuts the steady altitude bias under mismatch by about 32% (QP ≈ 5 ms).
+## Team
 
-**Validation:** 45 automated tests (physics invariants + published numbers) and a validation report against 3 papers (ICRA 2014, IJRR 2016, Sun T-RO 2020 Bebop 2) plus their flight data: `results/tables/validation_report.md`. Honest status and caveats: `progress/status.md`.
+| Name | Roll number |
+|---|---|
+| Pranshu Kumar | 220799 |
+| Mudita Jain | 220675 |
+| Prashant Gupta | 220803 |
+| Aarush Singh Kushwaha | 230019 |
 
-**Deliverables:** progress report `docs/report/report.pdf` (LaTeX) and slide deck (link in `docs/deck/README.md`). Technical documentation: `docs/README.md`.
+## Key results so far
 
-Details: `progress/presentation-1-plan.md`, tables in `results/tables/`, figures in `results/figures/`.
+| Topic | Result |
+|---|---|
+| Model validation | Reproduces the published two-rotor and three-rotor-loss equilibria of Mueller and D'Andrea (ICRA 2014) to every digit, and five hover solutions of their IJRR 2016 model within 0.7%. The real vehicle spins up about 30% faster than the model; this gap is documented. |
+| Prediction | On the training plant, the residual Koopman model has the lowest multi-step error (normalized RMSE at 1 s: 0.42, against 0.70 for full-state EDMDc and 5.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
+| Control | A residual-corrected MPC removes about one third of a steady altitude error caused by model mismatch, with about 5 ms per QP. |
+| Detection delay | In simulation of the published model, the published recovery strategy meets a strict safety criterion only up to about 10 ms of detection delay; a fast reported detector needs 30 to 130 ms. |
+| Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; simulation recovers from 70%. |
 
-## Folder guide
+Full details are in the [progress report](docs/report/report.pdf) and the [documentation](docs/README.md).
 
-```
-rotor-failure-project/
-├── README.md
-├── docs/              DETAILED DOCS (01–08) · report/ (LaTeX report + PDF) · deck/ (slide deck link + sources)
-├── proposal/          proposal.md · novelty-and-claims.md · work-plan.md
-├── progress/          status.md (done / not done, setup, validation) · presentation-1-plan.md · task-list.md
-├── rotorfail/         Python package
-│   ├── params.py        vehicle parameters (M&D 2014 Hummingbird)
-│   ├── dynamics.py      nonlinear 6-DOF model, saturation, motor lag, RK4
-│   ├── equilibrium.py   healthy hover + relaxed hover (closed form + root find)
-│   ├── models.py        healthy (12-state) and failed (7-state) linear models
-│   ├── analysis.py      controllability / observability / PBH / Gramians / delay margin
-│   ├── control.py       healthy LQR, failure LQR, M&D spin-up strategy, delay supervisor
-│   ├── certify.py       saturation-aware invariant ellipsoids (Hu–Lin LMIs, CVXPY)
-│   ├── koopman.py       data generation, nominal discrete model, full-state and residual EDMDc
-│   ├── mpc.py           linear MPC (OSQP), analytical or residual-Koopman corrected
-│   ├── validation.py    independent implementation of the IJRR 2016 general model (cross-check)
-│   ├── metrics.py       recovery success criterion (fixed before the sweeps)
-│   ├── sim.py           fixed-step simulation with a ZOH controller
-│   └── plotting.py      figure style
-├── experiments/       v0_validation_report · e1_equilibrium · e2_structure · e3_lqr · e4_delay_sweep · e5_first_certificate · e6_koopman_prediction · e7_mpc_closed_loop
-├── results/           tables/ (markdown + csv) · figures/ (png)
-├── tests/             test_physics.py · test_paper_validation.py · test_core.py · test_koopman_mpc.py (45 tests)
-├── literature/        literature-review.md · search-log.md · notes/ · papers/
-└── history/           v1–v4 of the proposal + CHANGELOG
-```
+## Quick start
 
-## How to run
+Requires Python 3.12.
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q                         # 45 tests, ~20 s
-.venv/bin/python experiments/v0_validation_report.py  # seconds: model vs papers
-.venv/bin/python experiments/e1_equilibrium.py        # seconds
-.venv/bin/python experiments/e2_structure.py          # seconds
-.venv/bin/python experiments/e3_lqr.py                # ~15 s
-.venv/bin/python experiments/e4_delay_sweep.py        # ~5 min on 8 cores (add --plot-only to redraw from CSV)
-.venv/bin/python experiments/e5_first_certificate.py  # ~8 min on 8 cores
-.venv/bin/python experiments/e6_koopman_prediction.py # ~2.5 min
-.venv/bin/python experiments/e7_mpc_closed_loop.py    # ~3 min on 8 cores
+git clone https://github.com/pranshuk22/quadrotor-rotor-loss-recovery.git
+cd quadrotor-rotor-loss-recovery
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+.venv/bin/python -m pytest -q                          # 45 tests, about 20 s
+.venv/bin/python experiments/v0_validation_report.py   # model against published results
+.venv/bin/python experiments/e1_equilibrium.py         # relaxed-hover equilibrium
 ```
 
-## Next
-See `progress/task-list.md`. RQ1: full-state Koopman MPC, offset-free MPC baseline, online residual adaptation. RQ2: read Stephan et al. 2018 (novelty gate), then the r-robust capture certificate.
+| Script | Purpose | Runtime |
+|---|---|---|
+| `experiments/v0_validation_report.py` | Model against three papers and flight data | seconds |
+| `experiments/e1_equilibrium.py` | Relaxed-hover equilibrium | seconds |
+| `experiments/e2_structure.py` | Controllability and observability | seconds |
+| `experiments/e3_lqr.py` | LQR designs and delay margins | about 15 s |
+| `experiments/e4_delay_sweep.py` | Effect of detection delay, Monte Carlo | about 5 min |
+| `experiments/e5_first_certificate.py` | First LMI certificate against simulation | about 8 min |
+| `experiments/e6_koopman_prediction.py` | Analytical, full-state and residual EDMDc predictors | about 2.5 min |
+| `experiments/e7_mpc_closed_loop.py` | LQR, analytical MPC and residual Koopman MPC | about 3 min |
+
+Each script writes a table to `results/tables/` and figures to `results/figures/`. All random seeds are fixed.
+
+## Repository layout
+
+```
+rotorfail/     Python package: dynamics, trim solvers, linear models, controllers,
+               LMI certificates, Koopman models, MPC, validation model
+experiments/   One script per experiment (V0, E1 to E7)
+tests/         Physics, published-result and unit tests
+results/       Generated tables and figures
+docs/          Documentation, progress report (LaTeX) and slide deck
+proposal/      Project proposal, novelty assessment and work plan
+progress/      Status, task list and review reports
+literature/    Literature review, search log and paper notes
+history/       Earlier versions of the proposal
+```
+
+## Documentation
+
+- [Progress report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
+- [Slide deck](docs/deck/progress-review-1.pdf) ([PPTX](docs/deck/progress-review-1.pptx))
+- [Technical documentation](docs/README.md): model and equations, validation, methods, experiments, code reference and reproducibility
+- [Project proposal](proposal/proposal.md)
+
+## Main references
+
+- M. W. Mueller and R. D'Andrea, "Stability and control of a quadrocopter despite the complete loss of one, two, or three propellers," ICRA 2014.
+- M. W. Mueller and R. D'Andrea, "Relaxed hover solutions for multicopters," IJRR, 2016.
+- M. Korda and I. Mezić, "Linear predictors for nonlinear dynamical systems: Koopman operator meets model predictive control," Automatica, 2018.
+- E. Todde, S. Martini, A. Rizzo and K. P. Valavanis, "Residual Koopman-based model predictive control of quadrotors," ICUAS 2026.
+- T. Hu and Z. Lin, *Control Systems with Actuator Saturation*, Birkhäuser, 2001.
+
+The full bibliography is in [`docs/report/references.bib`](docs/report/references.bib).
 
 ## License
-Code (`rotorfail/`, `experiments/`, `tests/`, `docs/deck/build_pptx.js`): MIT, see `LICENSE`. Documentation, report, slides and other written material: CC BY 4.0, see `LICENSE-docs`. Paper PDFs are not included; see `literature/papers/README.md` for links.
+
+Code (`rotorfail/`, `experiments/`, `tests/`, `docs/deck/build_pptx.js`) is released under the [MIT License](LICENSE). Documentation, report, slides and other written material are released under [CC BY 4.0](LICENSE-docs). Paper PDFs are not included; see [`literature/papers/README.md`](literature/papers/README.md) for links.
