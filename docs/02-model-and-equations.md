@@ -85,5 +85,5 @@ Both are central-difference Jacobians of exact nonlinear equations (tested again
 
 ## 2.7 Known modelling limitations
 - No air-relative thrust (IJRR 2016 eq. 4) and no quadratic drag in the simulator; both are validated in `rotorfail/validation.py` but not yet in the truth plant (task K11).
-- The model spins up ~30% more slowly than the ICRA flight (see `03-validation.md`).
+- The spin-up time depends strongly on the thrust of the two remaining rotors; at the flight thrust it is within about 4% of the ICRA flight (see `03-validation.md`). The papers' models over-predict the steady spin rate by about 20%.
 - No translational drag, no blade flapping, no ground effect, no sensor noise (yet).

@@ -1,4 +1,4 @@
-# 5. Koopman Models and MPC (RQ1)
+# 5. Koopman Models and MPC
 
 Code: `rotorfail/koopman.py`, `rotorfail/mpc.py`. Experiments: E6 (prediction), E7 (closed loop).
 
@@ -20,18 +20,19 @@ Code: `rotorfail/koopman.py`, `rotorfail/mpc.py`. Experiments: E6 (prediction), 
 
 ## 5.3 Prediction results (E6, `results/tables/e6_koopman_prediction.md`)
 
-Models trained on family A (40 × 4 s):
+Models trained on family A (40 × 4 s), normalized RMSE:
 
 | Predictor | A, 0.1 s | A, 1 s | A, 3 s | B, 1 s |
 |---|---|---|---|---|
-| Analytical | 2.29 | 5.13 | 13.6 | 5.57 |
-| Full-state EDMDc | 0.13 | 0.70 | 4.97 | 12.3 |
-| Residual EDMDc | **0.11** | **0.42** | 3.55 | 11.8 |
-| No change | 1.93 | 2.03 | 2.22 | 1.93 |
+| Analytical | 3.17 | 7.09 | 14.0 | 7.94 |
+| Full-state EDMDc | 0.17 | 0.91 | 14.1 | 26.2 |
+| Residual EDMDc | **0.15** | **0.64** | 6.23 | 19.9 |
+| No change | 2.42 | 2.38 | 2.56 | 2.44 |
 
-- Full-state EDMDc: 4 of 55 eigenvalues outside the unit circle (spectral radius 1.0054); it falls behind "no change" between 2 and 3 s.
-- Data efficiency (0.5 s horizon): residual with 10 episodes, 0.32; full-state with 40, 0.43.
-- **Generalization fails:** on family B both learned models are worse than the analytical model. Training on randomized plants makes both worse on A too (residual 7.9 at 1 s; the full-state model diverges, ρ = 1.019). A static regression cannot infer per-plant parameters (motor lag, thrust loss) from one state sample.
+- On family A the residual model is the most accurate predictor at every horizon from 100 ms on; at 20 and 50 ms the full-state model is slightly better.
+- Full-state EDMDc: 4 of 55 eigenvalues outside the unit circle (spectral radius 1.0070); it falls behind "no change" by 2 s. At 2 s the residual model is also behind "no change", so long open-loop horizons need feedback.
+- Data efficiency (0.5 s horizon): residual with 10 episodes, 0.42; full-state with 40, 0.48.
+- **Generalization fails:** on family B both learned models are worse than the analytical model. Training on randomized plants (one random plant per episode) helps the residual model on B only up to about 100 ms (3.68 vs 4.31 for the analytical model) and makes both models worse on A (residual 15.7 at 1 s; the full-state model diverges, spectral radius 1.028). A static regression cannot infer per-plant parameters (motor lag, thrust loss) from one state sample.
 
 ## 5.4 MPC (`FailureMPC`)
 - Prediction model: the nominal discrete model (10 states). Horizon N = 20 (100 ms). Stage cost from `failure_weights()`, terminal cost from the discrete Riccati equation. Input bounds [f_min − f̄, f_max − f̄].
@@ -40,15 +41,19 @@ Models trained on family A (40 × 4 s):
 
 ## 5.5 Closed-loop results (E7, `results/tables/e7_mpc_closed_loop.md`)
 
-Regulation, 8 starts 1 m below the set-point, 8 s:
+Steady altitude error near the relaxed hover, broken down by mismatch effect (one start 1 m below the set-point per plant, 8 s, mean over the last 2 s; the steady state does not depend on the start):
 
-| Controller | Plant A: steady altitude error | Plant B | QP time |
-|---|---|---|---|
-| LQR | −0.285 m | −0.029 m | n/a |
-| MPC, analytical | −0.286 m | −0.033 m | 4.8 ms |
-| MPC, residual Koopman | **−0.194 m** (−32%) | +0.022 m | 4.9 ms |
+| Plant | LQR | MPC, analytical | MPC, residual Koopman | Residual MPC vs LQR |
+|---|---|---|---|---|
+| A (full) | −0.285 m | −0.286 m | **−0.193 m** | −32% |
+| A without thrust loss | −0.154 m | −0.154 m | −0.066 m | −57% |
+| nominal + A's thrust loss only | −0.100 m | −0.101 m | −0.033 m | −67% |
+| B (full, held out) | −0.029 m | −0.033 m | +0.022 m | −25% |
+| B without thrust loss | +0.112 m | +0.111 m | +0.164 m | **+47%** |
+| nominal + B's thrust loss only | −0.174 m | −0.177 m | −0.107 m | −39% |
 
-As capture controllers after a detection delay (truth A; spin-up, then the controller), neither MPC beats LQR, and both stop settling at τ ≥ 40 ms. The bottleneck is the validity of the linear prediction model far from the spin, not constraint handling.
+- Timing: median 0.73 ms per step inside OSQP, 4.4 ms wall clock through CVXPY. The sample period is 5 ms, so a real-time version would call the solver directly.
+- As capture controllers after a detection delay (truth A; spin-up at 2.95 N, then the controller; capture judged against each controller's own closed-loop steady state on A), LQR is SAFE up to τ = 10 ms and both MPCs only at τ = 0. The likely bottleneck is the validity of the linear prediction model far from the spin, not constraint handling.
 
 ## 5.6 Not done yet
 - MPC on the full-state Koopman model (proposal controller 2), task K5.
