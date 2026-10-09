@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from rotorfail.analysis import delay_margin  # noqa: E402
 from rotorfail.control import FailureLQR, HealthyLQR  # noqa: E402
-from rotorfail.dynamics import IDX_Q, make_state  # noqa: E402
+from rotorfail.dynamics import IDX_Q, make_state, quat_from_n  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
 from rotorfail.plotting import REF, SERIES, apply_style, save  # noqa: E402
@@ -26,22 +26,21 @@ from rotorfail.sim import simulate  # noqa: E402
 ALIVE3 = lambda t: np.array([True, True, True, False])  # noqa: E731
 
 
-def quat_from_n(n):
-    """Attitude quaternion whose body-frame 'up' vector R^T e3 equals n (zero 'yaw')."""
-    n = np.asarray(n, float) / np.linalg.norm(n)
-    e3 = np.array([0.0, 0.0, 1.0])
-    v = np.cross(n, e3)
-    s, c = np.linalg.norm(v), n @ e3
-    if s < 1e-12:
-        return np.array([1.0, 0, 0, 0])
-    ax, ang = v / s, np.arctan2(s, c)
-    return np.concatenate(([np.cos(ang / 2)], np.sin(ang / 2) * ax))
-
-
-def failed_state(eq, dw=(0, 0, 0), dn=(0, 0, 0), z=0.0):
+def failed_state(eq, dw=(0, 0, 0), dn=(0, 0), z=0.0):
+    """Relaxed hover plus deviations; (n_x, n_y) are shifted exactly by dn and n_z follows."""
+    nxy = eq.n[:2] + np.asarray(dn, float)
+    n = np.array([nxy[0], nxy[1], np.sqrt(1.0 - nxy @ nxy)])
     x = make_state(d=(0, 0, z), w=eq.w + np.asarray(dw), f=np.concatenate((eq.f[:3], [0.0])))
-    x[IDX_Q] = quat_from_n(eq.n + np.asarray(dn))
+    x[IDX_Q] = quat_from_n(n)
     return x
+
+
+def settling_time(t, err, tol):
+    """First time after which |err| stays below tol (nan if never)."""
+    bad = np.where(np.abs(err) >= tol)[0]
+    if len(bad) == 0:
+        return float(t[0])
+    return float(t[bad[-1] + 1]) if bad[-1] + 1 < len(t) else float("nan")
 
 
 def poles_text(Acl, k=6):
@@ -80,7 +79,7 @@ def main():
     rho_lag = np.max(np.linalg.eigvals(lagged.A - lagged.B @ K_ext).real)
 
     L = ["# E3: LQR designs", "",
-         "| Controller | Model | Weights | Slowest closed-loop poles | Input-delay margin |",
+         "| Controller | Model | Weights | Closed-loop poles (slowest first) | Input-delay margin |",
          "|---|---|---|---|---|",
          f"| Healthy LQR | 12-state hover | Bryson: 0.5 m, 1 m/s, 0.2 rad, 2 rad/s; 0.5 N per rotor | "
          f"{poles_text(Ah)} | {dm_h * 1e3:.0f} ms |",
@@ -96,7 +95,7 @@ def main():
 
     # ---- nonlinear checks
     # failed vehicle: start at the relaxed hover with attitude/rate error and 1 m altitude error
-    x0 = failed_state(eq, dw=(1.0, -1.0, -3.0), dn=(0.08, -0.05, 0.0), z=-1.0)
+    x0 = failed_state(eq, dw=(1.0, -1.0, -3.0), dn=(0.08, -0.05), z=-1.0)
     log = simulate(x0, f, P, 6.0, dt=5e-4, ctrl_period=1e-3, alive_fn=ALIVE3)
     final_err_n = np.linalg.norm(log.n[-1] - eq.n)
     final_err_w = np.linalg.norm(log.w[-1] - eq.w)
@@ -104,7 +103,14 @@ def main():
           "Start: relaxed hover + Δω = (1, −1, −3) rad/s, Δn = (0.08, −0.05, ·), 1 m below the set-point; "
           "rotor 4 off; motor lag and thrust limits active.", "",
           f"After 6 s: |n − n̄| = {final_err_n:.1e}, |ω − ω̄| = {final_err_w:.1e} rad/s, "
-          f"z = {log.z[-1]:+.3f} m.", ""]
+          f"z = {log.z[-1]:+.3f} m.", "",
+          "Settling times (first time after which the error stays inside the band):", "",
+          "| Quantity | Band | Settling time |", "|---|---|---|",
+          f"| Tilt, |n − n̄| | 0.01 | {settling_time(log.t, np.linalg.norm(log.n - eq.n, axis=1), 0.01):.2f} s |",
+          f"| Altitude, |z| | 0.05 m | {settling_time(log.t, log.z, 0.05):.2f} s |",
+          f"| Yaw rate, |r − r̄| | 0.5 rad/s | {settling_time(log.t, log.w[:, 2] - eq.w[2], 0.5):.2f} s |", "",
+          "The least-damped closed-loop mode is the oscillation at about |ω̄| (−3.80 ± 19.68j, ζ ≈ 0.19); "
+          "the slowest modes are −1.09 and −2.01 ± 1.04j.", ""]
 
     fig, ax = plt.subplots(1, 3, figsize=(11, 3.2))
     t = log.t
