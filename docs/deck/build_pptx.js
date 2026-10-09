@@ -1,4 +1,5 @@
-// Builds docs/deck/progress-review-1.pptx from the same content as the online deck.
+// Builds docs/deck/progress-review-1.pptx. Speaker notes are read from source/slides/*.html.
+// Usage: NODE_PATH=<folder with pptxgenjs>/node_modules node docs/deck/build_pptx.js
 const fs = require("fs");
 const path = require("path");
 const pptxgen = require("pptxgenjs");
@@ -7,8 +8,21 @@ const ROOT = path.resolve(__dirname, "../..");   // repository root
 const FIG = path.join(ROOT, "results/figures");
 const SRC = path.join(ROOT, "docs/deck/source/slides");
 const OUT = path.join(ROOT, "docs/deck/progress-review-1.pptx");
-const SKILL = process.argv[2];
-const { applyTheme } = require(path.join(SKILL, "scripts/apply_theme.js"));
+
+// pptxgenjs writes Office's default color scheme into the theme; replace it with ours.
+async function applyTheme(file, theme) {
+  const JSZip = require(require.resolve("jszip", { paths: [require.resolve("pptxgenjs")] }));
+  const zip = await JSZip.loadAsync(fs.readFileSync(file));
+  const part = "ppt/theme/theme1.xml";
+  const xml = await zip.file(part).async("string");
+  const slots = ["dk1", "lt1", "dk2", "lt2", "accent1", "accent2", "accent3", "accent4", "accent5", "accent6", "hlink", "folHlink"];
+  const scheme = `<a:clrScheme name="${theme.name}">` +
+    slots.map((k) => `<a:${k}><a:srgbClr val="${theme.colors[k]}"/></a:${k}>`).join("") + "</a:clrScheme>";
+  const out = xml.replace(/<a:clrScheme\b[\s\S]*?<\/a:clrScheme>/, scheme);
+  if (out === xml) throw new Error("no color scheme found in " + part);
+  zip.file(part, out);
+  fs.writeFileSync(file, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
+}
 
 const THEME = {
   name: "Rotor Loss Recovery",
