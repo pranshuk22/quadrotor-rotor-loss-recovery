@@ -1,4 +1,4 @@
-// Builds docs/deck/progress-review-1.pptx. Speaker notes are read from source/slides/*.html.
+// Builds docs/deck/progress-review.pptx. Speaker notes are read from docs/deck/speaker-notes.md.
 // Usage: NODE_PATH=<folder with pptxgenjs>/node_modules node docs/deck/build_pptx.js
 const fs = require("fs");
 const path = require("path");
@@ -6,8 +6,8 @@ const pptxgen = require("pptxgenjs");
 
 const ROOT = path.resolve(__dirname, "../..");   // repository root
 const FIG = path.join(ROOT, "results/figures");
-const SRC = path.join(ROOT, "docs/deck/source/slides");
-const OUT = path.join(ROOT, "docs/deck/progress-review-1.pptx");
+const NOTES = path.join(ROOT, "docs/deck/speaker-notes.md");
+const OUT = path.join(ROOT, "docs/deck/progress-review.pptx");
 
 // pptxgenjs writes Office's default color scheme into the theme; replace it with ours.
 async function applyTheme(file, theme) {
@@ -40,14 +40,18 @@ const HEX = THEME.colors;   // for hex-only options (borders)
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";                 // 13.333 x 7.5 in
 pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
-pres.title = "Rotor Loss Recovery: Progress Review 1";
+pres.title = "Rotor Loss Recovery: Progress Review";
 const C = pres.SchemeColor;
 
-// ------------------------------------------------------------------ notes from the HTML sources
+// ------------------------------------------------------------------ speaker notes ("## <slide id>" sections)
+const NOTE = {};
+fs.readFileSync(NOTES, "utf8").split(/^## /m).slice(1).forEach((sec) => {
+  const i = sec.indexOf("\n");
+  NOTE[sec.slice(0, i).trim()] = sec.slice(i + 1).replace(/\s+/g, " ").trim();
+});
 function notesFor(id) {
-  const html = fs.readFileSync(path.join(SRC, `${id}.html`), "utf8");
-  const m = html.match(/<aside>([\s\S]*?)<\/aside>/);
-  return m ? m[1].replace(/&amp;/g, "&").replace(/\s+/g, " ").trim() : "";
+  if (!(id in NOTE)) throw new Error("no speaker notes for slide " + id);
+  return NOTE[id];
 }
 
 // ------------------------------------------------------------------ layouts
@@ -57,7 +61,7 @@ pres.defineSlideMaster({
   objects: [
     { placeholder: { options: { name: "eyebrow", type: "body", x: 0.6, y: 0.32, w: 9.0, h: 0.36, fontSize: 12, bold: true, color: C.accent1, charSpacing: 1, margin: 0 }, text: "" } },
     { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.66, w: 12.1, h: 0.78, fontSize: 30, bold: true, color: C.text2, margin: 0, valign: "top", align: "left" }, text: "" } },
-    { text: { text: "EE650 · Progress review 1", options: { x: 0.6, y: 7.0, w: 8.0, h: 0.3, fontSize: 10, color: C.accent6, margin: 0 } } },
+    { text: { text: "EE650 · Progress review", options: { x: 0.6, y: 7.0, w: 8.0, h: 0.3, fontSize: 10, color: C.accent6, margin: 0 } } },
   ],
   slideNumber: { x: 12.1, y: 7.0, w: 0.6, h: 0.3, fontSize: 10, color: C.accent6, align: "right" },
 });
@@ -82,7 +86,7 @@ pres.defineSlideMaster({
 // ------------------------------------------------------------------ helpers
 const FIGSIZE = {
   "e1_rho_sweep.png": [1780, 1185], "e3_failed_lqr_nonlinear.png": [2159, 637],
-  "e4_delay_sweep.png": [2180, 715], "e4_undetected_phase.png": [1780, 656],
+  "e4_p_safe.png": [1681, 780], "e4_undetected_phase.png": [1780, 656],
   "e5_certificate_slice.png": [1416, 900], "e6_data_efficiency.png": [1098, 700],
   "e6_multistep_error.png": [2179, 1381], "e7_altitude.png": [1981, 715],
 };
@@ -126,13 +130,13 @@ function content(section, id, eb, title, orange) {
 }
 
 // ================================================================== slides
-const S1 = "Problem and questions", S2 = "Foundation", S3 = "RQ1: Residual Koopman", S4 = "RQ2: Detection delay", S5 = "Plan and summary";
+const S1 = "Problem and aim", S2 = "Foundation", S3 = "Learning the mismatch", S4 = "Detection delay", S5 = "Plan and summary";
 
 // 1 cover
 pres.addSection({ title: S1 });
 {
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: S1 });
-  s.addText("EE650 · BASICS OF MODERN CONTROL SYSTEMS · PROGRESS REVIEW 1", { placeholder: "eyebrow" });
+  s.addText("EE650 · BASICS OF MODERN CONTROL SYSTEMS · PROGRESS REVIEW", { placeholder: "eyebrow" });
   s.addText("Fault-tolerant control of a quadrotor after complete rotor loss", { placeholder: "title" });
   s.addText("Residual Koopman MPC, and certified limits on fault-detection delay", { placeholder: "body" });
   text(s, "Pranshu Kumar · Mudita Jain · Prashant Gupta · Aarush Singh Kushwaha", { x: 0.8, y: 6.4, w: 8.4, h: 0.4, fontSize: 16, color: C.accent3, objectName: "team" });
@@ -142,17 +146,17 @@ pres.addSection({ title: S1 });
 
 // 2 recap
 {
-  const s = content(S1, "recap", "RECAP", "Two research questions");
+  const s = content(S1, "recap", "AIM", "One aim, two connected parts");
   card(s, [
-    { text: "RQ1 · AS PROPOSED", options: { fontSize: 13, bold: true, color: C.accent1, breakLine: true } },
+    { text: "MODEL AND CONTROL · AS PROPOSED", options: { fontSize: 13, bold: true, color: C.accent1, breakLine: true } },
     { text: "Residual Koopman MPC", options: { fontSize: 22, bold: true, color: C.text2, breakLine: true, paraSpaceBefore: 6 } },
     { text: "Can a Koopman (EDMDc) model of only the mismatch, built on the known spinning-equilibrium model of Mueller & D'Andrea, predict and control better than the physics model alone or a full-state Koopman model?", options: { fontSize: 16, paraSpaceBefore: 8 } },
-  ], { x: 0.6, y: 1.7, w: 5.9, h: 2.7, fill: { color: C.accent4 }, line: { color: C.accent4 }, objectName: "RQ1 card" });
+  ], { x: 0.6, y: 1.7, w: 5.9, h: 2.7, fill: { color: C.accent4 }, line: { color: C.accent4 }, objectName: "model card" });
   card(s, [
-    { text: "RQ2 · ADDED AFTER THE PROPOSAL", options: { fontSize: 13, bold: true, color: C.accent2, breakLine: true } },
+    { text: "TIMING · ADDED AFTER THE PROPOSAL", options: { fontSize: 13, bold: true, color: C.accent2, breakLine: true } },
     { text: "Certified detection-delay budget", options: { fontSize: 22, bold: true, color: C.text2, breakLine: true, paraSpaceBefore: 6 } },
-    { text: "A fault detector needs 30–130 ms to notice a dead rotor. What is the largest delay for which recovery is guaranteed, and how do the RQ1 controllers change it?", options: { fontSize: 16, paraSpaceBefore: 8 } },
-  ], { x: 6.8, y: 1.7, w: 5.9, h: 2.7, fill: { color: C.accent5 }, line: { color: C.accent5 }, objectName: "RQ2 card" });
+    { text: "A fault detector needs 30–130 ms to notice a dead rotor. What is the largest delay for which recovery is guaranteed, and how does the capture controller change it?", options: { fontSize: 16, paraSpaceBefore: 8 } },
+  ], { x: 6.8, y: 1.7, w: 5.9, h: 2.7, fill: { color: C.accent5 }, line: { color: C.accent5 }, objectName: "timing card" });
   text(s, [
     { text: "The link: ", options: { bold: true } },
     { text: "each capture controller (LQR, analytical MPC, residual Koopman MPC) is compared by the detection delay it can tolerate." },
@@ -204,7 +208,7 @@ pres.addSection({ title: S2 });
   table(s, [
     ["Parameter", "Value"],
     ["Mass", "0.50 kg"], ["Arm length", "0.17 m"], ["Inertia Ixx, Izz", "3.2, 5.5 × 10⁻³ kg m²"],
-    ["Thrust coefficient κf", "6.41 × 10⁻⁶ N s²"], ["Torque ratio κτ", "0.0169 m"], ["Yaw drag γ", "2.75 × 10⁻³ N m s"],
+    ["Thrust coefficient κf", "6.41 × 10⁻⁶ N s²/rad²"], ["Torque ratio κτ", "0.0169 m"], ["Yaw drag γ", "2.75 × 10⁻³ N m s/rad"],
   ], { x: 7.6, y: 1.75, w: 5.1, colW: [2.6, 2.5], objectName: "parameter table" });
   text(s, "All values from Mueller & D'Andrea, ICRA 2014, Sec. V-A", { x: 7.6, y: 4.95, w: 5.1, h: 0.35, fontSize: 12, color: C.accent6, objectName: "param source" });
 }
@@ -218,13 +222,13 @@ pres.addSection({ title: S2 });
     ["ICRA 2014", "Three-rotor-loss equilibrium", "All published digits (≤ 0.8%)"],
     ["ICRA 2014", "One-rotor-loss equilibrium", "f, r, n_z ≤ 0.5%; pitch rate −6% *"],
     ["ICRA 2014", "ā and controllability loss (eqs. 28, 39)", "Exact"],
-    ["IJRR 2016", "Five failure cases, own implementation", "0–4%; ≤ 0.7% within rounding"],
+    ["IJRR 2016", "Five failure cases, own implementation", "Body rates within 4%"],
     ["Sun et al. 2020", "Bebop 2, two-rotor loss (eq. 60)", "Exact"],
-    [{ text: "Flight data", options: { fill: { color: C.accent5 } } }, { text: "Time to spin up to 10 rad/s", options: { fill: { color: C.accent5 } } }, { text: "0.80 s vs 0.62 s: model 30% slower", options: { fill: { color: C.accent5 }, bold: true } }],
+    [{ text: "Flight data", options: { fill: { color: C.accent4 } } }, { text: "Spin-up to 10 rad/s at the flight thrust (2.95 N)", options: { fill: { color: C.accent4 } } }, { text: "0.65 s vs 0.62 s in flight (4%)", options: { fill: { color: C.accent4 }, bold: true } }],
   ], { x: 0.6, y: 1.7, w: 12.1, colW: [2.4, 4.9, 4.8], rowH: 0.42, objectName: "validation table" });
   text(s, [
     { text: "* The paper's own published values do not satisfy its eq. (12); its other two cases match exactly. " },
-    { text: "45 automated tests", options: { bold: true } },
+    { text: "46 automated tests", options: { bold: true } },
     { text: " also check conservation laws, closed-form solutions and these published numbers." },
   ], { x: 0.6, y: 5.35, w: 12.1, h: 0.7, fontSize: 14, color: C.accent6, objectName: "validation note" });
 }
@@ -236,7 +240,7 @@ pres.addSection({ title: S2 });
   text(s, [
     { text: "Rotor 4 lost, design ratio ρ = f₂/f₁ = 0.5:", options: { breakLine: true } },
     { text: "f = (2.04, 1.02, 2.04) N", options: { bold: true, color: C.text2, breakLine: true, paraSpaceBefore: 12 } },
-    { text: "spin 18.8 rad/s, axis tilted 16°", options: { bold: true, color: C.text2, breakLine: true } },
+    { text: "spin 19.6 rad/s, axis tilted 16°", options: { bold: true, color: C.text2, breakLine: true } },
     { text: "Thrust, spin rate and tilt match the paper within 0.5%.", options: { breakLine: true, paraSpaceBefore: 16 } },
     { text: "The ρ sweep reproduces the paper's Fig. 3 (minimum spin 18.6 vs 19.0 rad/s).", options: { paraSpaceBefore: 16 } },
   ], { x: 8.2, y: 2.0, w: 4.5, h: 4.0, fontSize: 17, objectName: "equilibrium text" });
@@ -266,25 +270,25 @@ pres.addSection({ title: S2 });
 {
   const s = content(S2, "lqr", "FOUNDATION", "LQR baseline at the spinning equilibrium");
   stat(s, "18 ms", "input-delay margin (healthy LQR: 40 ms)", 0.6, 1.65, 3.9);
-  stat(s, "ζ ≈ 0.19", "damping of the slowest oscillation", 4.7, 1.65, 3.9);
-  stat(s, "1–4 s", "to settle tilt, altitude and spin", 8.8, 1.65, 3.9);
+  stat(s, "ζ ≈ 0.19", "damping of the least-damped mode", 4.7, 1.65, 3.9);
+  stat(s, "1.8–2.5 s", "to settle altitude, tilt and yaw rate", 8.8, 1.65, 3.9);
   figure(s, "e3_failed_lqr_nonlinear.png", 0.9, 3.0, 11.5, "Failure-mode LQR on the nonlinear model converging to the equilibrium");
   text(s, "Weights from Mueller & D'Andrea, plus motor states and altitude", { x: 0.6, y: 6.55, w: 12.1, h: 0.3, fontSize: 12, color: C.accent6, objectName: "lqr source" });
 }
 
-// 9 RQ1 divider
+// 9 part 1 divider
 pres.addSection({ title: S3 });
 {
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: S3 });
-  s.addText("RESEARCH QUESTION 1 · AS PROPOSED", { placeholder: "eyebrow" });
+  s.addText("PART 1 · AS PROPOSED", { placeholder: "eyebrow" });
   s.addText("Residual Koopman models of the failed vehicle", { placeholder: "title" });
   s.addText("Learn only what the physics model gets wrong, then use it inside a convex MPC.", { placeholder: "body" });
-  s.addNotes(notesFor("rq1"));
+  s.addNotes(notesFor("part1"));
 }
 
 // 10 koopman
 {
-  const s = content(S3, "koopman", "RQ1 · SET-UP", "Three predictors, same data");
+  const s = content(S3, "koopman", "SET-UP", "Three predictors, same data");
   const cards = [
     ["Analytical", "Mueller & D'Andrea linear model about the spinning equilibrium. No data.", C.background2],
     ["Full-state EDMDc", "Learns all the dynamics from data: 55 lifted states (quadratic dictionary).", C.background2],
@@ -304,27 +308,27 @@ pres.addSection({ title: S3 });
 
 // 11 prediction
 {
-  const s = content(S3, "prediction", "RQ1 · PREDICTION", "The residual model predicts best");
+  const s = content(S3, "prediction", "PREDICTION", "From 100 ms on, the residual model predicts best");
   figure(s, "e6_multistep_error.png", 0.6, 1.6, 7.6, "Multi-step prediction error versus horizon, four panels");
   text(s, "Error at a 1 s horizon, test family A (normalized RMSE):", { x: 8.55, y: 1.7, w: 4.15, h: 0.6, fontSize: 15, color: C.accent6, objectName: "table caption" });
   table(s, [
     ["Predictor", { text: "Error", options: { align: "right" } }],
-    [{ text: "Residual EDMDc", options: { bold: true, fill: { color: C.accent4 } } }, { text: "0.42", options: { bold: true, align: "right", fill: { color: C.accent4 } } }],
-    ["Full-state EDMDc", { text: "0.70", options: { align: "right" } }],
-    ["\"No change\" baseline", { text: "2.0", options: { align: "right" } }],
-    ["Analytical model", { text: "5.1", options: { align: "right" } }],
+    [{ text: "Residual EDMDc", options: { bold: true, fill: { color: C.accent4 } } }, { text: "0.64", options: { bold: true, align: "right", fill: { color: C.accent4 } } }],
+    ["Full-state EDMDc", { text: "0.91", options: { align: "right" } }],
+    ["\"No change\" baseline", { text: "2.38", options: { align: "right" } }],
+    ["Analytical model", { text: "7.09", options: { align: "right" } }],
   ], { x: 8.55, y: 2.35, w: 4.15, colW: [2.95, 1.2], rowH: 0.42, objectName: "prediction table" });
-  text(s, "Full-state EDMDc has 4 of 55 eigenvalues outside the unit circle and falls behind \"no change\" after 2–3 s, as the proposal predicted.",
+  text(s, "Below 100 ms the full-state model is slightly better. It has 4 of 55 eigenvalues outside the unit circle and falls behind \"no change\" by 2 s, as the proposal predicted.",
     { x: 8.55, y: 4.7, w: 4.15, h: 1.5, fontSize: 15, objectName: "prediction note" });
 }
 
 // 12 limits
 {
-  const s = content(S3, "limits", "RQ1 · LIMITS", "Little data needed, no generalization yet");
+  const s = content(S3, "limits", "LIMITS", "Little data needed, no generalization yet");
   figure(s, "e6_data_efficiency.png", 0.6, 1.65, 6.4, "Prediction error at 0.5 s versus number of training episodes");
   const blocks = [
-    ["Data efficiency", "With 10 episodes the residual model (0.32) beats the full-state model trained on 40 (0.43), at a 0.5 s horizon.", C.text2],
-    ["Generalization fails", "On the unseen plant B, both learned models are worse than the physics model alone. Training on randomized plants makes them worse: the unknown parameters cannot be read from one state sample.", C.accent2],
+    ["Data efficiency", "With 10 episodes the residual model (0.42) beats the full-state model trained on 40 (0.48), at a 0.5 s horizon.", C.text2],
+    ["Generalization fails", "On the unseen plant B, both learned models are worse than the physics model alone. Training on randomized plants helps on B only up to about 100 ms and hurts on A: the unknown parameters cannot be read from one state sample.", C.accent2],
     ["Next", "Update the residual online with recursive least squares (it is linear in its parameters).", C.text2],
   ];
   let y = 1.7;
@@ -339,27 +343,27 @@ pres.addSection({ title: S3 });
 
 // 13 mpc
 {
-  const s = content(S3, "mpc", "RQ1 · CONTROL", "Residual MPC removes a third of the bias");
+  const s = content(S3, "mpc", "CONTROL", "Residual MPC removes a third of the bias");
   figure(s, "e7_altitude.png", 0.6, 1.7, 8.3, "Altitude regulation under model mismatch for three controllers");
   stat(s, "−32%", "steady altitude error on plant A (−0.29 → −0.19 m)", 9.3, 1.8, 3.4);
-  stat(s, "≈ 5 ms", "per QP (horizon 20 × 5 ms, OSQP)", 9.3, 3.2, 3.4);
-  text(s, "The residual enters the QP as a measured disturbance, so the problem stays convex (as in Todde et al. 2026, who report 35% in healthy flight). No harm on plant B. As the controller that catches the vehicle after a detection delay, neither MPC beats LQR yet.",
+  stat(s, "0.7 ms", "solver time per step (horizon 20 × 5 ms, OSQP)", 9.3, 3.2, 3.4);
+  text(s, "The residual enters the QP as a measured disturbance, so the problem stays convex (as in Todde et al. 2026). It helps for every mismatch effect of plant A, but on plant B without its thrust loss the error grows by 47%. After a detection delay, LQR is safe up to 10 ms and both MPCs only without delay.",
     { x: 0.6, y: 5.0, w: 12.1, h: 1.2, fontSize: 16, objectName: "mpc note" });
 }
 
-// 14 RQ2 divider
+// 14 part 2 divider
 pres.addSection({ title: S4 });
 {
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: S4 });
-  s.addText([{ text: "RESEARCH QUESTION 2 · ADDED", options: { color: C.accent5 } }], { placeholder: "eyebrow" });
+  s.addText([{ text: "PART 2 · ADDED AFTER THE PROPOSAL", options: { color: C.accent5 } }], { placeholder: "eyebrow" });
   s.addText("How long can fault detection take?", { placeholder: "title" });
   s.addText("Most recovery methods assume instant detection. Fast detectors take 30–130 ms.", { placeholder: "body" });
-  s.addNotes(notesFor("rq2"));
+  s.addNotes(notesFor("part2"));
 }
 
 // 15 undetected
 {
-  const s = content(S4, "undetected", "RQ2 · WHY DELAY MATTERS", "Before detection, nothing stops the roll", true);
+  const s = content(S4, "undetected", "WHY DELAY MATTERS", "Before detection, nothing stops the roll", true);
   figure(s, "e4_undetected_phase.png", 1.4, 1.6, 10.5, "Tilt during the undetected phase and thrust of rotor 2");
   text(s, [
     { text: "Rotor 2 cannot go below its idle thrust (0.2 N), so the roll acceleration is at least " },
@@ -370,30 +374,32 @@ pres.addSection({ title: S4 });
 
 // 16 delay
 {
-  const s = content(S4, "delay", "RQ2 · KEY RESULT", "The published strategy tolerates about 10 ms", true);
-  figure(s, "e4_delay_sweep.png", 0.6, 1.7, 8.3, "Altitude loss and worst tilt versus detection delay");
-  text(s, "Safe recoveries, 20 random starts:", { x: 9.3, y: 1.7, w: 3.4, h: 0.4, fontSize: 15, color: C.accent6, objectName: "mc caption" });
+  const s = content(S4, "delay", "KEY RESULT", "Safe recovery is likely only below about 12 ms", true);
+  figure(s, "e4_p_safe.png", 0.6, 1.6, 8.2, "Probability of a safe recovery versus detection delay for two spin-up thrusts, with 95% Wilson bands and the fast-detector range shaded");
+  text(s, "P(safe), 40 random starts per delay:", { x: 9.2, y: 1.7, w: 3.5, h: 0.4, fontSize: 15, color: C.accent6, objectName: "mc caption" });
+  const r = (t, o) => ({ text: t, options: Object.assign({ align: "right" }, o || {}) });
   table(s, [
-    ["Delay", { text: "Safe", options: { align: "right" } }],
-    ["0 ms", { text: "20 / 20", options: { align: "right" } }],
-    ["10 ms", { text: "17 / 20", options: { align: "right" } }],
-    ["20 ms", { text: "6 / 20", options: { align: "right" } }],
-    ["30 ms", { text: "1 / 20", options: { align: "right" } }],
-    [{ text: "50 ms", options: { fill: { color: C.accent5 } } }, { text: "0 / 20", options: { align: "right", bold: true, fill: { color: C.accent5 } } }],
-  ], { x: 9.3, y: 2.15, w: 3.4, colW: [1.7, 1.7], rowH: 0.4, objectName: "monte carlo table" });
-  text(s, "Safe = attitude recovered, altitude loss under 2 m, never upside down (fixed before the runs). At τ = 0 the strategy loses 0.4 m, consistent with the paper's flight. With the looser \"attitude recovered\" criterion the tolerance is about 40 ms. Our model spins up more slowly than the real vehicle, so these numbers hold for the published model.",
-    { x: 0.6, y: 4.85, w: 12.1, h: 1.5, fontSize: 15, objectName: "delay note" });
+    ["Delay", r("2.95 N"), r("2.45 N")],
+    ["0 ms", r("1.00"), r("1.00")],
+    ["10 ms", r("0.97"), r("0.82")],
+    ["15 ms", r("0.80"), r("0.45")],
+    ["20 ms", r("0.42"), r("0.28")],
+    [{ text: "30 ms", options: { fill: { color: C.accent5 } } }, r("0.17", { bold: true, fill: { color: C.accent5 } }), r("0.07", { bold: true, fill: { color: C.accent5 } })],
+  ], { x: 9.2, y: 2.15, w: 3.5, colW: [1.3, 1.1, 1.1], rowH: 0.4, objectName: "monte carlo table" });
+  text(s, "2.95 N: flight spin-up thrust (Fig. 4 of the paper); 2.45 N = mg/2.", { x: 9.2, y: 4.7, w: 3.5, h: 0.7, fontSize: 13, color: C.accent6, objectName: "thrust note" });
+  text(s, "Safe = attitude recovered, altitude loss under 2 m, never upside down (fixed before the runs). With no delay the vehicle climbs 0.40 m and loses only 0.03 m, like the flight. P(safe) falls below 0.5 at 19 ms (14 ms at mg/2); for attitude capture alone, at 52 ms. Fast detectors need 30–130 ms.",
+    { x: 0.6, y: 5.55, w: 12.1, h: 1.2, fontSize: 15, objectName: "delay note" });
 }
 
 // 17 certificate
 {
-  const s = content(S4, "certificate", "RQ2 · FIRST CERTIFICATE", "A first LMI certificate, and its limit", true);
+  const s = content(S4, "certificate", "FIRST CERTIFICATE", "A first LMI certificate, and its limit", true);
   figure(s, "e5_certificate_slice.png", 0.6, 1.6, 6.8, "Certified ellipse slice versus nonlinear simulation grid");
   text(s, "Saturation-aware invariant ellipsoid (Hu–Lin LMIs) for the LQR on the linear model at the spinning equilibrium.",
     { x: 7.8, y: 1.7, w: 4.9, h: 1.0, fontSize: 15, objectName: "certificate intro" });
   stat(s, "22%", "of the way to hover onset, certified", 7.8, 2.85, 2.35);
-  stat(s, "70%", "recovered in simulation", 10.35, 2.85, 2.35, C.accent2);
-  text(s, "The LQR fails only when the spin is near zero, exactly where the hover-onset state lies. Next: a certificate valid over the whole spin-up, treating the yaw rate r as a varying parameter (LPV).",
+  stat(s, "70%", "recovers in simulation", 10.35, 2.85, 2.35, C.accent2);
+  text(s, "The LQR fails only at spin rates of 4.8 rad/s or less, which is where the hover-onset state lies. Next: a certificate valid over the whole spin-up, treating the yaw rate r as a varying parameter (LPV).",
     { x: 7.8, y: 4.25, w: 4.9, h: 1.9, fontSize: 15, objectName: "certificate note" });
 }
 
@@ -402,12 +408,12 @@ pres.addSection({ title: S5 });
 {
   const s = content(S5, "plan", "NEXT STEPS", "Plan for the remaining weeks");
   table(s, [
-    ["Weeks", "RQ1 · Residual Koopman", "RQ2 · Delay budget"],
-    ["1–2", "MPC on the full-state Koopman model; integral-action MPC baseline", "Read Stephan 2018 and Lanzon 2014; certificate over the spin-up (LPV in r)"],
-    ["3–4", "Online residual adaptation (recursive least squares)", "Reachable set of the undetected phase; first certified delay budget τ*"],
-    ["5–6", "Air-relative thrust in the truth plant; residual trained on spin-up data", "Trade study incl. yaw-drag and thrust-model sensitivity; τ* per controller"],
-    ["7–8", "Ablations and write-up", "Simulation check of the certified τ*; final report"],
-  ], { x: 0.6, y: 1.7, w: 12.1, colW: [1.3, 5.4, 5.4], rowH: 0.62, objectName: "plan table" });
+    ["Dates", "Learning the mismatch", "Detection-delay budget"],
+    ["12–18 Oct", "MPC on the full-state Koopman model; integral-action MPC baseline", "Read the remaining key papers; certificate over the spin-up (LPV in r)"],
+    ["19–25 Oct", "Online residual adaptation (recursive least squares)", "Reachable set of the undetected phase; first certified delay budget τ*"],
+    ["26–31 Oct", "Air-relative thrust in the truth plant", "Sensitivity of τ* to spin-up thrust, idle thrust and motor lag; presentation 31 Oct"],
+    ["1–13 Nov", "Certificate for the residual-Koopman loop if time allows", "Final simulations; journal-style report due 13 Nov"],
+  ], { x: 0.6, y: 1.7, w: 12.1, colW: [1.6, 5.25, 5.25], rowH: 0.62, objectName: "plan table" });
   text(s, [
     { text: "Main risk: ", options: { bold: true } },
     { text: "a certificate over the whole spin-up may be infeasible or too conservative. Fallbacks: a parameter-dependent Lyapunov function, or a chain of nested ellipsoids." },
@@ -420,9 +426,9 @@ pres.addSection({ title: S5 });
   s.addText("SUMMARY", { placeholder: "eyebrow" });
   s.addText("Where we stand", { placeholder: "title" });
   const items = [
-    ["1", "The simulator matches three published papers. Known gap: the real vehicle spins up about 30% faster.", C.accent3],
-    ["2", "RQ1: the residual Koopman model predicts best, needs less data and cuts the MPC altitude bias by a third, but does not yet generalize to an unseen vehicle.", C.accent3],
-    ["3", "RQ2: the published recovery tolerates about 10 ms of detection delay; detectors need 30–130 ms. Certifying the spin-up is next.", C.accent5],
+    ["1", "The simulator matches three published papers and the flight spin-up time within 4%.", C.accent3],
+    ["2", "The residual Koopman model predicts best from 100 ms on, needs less data and cuts the MPC altitude bias by a third, but does not yet generalize to an unseen vehicle.", C.accent3],
+    ["3", "The published recovery is safe with probability above 0.9 only up to about 12 ms of detection delay; detectors need 30–130 ms. Certifying the spin-up is next.", C.accent5],
   ];
   items.forEach(([n, t, col], i) => {
     const y = 1.9 + i * 1.35;
