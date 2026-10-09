@@ -45,7 +45,7 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 | **RQ2-C1** Certified maximum τ\* for complete rotor loss | "To our knowledge, the first certified maximum tolerable detection delay for complete rotor loss that accounts for thrust saturation and the drift of the undetected phase; it extends stability analyses with a fixed detection delay (Başak 2015, 2018)" | ~50–60% | Başak & Prempain (ECC 2015) certify stability for a given delay in a linear model; Stephan 2018 and Qi 2016 unread |
 | **RQ2-C2** Saturation-aware capture set robust over spin-up yaw rate | "A saturation-aware invariant ellipsoid for the relaxed-hover controller, robust over the spin-up yaw rate, used as the capture target of a detection-delay budget" | ~45–55% | LPV synthesis on the yaw rate (Stephan 2018) and SOS recoverable sets at the relaxed hover (Qi et al. 2016) exist |
 | **RQ2-C3** τ\* trade study, incl. healthy-controller and capture-controller dependence (LQR vs analytical MPC vs residual-Koopman MPC) | n/a | ~80% | Could be seen as a parameter sweep |
-| **Link** Residual clipped at d_max → bounded-disturbance capture certificate for the residual-corrected loop | "Formal capture guarantees for a residual-Koopman controller of the failed vehicle" | ~80% | Certificate may be very conservative |
+| **Link** Capture certificate for the residual-Koopman MPC loop, using a bound on the true plant mismatch and an MPC terminal-set argument | "Capture guarantees for a residual-Koopman controller of the failed vehicle" | ~70% | d_max is not a bound on the true mismatch; the constrained MPC needs more than the Hu–Lin conditions; may be very conservative |
 
 ## 5. What the first results already say (presentation 1)
 

@@ -110,7 +110,7 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 
 τ\* = sup{τ : M·R(τ) ⊆ C}, found by bisection with an LMI containment test.
 
-**Link to RQ1.** The residual Koopman MPC is a capture controller. Its learned residual is clipped to ‖d‖ ≤ d_max (as in Todde et al. 2026), so the same LMI machinery with a bounded disturbance gives a capture set for the residual-corrected loop. This answers the future work Todde et al. state ("structured uncertainty bounds to provide formal robustness guaranties") for the failed vehicle.
+**Link to RQ1.** The residual Koopman MPC is a capture controller, so it can be compared with LQR by the delay it tolerates. A certificate for this loop needs two ingredients that the learned model does not supply by itself: a bound on the *true* plant mismatch over the family of plants considered (the clipping level d_max is a percentile of the training residuals, so it is not such a bound), and, because the controller is a constrained MPC, an argument that covers its constraints, such as the region where the MPC equals its unconstrained LQR law or a terminal-set condition. LMI certificates with bounded learned error (as in SafEDMD, Strässer et al. 2024) are the starting point.
 
 **Contributions (RQ2).**
 - C1: certified τ\* for complete single-rotor loss.

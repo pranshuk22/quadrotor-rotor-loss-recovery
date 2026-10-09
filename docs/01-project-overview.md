@@ -10,7 +10,7 @@ A quadrotor that loses one rotor completely cannot hover level, because three ro
 | **RQ1** | Can a Koopman/EDMDc **residual** model, built on the Mueller–D'Andrea spinning-equilibrium model, predict and control (inside MPC) better than the analytical model alone or a full-state Koopman model? | The proposal as presented (`history/v1-proposal-koopman.pdf`) |
 | **RQ2** | What is the largest **fault-detection delay** τ\* for which recovery into the relaxed hover is **guaranteed**, given the healthy controller, the capture controller, thrust limits and motor lag? How do the RQ1 controllers change τ\*? | Added after the proposal (v4) |
 
-**How they connect:** every capture controller (LQR, analytical MPC, residual-Koopman MPC) is compared by the delay it tolerates. The residual is clipped to a bound d_max, which allows a bounded-disturbance certificate for the residual-corrected loop.
+**How they connect:** every capture controller (LQR, analytical MPC, residual-Koopman MPC) is compared by the delay it tolerates. Certifying the residual-corrected loop needs a bound on the true plant mismatch (the clipping level d_max is a percentile of the training residuals, not such a bound) and an argument that covers the MPC's constraints.
 
 ## The failure timeline
 

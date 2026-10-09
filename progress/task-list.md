@@ -43,7 +43,7 @@ RQ1 = residual Koopman MPC (proposal PDF). RQ2 = certified detection-delay budge
 - [ ] ⬜ D5 Gain-scheduled capture controller K(r), certified
 - [ ] ⬜ D6 Reachable set of the undetected phase; switch map; containment LMI; τ\* by bisection
 - [ ] ⬜ D7 Trade study: τ\* vs healthy tuning, idle thrust f_min, thrust-to-weight, motor lag, sampling, **and yaw drag / thrust model** (our model spins up 30% slower than the ICRA flight, which affects the E4 delay numbers)
-- [ ] ⬜ D8 Bounded-residual certificate for the residual-Koopman MPC loop (the RQ1–RQ2 link); τ\* per capture controller
+- [ ] ⬜ D8 Certificate for the residual-Koopman MPC loop: bound the true plant mismatch over the plant family (d_max is only a training percentile) and handle the MPC constraints (unconstrained-region or terminal-set argument); τ\* per capture controller
 - [ ] ⬜ D9 Monte Carlo tightness (certified vs empirical τ\*); LQG / output feedback
 
 ## Phase 5: Write-up

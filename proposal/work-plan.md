@@ -32,7 +32,7 @@ Companion to `proposal.md`. Status and schedule are tracked in `../progress/task
 | 2.3 | LPV model in r; r-robust capture certificate (common P, then P(r)) | next |
 | 2.4 | Reachable set of the undetected phase; switch map; containment LMI; τ\* by bisection | next |
 | 2.5 | τ\* trade study: healthy tuning, idle thrust, thrust-to-weight, motor lag, sampling | later |
-| 2.6 | τ\* per capture controller: LQR, analytical MPC, residual-Koopman MPC (bounded-residual certificate) | later |
+| 2.6 | τ\* per capture controller: LQR, analytical MPC, residual-Koopman MPC (certificate with a bound on the true mismatch and an MPC terminal-set argument) | later |
 | 2.7 | Monte Carlo tightness; LQG / output feedback | later |
 
 ## Risks and fallbacks
