@@ -13,6 +13,7 @@ class SimLog:
     x: np.ndarray
     u: np.ndarray
     n: np.ndarray     # reduced attitude R^T e3 at each sample
+    completed: bool = True   # False if the run stopped early (divergence or stop_fn)
 
     @property
     def w(self):
@@ -36,8 +37,9 @@ def simulate(x0, controller, p: QuadParams, T: float, dt: float = 5e-4,
     n_steps = int(round(T / dt))
     ctrl_every = max(1, int(round(ctrl_period / dt)))
     x = np.array(x0, float)
-    u = controller(0.0, x)
+    u = np.zeros(4)              # set at k = 0; the controller is called once per period
     ts, xs, us, ns = [], [], [], []
+    completed = True
     for k in range(n_steps + 1):
         t = k * dt
         if k % ctrl_every == 0:
@@ -48,9 +50,11 @@ def simulate(x0, controller, p: QuadParams, T: float, dt: float = 5e-4,
             us.append(np.array(u, float))
             ns.append(quat_to_rot(x[IDX_Q]).T @ E3)
             if stop_fn is not None and stop_fn(t, x):
+                completed = k == n_steps
                 break
         if k < n_steps:
             x = rk4_step(x, u, dt, p, alive_fn(t), motor_lag)
             if not np.all(np.isfinite(x)):
+                completed = False
                 break
-    return SimLog(np.array(ts), np.array(xs), np.array(us), np.array(ns))
+    return SimLog(np.array(ts), np.array(xs), np.array(us), np.array(ns), completed)

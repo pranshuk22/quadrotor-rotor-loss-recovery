@@ -37,14 +37,14 @@ def evaluate(log: SimLog, eq: RelaxedHover, t_fail: float = 0.0) -> Outcome:
     dw = np.linalg.norm(log.w - eq.w, axis=1)
     ok = (dn < N_TOL) & (dw < W_TOL)
     final = t >= t[-1] - FINAL_WINDOW
-    captured = bool(np.all(ok[final])) and np.all(np.isfinite(log.x[-1]))
+    captured = bool(np.all(ok[final])) and log.completed
     after = t >= t_fail
     z0 = log.z[after][0]
     alt_loss = float(z0 - np.min(log.z[after]))
     min_nz = float(np.min(log.n[after, 2]))
     if captured:
         bad = np.where(~ok)[0]
-        t_cap = float(t[bad[-1] + 1]) if len(bad) else float(t[0])
+        t_cap = float(t[bad[-1] + 1]) if len(bad) else max(float(t[0]), t_fail)
     else:
         t_cap = float("nan")
     safe = captured and alt_loss < ALT_LOSS_MAX and min_nz > 0.0
