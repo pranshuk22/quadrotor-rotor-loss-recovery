@@ -20,11 +20,11 @@ After a rotor fails, a quadrotor can no longer hover level. Its only steady stat
 
 | Topic | Result |
 |---|---|
-| Model validation | Reproduces the published two-rotor and three-rotor-loss equilibria of Mueller and D'Andrea (ICRA 2014) to every digit, and five hover solutions of their IJRR 2016 model within 0.7%. The real vehicle spins up about 30% faster than the model; this gap is documented. |
-| Prediction | On the training plant, the residual Koopman model has the lowest multi-step error (normalized RMSE at 1 s: 0.42, against 0.70 for full-state EDMDc and 5.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
-| Control | A residual-corrected MPC removes about one third of a steady altitude error caused by model mismatch, with about 5 ms per QP. |
-| Detection delay | In simulation of the published model, the published recovery strategy meets a strict safety criterion only up to about 10 ms of detection delay; a fast reported detector needs 30 to 130 ms. |
-| Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; simulation recovers from 70%. |
+| Model validation | Reproduces the published two-rotor and three-rotor-loss equilibria of Mueller and D'Andrea (ICRA 2014) to every digit, and five hover solutions of their IJRR 2016 model within 4%. At the thrust used in flight, the spin-up time is within about 4% of the flight data. |
+| Prediction | On the training plant, the residual Koopman model has the lowest multi-step error from 100 ms on (normalized RMSE at 1 s: 0.64, against 0.91 for full-state EDMDc and 7.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
+| Control | A residual-corrected MPC reduces a steady altitude error caused by model mismatch by one third (0.29 m to 0.19 m); the QP solver needs under 1 ms per step. |
+| Detection delay | In simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about 12 ms, and below 0.5 beyond about 19 ms (40 random starts per delay). Fast detectors need 30 to 130 ms. |
+| Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; in simulation, every start up to 70% of the way recovers. |
 
 Full details are in the [progress report](docs/report/report.pdf) and the [documentation](docs/README.md).
 
@@ -38,7 +38,7 @@ cd quadrotor-rotor-loss-recovery
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-.venv/bin/python -m pytest -q                          # 45 tests, about 20 s
+.venv/bin/python -m pytest -q                          # 46 tests, about 20 s
 .venv/bin/python experiments/v0_validation_report.py   # model against published results
 .venv/bin/python experiments/e1_equilibrium.py         # relaxed-hover equilibrium
 ```
@@ -49,7 +49,7 @@ python3 -m venv .venv
 | `experiments/e1_equilibrium.py` | Relaxed-hover equilibrium | seconds |
 | `experiments/e2_structure.py` | Controllability and observability | seconds |
 | `experiments/e3_lqr.py` | LQR designs and delay margins | about 15 s |
-| `experiments/e4_delay_sweep.py` | Effect of detection delay, Monte Carlo | about 5 min |
+| `experiments/e4_delay_sweep.py` | Effect of detection delay, Monte Carlo | several minutes |
 | `experiments/e5_first_certificate.py` | First LMI certificate against simulation | about 8 min |
 | `experiments/e6_koopman_prediction.py` | Analytical, full-state and residual EDMDc predictors | about 2.5 min |
 | `experiments/e7_mpc_closed_loop.py` | LQR, analytical MPC and residual Koopman MPC | about 3 min |
@@ -74,7 +74,7 @@ history/       Earlier versions of the proposal
 ## Documentation
 
 - [Progress report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
-- [Slide deck](docs/deck/progress-review-1.pdf) ([PPTX](docs/deck/progress-review-1.pptx))
+- [Slide deck](docs/deck/progress-review.pdf) ([PPTX](docs/deck/progress-review.pptx))
 - [Technical documentation](docs/README.md): model and equations, validation, methods, experiments, code reference and reproducibility
 - [Project proposal](proposal/proposal.md)
 
