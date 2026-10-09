@@ -30,12 +30,12 @@ Each test compares the simulator with a hand-derived result, never with another 
 | ICRA 2014 eqs. (50)–(53) | One rotor lost, ρ = 0.5: f, r, n_z | 2.040/1.020, 18.81, 0.962 | 2.05/1.02, 18.89, 0.958 | ✅ ≤ 0.5% |
 | | q, n_y | 5.37, 0.274 | 5.69, 0.289 | ⚠️ −6%: see 3.3 |
 | ICRA 2014 Fig. 3 | min ‖ω‖, min f₁ over ρ | 18.6 rad/s, 2.029 N | 19.0, 2.04 | ✅ ≤ 2% |
-| ICRA 2014 eq. (21) | r̄ formula | exact | — | ✅ |
-| ICRA 2014 eq. (28) | ā = Jacobian entry A[p, q] | exact | — | ✅ |
-| ICRA 2014 eqs. (37)–(39) | Controllability rank 7 → 6 (p uncontrollable) exactly when ā = 0 | yes | — | ✅ |
-| IJRR 2016 (31)–(50) | 5 hover solutions, published parameters | 0–4% | — | ✅ |
-| | same, I_xx = 2.75e-3 (inside rounding of 2.7e-3) | ≤ 0.7% in ω, ≤ 0.6% in force | — | ✅ |
-| | Two-rotor speed 643 rad/s explained by air-relative thrust | κ_f (643 − 24.5)² = mg/2 | — | ✅ |
+| ICRA 2014 eq. (21) | r̄ formula | exact | n/a | ✅ |
+| ICRA 2014 eq. (28) | ā = Jacobian entry A[p, q] | exact | n/a | ✅ |
+| ICRA 2014 eqs. (37)–(39) | Controllability rank 7 → 6 (p uncontrollable) exactly when ā = 0 | yes | n/a | ✅ |
+| IJRR 2016 (31)–(50) | 5 hover solutions, published parameters | 0–4% | n/a | ✅ |
+| | same, I_xx = 2.75e-3 (inside rounding of 2.7e-3) | ≤ 0.7% in ω, ≤ 0.6% in force | n/a | ✅ |
+| | Two-rotor speed 643 rad/s explained by air-relative thrust | κ_f (643 − 24.5)² = mg/2 | n/a | ✅ |
 | Sun et al. T-RO 2020, eq. (60) | Bebop 2, two rotors lost: r̄, ω̄ | 26.81, 1029 (= the formula) | text: 26.4, 1015 | ✅ (the paper's text is 1.5% below its own formula) |
 
 ## 3.3 Discussion of the gaps

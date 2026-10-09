@@ -45,7 +45,7 @@ Organized by theme. "Read depth": **F** = full text read, **P** = partial / grep
 |---|---|---|---|
 | Stoican & Olaru, *Set-Theoretic FTC in Multisensor Systems*, Wiley 2013; Olaru, De Doná, Seron, Stoican 2010; Stoican et al. 2012 | A | Invariant/reachable sets for FDI and reconfiguration | **The general method is known.** Cite it as the foundation |
 | Shin & Belcastro 2006 (performance analysis of FTC with detection delay, NASA) | A | Induced-norm bounds as a function of detection time | General delay analysis, not rotor loss |
-| Hu & Lin 2001; Boyd et al. 1994 | — | Saturation-aware invariant ellipsoids; LMI toolbox | Core tools for C |
+| Hu & Lin 2001; Boyd et al. 1994 | n/a | Saturation-aware invariant ellipsoids; LMI toolbox | Core tools for C |
 
 ## G. Koopman (relevant only to the optional extension)
 

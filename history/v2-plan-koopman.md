@@ -1,4 +1,4 @@
-# Project Plan (v2): Residual Koopman MPC for Recovery from Complete Rotor Loss — Simulation Study
+# Project Plan (v2): Residual Koopman MPC for Recovery from Complete Rotor Loss: Simulation Study
 
 Source: `project-proposal.pdf` (revised proposal). v1 written 2026-10-09; v2 reworks the plan to sharpen novelty and to fit a **simulation-only** scope.
 

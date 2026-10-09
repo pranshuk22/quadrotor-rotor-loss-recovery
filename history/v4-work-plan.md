@@ -48,7 +48,7 @@ Companion to `proposal.md`. This file covers how the work gets done: tasks, expe
 
 | # | Experiment | Output | Tests |
 |---|---|---|---|
-| E1 | Equilibrium + linear models | Match to the published equilibrium; A(r), B(r) | — |
+| E1 | Equilibrium + linear models | Match to the published equilibrium; A(r), B(r) | n/a |
 | E2 | Controllability / observability tables | Ranks, PBH, Gramian values per sensor set | course core |
 | E3 | Healthy and failure controller designs | Poles, margins, time responses | course core |
 | E4 | **Capture set: LTI-at-r_eq vs r-robust** | Does C contain hover onset? Volume, axis extents | **H1, C2** |
@@ -71,7 +71,7 @@ At least 30 seeds per Monte Carlo cell. Report confidence intervals and failure 
 | 4 | Reachable sets + τ\* pipeline (E5) | τ\* computed for the nominal case |
 | 5 | τ\* trade study (E6) | H2–H4 answered |
 | 6 | Monte Carlo + LQG (E7, E8) | H5, H6 answered |
-| 7 | Stretch (E9) or buffer | — |
+| 7 | Stretch (E9) or buffer | n/a |
 | 8 | Report, figures, presentation | Claims match evidence |
 
 ## 5. Risks and fallbacks

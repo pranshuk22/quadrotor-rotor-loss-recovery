@@ -35,7 +35,7 @@ These are judgment estimates from the searches, not measurements.
 | **C1** Certified τ\* for complete rotor loss | "To our knowledge, the first certified (rather than simulated) bound on the tolerable fault-detection delay for a quadrotor with complete single-rotor loss" | **~75–80%** | Something similar in paywalled FTC/aerospace venues; Stephan 2018 not yet read |
 | **C2** Saturation-aware capture set robust over spin-up yaw rate | "A saturation-aware invariant capture set for the relaxed-hover controller that remains valid from hover onset" | **~55–65%** | Stephan 2018 may contain stability-region analysis; standard LMI techniques make it look routine |
 | **C3** τ\* trade study, in particular the effect of the *healthy* controller | "How healthy-mode tuning, thrust margin, motor lag and sampling trade against the delay budget" | ~80% for the healthy-controller dependence | Low risk; possibly seen as a parameter sweep |
-| C4 Tightness vs Monte Carlo | Validation, not claimed as novel | n/a | — |
+| C4 Tightness vs Monte Carlo | Validation, not claimed as novel | n/a | n/a |
 | C5 Failure-aware healthy-controller tuning (stretch) | "Tuning the healthy controller to enlarge the delay budget" | ~80% | Stretch; only if time allows |
 
 **Overall for a course project:** the question is new, the answer is useful (a detector specification), and the methods are squarely EE650. The main defensibility risk is the "known tools" criticism, which is answered by the problem structure (switched coordinates + spin-up transient + saturation) and the design insight (C3).

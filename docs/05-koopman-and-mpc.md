@@ -44,7 +44,7 @@ Regulation, 8 starts 1 m below the set-point, 8 s:
 
 | Controller | Plant A: steady altitude error | Plant B | QP time |
 |---|---|---|---|
-| LQR | −0.285 m | −0.029 m | — |
+| LQR | −0.285 m | −0.029 m | n/a |
 | MPC, analytical | −0.286 m | −0.033 m | 4.8 ms |
 | MPC, residual Koopman | **−0.194 m** (−32%) | +0.022 m | 4.9 ms |
 

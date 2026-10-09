@@ -61,7 +61,7 @@ def main():
              "| Quantity | Ours | Paper | Rel. diff |", "|---|---|---|---|"]
     for k, v in ours.items():
         ref = PAPER[k]
-        rel = "—" if ref == 0 else f"{(v - ref) / ref * 100:+.1f}%"
+        rel = "n/a" if ref == 0 else f"{(v - ref) / ref * 100:+.1f}%"
         lines.append(f"| {k} | {v:.3f} | {ref:.3f} | {rel} |")
     lines += ["",
               f"**Inertia-rounding sensitivity.** The paper gives I_xx^T = 3.2e-3 and I_zz^T = 5.5e-3 "
