@@ -7,8 +7,8 @@ RQ1 = residual Koopman MPC (proposal PDF). RQ2 = certified detection-delay budge
 - [ ] 🔜 T0.1 Read Stephan, Schmitt & Fichter, JGCD 2018 (LPV on yaw rate). Decide whether RQ2-C2 stays (IITK library / AIAA)
 - [ ] 🔜 T0.2 Read Lanzon, Freddi & Longhi, JGCD 2014
 - [x] ✅ T0.3 Read Mueller & D'Andrea ICRA 2014 in full
-- [ ] ⬜ T0.4 Get exact detector-delay numbers (IEEE 11235993)
-- [ ] ⬜ T0.5 Verify the flagged PDF references: "Lee et al. 2024" Koopman FT-MPC attribution; RK-MPC "unstable within seconds"
+- [x] ✅ T0.4 Detector-delay numbers: 30 to 130 ms (Strack van Schijndel et al. 2021); 45 ms (Yang et al., RA-L 2026)
+- [x] ✅ T0.5 Verify the flagged PDF references: "Lee et al. 2024" Koopman FT-MPC attribution; RK-MPC "unstable within seconds"
 - [ ] ⬜ T0.6 Re-run the novelty searches before the final report (`literature/search-log.md`)
 
 ## Phase 1: Shared foundation (presentation 1)

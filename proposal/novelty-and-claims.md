@@ -10,7 +10,7 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 | v2 | Same, re-framed around the "region of validity" of the linear predictor | Merged into RQ1 hypotheses |
 | v3 | Certified recoverable set (LMI) for relaxed-hover LQR + delay map + observability | A local certificate cannot contain hover onset → refined into v4 |
 | v4 | Certified fault-detection-delay budget τ\*, capture set robust over the spin-up yaw rate | **Kept as RQ2** |
-| **v5 (current)** | RQ1 + RQ2 in one proposal: residual Koopman MPC is a capture controller; τ\* is the yardstick, and the LMI layer supplies the guarantees residual-Koopman work lacks | — |
+| **v5 (current)** | RQ1 + RQ2 in one proposal: residual Koopman MPC is a capture controller; τ\* is the yardstick, and the LMI layer supplies the guarantees residual-Koopman work lacks | n/a |
 
 ## 2. RQ1 (residual Koopman MPC): what exists, do not claim
 
@@ -42,9 +42,9 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 |---|---|---|---|
 | **RQ1-a** Residual Koopman model built on the M&D spinning-equilibrium model, in the complete-loss regime | "We did not find residual Koopman modeling applied to the complete-rotor-loss, spinning-equilibrium regime" | ~85–90% | Paywalled work; the pattern itself is known |
 | **RQ1-b** Comparison of analytical / full-state / residual predictors and MPCs for the failed vehicle, incl. full-state EDMDc instability in this regime | "A controlled comparison in the failed regime" | ~85% | Low novelty per se; value is in the measured results |
-| **RQ2-C1** Certified τ\* for complete rotor loss | "To our knowledge, the first certified (rather than simulated) bound on the tolerable fault-detection delay" | ~75–80% | Paywalled venues; Stephan 2018 unread |
-| **RQ2-C2** Saturation-aware capture set robust over spin-up yaw rate | "A capture set for the relaxed-hover controller valid from hover onset" | ~55–65% | Stephan 2018 may contain stability-region analysis |
-| **RQ2-C3** τ\* trade study, incl. healthy-controller and capture-controller dependence (LQR vs analytical MPC vs residual-Koopman MPC) | — | ~80% | Could be seen as a parameter sweep |
+| **RQ2-C1** Certified maximum τ\* for complete rotor loss | "To our knowledge, the first certified maximum tolerable detection delay for complete rotor loss that accounts for thrust saturation and the drift of the undetected phase; it extends stability analyses with a fixed detection delay (Başak 2015, 2018)" | ~50–60% | Başak & Prempain (ECC 2015) certify stability for a given delay in a linear model; Stephan 2018 and Qi 2016 unread |
+| **RQ2-C2** Saturation-aware capture set robust over spin-up yaw rate | "A saturation-aware invariant ellipsoid for the relaxed-hover controller, robust over the spin-up yaw rate, used as the capture target of a detection-delay budget" | ~45–55% | LPV synthesis on the yaw rate (Stephan 2018) and SOS recoverable sets at the relaxed hover (Qi et al. 2016) exist |
+| **RQ2-C3** τ\* trade study, incl. healthy-controller and capture-controller dependence (LQR vs analytical MPC vs residual-Koopman MPC) | n/a | ~80% | Could be seen as a parameter sweep |
 | **Link** Residual clipped at d_max → bounded-disturbance capture certificate for the residual-corrected loop | "Formal capture guarantees for a residual-Koopman controller of the failed vehicle" | ~80% | Certificate may be very conservative |
 
 ## 5. What the first results already say (presentation 1)
@@ -56,7 +56,7 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 ## 6. Must-do checks before the final report
 
 1. Read **Stephan, Schmitt & Fichter (JGCD 2018)** and **Lanzon, Freddi & Longhi (JGCD 2014)**.
-2. Verify the PDF references flagged in `proposal.md` §8: the "Lee et al. 2024" Koopman FT-MPC attribution, and the RK-MPC "unstable within seconds" statement.
+2. Done: "Lee et al. 2024" is correct (Lee, Kim, Kim & Bang, ICCAS 2024), and the RK-MPC "unstable within seconds" statement is verified (about 5 s).
 3. Re-run the searches in `../literature/search-log.md` before submission.
-4. Get exact detector-delay numbers (IEEE 11235993).
+4. Done: the 30 to 130 ms detector range is from Strack van Schijndel, Sun & de Visser (arXiv:2102.06439); the multiple-model L1 paper (Yang et al., RA-L 2026) reports about 45 ms. Independent novelty check: `../progress/novelty-check.md`.
 5. Wording rule: "not found in our search", never "first ever" without the qualifier.

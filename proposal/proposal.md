@@ -12,7 +12,7 @@ Following your feedback on our earlier proposal, we went back and re-audited the
 
 The revised proposal below identifies a narrower, more specific gap and states our novelty claim carefully, as something we did not find in an extensive search rather than as an absolute claim.
 
-**[added]** A further audit after the proposal (2026-10-09) led to one extension, which keeps everything above unchanged. A data-driven predictor says nothing about *where* recovery is guaranteed, and every recovery method we found assumes the failure is detected *instantly*. We therefore add a second, control-theoretic research question (RQ2, §6): a certified bound on the tolerable fault-detection delay. The residual Koopman MPC of RQ1 is one of the capture controllers this bound evaluates.
+**[added]** A further audit after the proposal (2026-10-09) led to one extension, which keeps everything above unchanged. A data-driven predictor says nothing about *where* recovery is guaranteed, and most recovery methods with guarantees assume the failure is detected *instantly*. We therefore add a second, control-theoretic research question (RQ2, §6): a certified bound on the tolerable fault-detection delay. The residual Koopman MPC of RQ1 is one of the capture controllers this bound evaluates.
 
 ---
 
@@ -30,7 +30,7 @@ The revised proposal below identifies a narrower, more specific gap and states o
 
 We could not find residual Koopman modeling applied specifically to this complete-loss, spinning-equilibrium regime, across searches spanning direct term combinations, citation trails from the Mueller & D'Andrea paper, and adjacent "reduced attitude" terminology. We state this as the result of our search, not as a claim that it does not exist anywhere.
 
-**[added] For RQ2:** every recovery method with a guarantee that we found assumes the failure-mode controller starts at the instant of failure (Simha et al. 2017; Al Lawati & Akhtar 2026 state "a reliable FDI module and an instantaneous transition"). The only delay-tolerance figure is empirical, for a different vehicle (180 ms, heli-quad). Mueller & D'Andrea list "a fault detection scheme ... and switching strategies for transitioning from four propellers to three" as future work. Details: `novelty-and-claims.md`.
+**[added] For RQ2:** most recovery methods with a guarantee assume the failure-mode controller starts at the instant of failure (Simha et al. 2017; Al Lawati & Akhtar 2026 state "a reliable FDI module and an instantaneous transition"). Başak & Prempain (ECC 2015) prove stability for a switched linear model with a fixed detection delay, without thrust saturation and without computing the largest tolerable delay. Reported tolerances are empirical (180 ms for the heli-quad; recovery with 0.1 to 0.18 s of delay for nonlinear controllers, Chen et al. 2025, Zhou et al. 2025). Fast detectors report 30 to 130 ms (Strack van Schijndel et al. 2021). We did not find a certified *maximum* tolerable delay under thrust saturation. Mueller & D'Andrea list "a fault detection scheme ... and switching strategies for transitioning from four propellers to three" as future work. Details: `novelty-and-claims.md`.
 
 ---
 
@@ -158,9 +158,9 @@ The truth simulator is the full nonlinear model **plus effects absent from the n
 
 1. Mueller, M.W. & D'Andrea, R. (2014). *Stability and Control of a Quadrocopter Despite the Complete Loss of One, Two, or Three Propellers.* ICRA 2014.
 2. Nan, F., Sun, S., Foehn, P., & Scaramuzza, D. (2022). *Nonlinear MPC for Quadrotor Fault-Tolerant Control.* IEEE RA-L.
-3. Lee et al. (2024). *Koopman Fault-Tolerant Model Predictive Control for Multirotor with Actuator Fault.* **[attribution to verify: the IET CTA Koopman-FTC paper we found is by Bakhtiaridoust et al.]**
+3. Lee et al. (2024). *Koopman Fault-Tolerant Model Predictive Control for Multirotor with Actuator Fault.* (verified: J. D. Lee, H. Kim, Y. Kim, H. Bang, ICCAS 2024, doi:10.23919/ICCAS63016.2024.10773232)
 4. Lee et al. (2024). *Data-Driven Fault Detection and Isolation for Multirotor System Using Koopman Operator.* J. Intelligent & Robotic Systems.
-5. Narayanan & Vaidya (2026). *RK-MPC: Residual Koopman Model Predictive Control for Quadruped Locomotion in Offroad Environments.* arXiv:2604.04221. **[verify the "unstable within seconds" statement in the full text]**
+5. Narayanan & Vaidya (2026). *RK-MPC: Residual Koopman Model Predictive Control for Quadruped Locomotion in Offroad Environments.* arXiv:2604.04221. (verified in the full text: the SE(3)-KMPC baseline fails within about 5 s)
 6. Todde, Martini, Rizzo, & Valavanis (2026). *Residual Koopman-Based Model Predictive Control of Quadrotors.* ICUAS 2026. (Read in full: `literature/notes/todde2026.md`.)
 7. Bruder, D., Bombara, D., & Wood, R.J. (2025). *A Koopman-based residual modeling approach for the control of a soft robot arm.* IJRR.
 8. Fu et al. (2025). *Residual Koopman Model Predictive Control for Enhanced Vehicle Dynamics with Small On-Track Data Input.*
