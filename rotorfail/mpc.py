@@ -50,11 +50,12 @@ class FailureMPC:
         self.U = U
         self.fe = np.zeros(m)
         self.u_prev = np.zeros(m)
-        self.solve_times = []
+        self.solve_times = []      # wall-clock time of the CVXPY call (includes modelling overhead)
+        self.qp_times = []         # time reported by the QP solver itself
         self.d_log = []
 
     def reset(self, f_now):
-        self.fe = np.clip(np.asarray(f_now[:3], float), self.p.f_min, self.p.f_max) - self.eq.f[:3]
+        self.fe = np.clip(np.asarray(f_now[:3], float), 0.0, self.p.f_max) - self.eq.f[:3]   # stopped motor: 0 N
         self.u_prev = self.fe.copy()
 
     def measure(self, x):
@@ -73,6 +74,8 @@ class FailureMPC:
         t0 = time.perf_counter()
         self.prob.solve(solver=cp.OSQP, warm_start=True, eps_abs=1e-5, eps_rel=1e-5, max_iter=4000)
         self.solve_times.append(time.perf_counter() - t0)
+        st = self.prob.solver_stats.solve_time
+        self.qp_times.append(float(st) if st is not None else float("nan"))
         u = self.U.value[:, 0] if self.U.value is not None else self.u_prev
         u = np.clip(u, self.p.f_min - self.eq.f[:3], self.p.f_max - self.eq.f[:3])
         a = 1 - np.exp(-self.ts / self.p.sigma_mot)
