@@ -1,0 +1,26 @@
+<section id="limits" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">RQ1 · Limits</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">Little data needed, no generalization yet</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<img src="/_blob/ce2f0bb18ccbe2ca6c24888e5db9c5d5" alt="Data efficiency: prediction error at 0.5 s versus number of training episodes for full-state and residual EDMDc" style="width:820px;height:523px;object-fit:contain;background:#FCFCFB;border-radius:12px">
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Data efficiency</h3>
+<p style="font-size:26px;line-height:1.4;color:#3E4756">With 10 episodes the residual model (0.32) beats the full-state model trained on 40 (0.43), at a 0.5 s horizon.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-size:30px;font-weight:600;color:#8E3A10">Generalization fails</h3>
+<p style="font-size:26px;line-height:1.4;color:#3E4756">On the unseen plant B, both learned models are worse than the physics model alone. Training on randomized plants makes them worse: the unknown parameters cannot be read from one state sample.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Next</h3>
+<p style="font-size:26px;line-height:1.4;color:#3E4756">Update the residual online with recursive least squares (it is linear in its parameters).</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">E6 · results/figures/e6_data_efficiency.png</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">12</p>
+<aside>Two more results, one good and one bad. Good: the residual model needs much less data. With only 10 short episodes it already beats the full-state model trained on 40. That matters because real failure data are scarce: failed flights tend to end in crashes. Bad: neither learned model generalizes to a plant with different parameters. On the held-out plant both are worse than the physics model alone. And training on many randomized plants did not help; it made them worse, because a static model cannot tell from a single state which vehicle it is on. This motivates our next step: adapt the residual online. Since the residual is linear in its parameters, recursive least squares is a natural, cheap choice.</aside>
+</section>

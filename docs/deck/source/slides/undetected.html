@@ -1,0 +1,11 @@
+<section id="undetected" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#B9531C;font-weight:600">RQ2 · Why delay matters</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">Before detection, nothing stops the roll</h2>
+</div>
+<img src="/_blob/f71934b989311640448e8e20eb938b7f" alt="Tilt during the undetected phase for three healthy-controller tunings, above an analytic lower bound, and the thrust of rotor 2 falling to its idle limit" style="width:1220px;height:450px;object-fit:contain;background:#FCFCFB;border-radius:12px">
+<p style="font-size:30px;line-height:1.4;color:#1E2433">Rotor 2 cannot go below its idle thrust (0.2 N), so the roll acceleration is at least <b>l·f_min / I_xx = 10.6 rad/s²</b> for any healthy-controller tuning. Tilt reaches about 13° at 100 ms and 37° at 200 ms.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">E4 · results/figures/e4_undetected_phase.png</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">15</p>
+<aside>Why does the delay matter so much? When rotor 4 dies, rotor 2 on the opposite side is no longer balanced, which creates a roll torque. The healthy controller reacts by cutting rotor 2, but a running motor cannot go below its idle thrust. So a roll acceleration of at least 10.6 radians per second squared remains, whatever the tuning. The plot shows three tunings, all above this lower bound. After 100 milliseconds the vehicle is already tilted about 13 degrees, and after 200 about 37.</aside>
+</section>

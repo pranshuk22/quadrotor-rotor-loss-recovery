@@ -1,0 +1,24 @@
+<section id="lqr" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">Foundation</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">LQR baseline at the spinning equilibrium</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-left:4px solid #2A62C4;padding:4px 0px 4px 24px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">18 ms</p>
+<p style="font-size:24px;color:#3E4756">input-delay margin (healthy LQR: 40 ms)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-left:4px solid #2A62C4;padding:4px 0px 4px 24px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">ζ ≈ 0.19</p>
+<p style="font-size:24px;color:#3E4756">damping of the slowest oscillation</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-left:4px solid #2A62C4;padding:4px 0px 4px 24px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">1–4 s</p>
+<p style="font-size:24px;color:#3E4756">to settle tilt, altitude and spin</p>
+</div>
+</div>
+<img src="/_blob/251f231bb2f8259dc96ca1062a77ab1c" alt="Failure-mode LQR on the nonlinear model: body rates, reduced attitude and altitude converge to the equilibrium" style="width:1500px;height:443px;object-fit:contain;background:#FCFCFB;border-radius:12px">
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">E3 · weights from Mueller &amp; D'Andrea, plus motor states and altitude</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">8</p>
+<aside>We designed two LQR controllers: a normal hover controller, and a failure-mode controller at the spinning equilibrium using the paper's weights, with motor states and altitude added. On the full nonlinear model with motor lag and thrust limits, the failure controller recovers from a perturbed start: tilt and altitude settle in one to two seconds, the spin rate in about four. One number to note: the failure controller tolerates only about 18 milliseconds of pure input delay, compared with 40 for the healthy one. The slowest oscillation, at the spin frequency, is lightly damped.</aside>
+</section>

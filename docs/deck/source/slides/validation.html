@@ -1,0 +1,20 @@
+<section id="validation" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">Foundation</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">The model matches three published papers</h2>
+</div>
+<table style="font-size:26px;color:#1E2433">
+<tr><th style="width:21%;text-align:left">Source</th><th style="width:39%;text-align:left">What we compared</th><th style="width:40%;text-align:left">Result</th></tr>
+<tr><td>ICRA 2014</td><td>Two-rotor-loss equilibrium</td><td>All published digits (≤ 0.14%)</td></tr>
+<tr><td>ICRA 2014</td><td>Three-rotor-loss equilibrium</td><td>All published digits (≤ 0.8%)</td></tr>
+<tr><td>ICRA 2014</td><td>One-rotor-loss equilibrium</td><td>f, r, n_z ≤ 0.5%; pitch rate −6% *</td></tr>
+<tr><td>ICRA 2014</td><td>ā and controllability loss (eqs. 28, 39)</td><td>Exact</td></tr>
+<tr><td>IJRR 2016</td><td>Five failure cases, own implementation</td><td>0–4%; ≤ 0.7% within rounding</td></tr>
+<tr><td>Sun et al. 2020</td><td>Bebop 2, two-rotor loss (eq. 60)</td><td>Exact</td></tr>
+<tr style="background:#FBE9DF"><td>Flight data</td><td>Time to spin up to 10 rad/s</td><td>0.80 s vs 0.62 s: model 30% slower</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.4;color:#3E4756">* The paper's own published values do not satisfy its eq. (12); its other two cases match exactly. <b>45 automated tests</b> also check conservation laws, closed-form solutions and these published numbers.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">Full tables: results/tables/validation_report.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">5</p>
+<aside>Before trusting any result we checked the simulator against published numbers. The two-rotor and three-rotor-loss equilibria from Mueller and D'Andrea's ICRA paper match every digit they published. The three-rotor case is a strong check because it uses all the gyroscopic terms. For the one-rotor case, thrust, spin rate and tilt match within half a percent, but the pitch rate is six percent lower; we found that the paper's own published values leave a residual in its own equation 12, so that one published case is slightly inconsistent. We also wrote an independent implementation of their more detailed IJRR model and reproduced all five failure cases, and matched a second drone, the Bebop 2, from Sun et al. The one real gap: in flight, the vehicle spun up 30 percent faster than the model predicts. That matters for the delay results later, and we will study its sensitivity.</aside>
+</section>

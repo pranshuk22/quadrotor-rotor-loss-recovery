@@ -1,0 +1,23 @@
+<section id="mpc" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">RQ1 · Control</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">Residual MPC removes a third of the bias</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<img src="/_blob/08d6c130dc515062b1a8117d13f41176" alt="Altitude regulation under model mismatch for LQR, analytical MPC and residual Koopman MPC on truth families A and B" style="width:1100px;height:397px;object-fit:contain;background:#FCFCFB;border-radius:12px">
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #2A62C4;padding:4px 0px 4px 24px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">−32%</p>
+<p style="font-size:24px;color:#3E4756">steady altitude error on plant A (−0.29 → −0.19 m)</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #2A62C4;padding:4px 0px 4px 24px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">≈ 5 ms</p>
+<p style="font-size:24px;color:#3E4756">per QP (horizon 20 × 5 ms, OSQP)</p>
+</div>
+</div>
+</div>
+<p style="font-size:26px;line-height:1.4;color:#3E4756">The residual enters the QP as a measured disturbance, so the problem stays convex (as in Todde et al. 2026, who report 35% in healthy flight). No harm on plant B. As the controller that catches the vehicle after a detection delay, neither MPC beats LQR yet.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">E7 · results/tables/e7_mpc_closed_loop.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">13</p>
+<aside>Now in closed loop. We built a linear MPC on the analytical model, and the same MPC with the residual added as a measured disturbance, evaluated outside the optimization so the QP stays convex. On the training plant, the thrust loss causes a steady altitude error of about 29 centimetres for LQR and analytical MPC. The residual-Koopman MPC cuts it to 19 centimetres, a 32 percent reduction, close to the 35 percent Todde et al. report for healthy flight. Each QP takes about 5 milliseconds. On the held-out plant all three are similar. When we used the MPCs to catch the vehicle after a detection delay, they did not beat LQR. The problem there is that the linear model is not valid far from the spin, not the constraints. The obvious next baseline is integral action, which we will add.</aside>
+</section>

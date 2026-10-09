@@ -1,0 +1,39 @@
+<section id="timeline" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">The problem</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">What happens when a rotor fails</h2>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#F0EEE6;padding:32px;border-radius:16px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Healthy flight</h3>
+<p style="font-size:24px;line-height:1.35;color:#3E4756">Normal controller, four rotors</p>
+</div>
+<x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA3B2"></x-shape>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#F0EEE6;padding:32px;border-radius:16px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Rotor fails</h3>
+<p style="font-size:24px;line-height:1.35;color:#3E4756">t = 0, thrust of rotor 4 lost</p>
+</div>
+<x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA3B2"></x-shape>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FBE9DF;padding:32px;border-radius:16px;border:3px solid #B9531C">
+<h3 style="font-size:30px;font-weight:600;color:#8E3A10">Undetected, τ</h3>
+<p style="font-size:24px;line-height:1.35;color:#3E4756">Healthy controller still flying a 3-rotor vehicle</p>
+</div>
+<x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA3B2"></x-shape>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#F0EEE6;padding:32px;border-radius:16px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Capture</h3>
+<p style="font-size:24px;line-height:1.35;color:#3E4756">Failure controller takes over</p>
+</div>
+<x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA3B2"></x-shape>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#E3ECFA;padding:32px;border-radius:16px">
+<h3 style="font-size:30px;font-weight:600;color:#16233F">Relaxed hover</h3>
+<p style="font-size:24px;line-height:1.35;color:#3E4756">Steady spin, ~19 rad/s, axis tilted</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;border-left:4px solid #B9531C;padding:8px 0px 8px 32px">
+<p style="font-size:30px;line-height:1.4;color:#1E2433">Every recovery method with a guarantee that we found assumes <b>τ = 0</b>.</p>
+<p style="font-size:30px;line-height:1.4;color:#3E4756">The only published tolerance (180 ms) is from simulation sweeps on a different vehicle.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">Mueller &amp; D'Andrea 2014; Simha et al. 2017; Al Lawati &amp; Akhtar 2026; Kulkarni et al. (heli-quad)</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">3</p>
+<aside>When one rotor dies, a quadrotor cannot hover level any more. Mueller and D'Andrea showed it can still fly by spinning steadily about a tilted axis, called the relaxed hover. But there is a gap in time: the fault detector needs some time tau to notice the failure. During that time the normal controller keeps flying a vehicle that has lost a rotor. Only after detection does the failure controller take over and try to capture the vehicle into the spinning state. All guarantee-based papers we found assume tau equals zero. The one published tolerance figure is empirical and for a different vehicle.</aside>
+</section>

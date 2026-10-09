@@ -1,0 +1,23 @@
+<section id="prediction" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">RQ1 · Prediction</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">The residual model predicts best</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<img src="/_blob/36840624b4912a888904c9c364410d8f" alt="Multi-step prediction error versus horizon for the analytical, full-state EDMDc, residual EDMDc and no-change predictors, four panels for training and test families" style="width:935px;height:592px;object-fit:contain;background:#FCFCFB;border-radius:12px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<p style="font-size:26px;color:#3E4756">Error at a 1 s horizon, test family A (normalized RMSE):</p>
+<table style="font-size:26px;color:#1E2433">
+<tr><th style="width:68%;text-align:left">Predictor</th><th style="width:32%;text-align:right">Error</th></tr>
+<tr style="background:#E3ECFA"><td><b>Residual EDMDc</b></td><td style="text-align:right"><b>0.42</b></td></tr>
+<tr><td>Full-state EDMDc</td><td style="text-align:right">0.70</td></tr>
+<tr><td>"No change" baseline</td><td style="text-align:right">2.0</td></tr>
+<tr><td>Analytical model</td><td style="text-align:right">5.1</td></tr>
+</table>
+<p style="font-size:26px;line-height:1.4;color:#3E4756">Full-state EDMDc has 4 of 55 eigenvalues outside the unit circle and falls behind "no change" after 2–3 s, as the proposal predicted.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">E6 · results/tables/e6_koopman_prediction.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">11</p>
+<aside>Here is the main prediction result. On held-out episodes from the training plant, the residual model has the lowest error at every horizon from 50 milliseconds upward. At one second its error is 0.42, against 0.70 for full-state EDMDc and 5.1 for the analytical model, which is worse than simply assuming nothing changes, because the unmodelled thrust loss makes it drift. Our proposal claimed that full-state EDMDc is unstable; on the failed vehicle we confirm that it has eigenvalues outside the unit circle and that it eventually loses to the no-change baseline, after two to three seconds. Note also that at three seconds even the residual model loses to no-change: long open-loop horizons need feedback, which is why the MPC re-plans every 5 milliseconds.</aside>
+</section>

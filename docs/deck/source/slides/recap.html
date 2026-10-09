@@ -1,0 +1,22 @@
+<section id="recap" data-transition="fade" style="background:#FAF9F5;color:#1E2433;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#2A62C4;font-weight:600">Recap</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1;color:#16233F">Two research questions</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px;background:#F0EEE6;padding:48px;border-radius:16px">
+<p style="font-size:24px;font-weight:600;color:#2A62C4">RQ1 · AS PROPOSED</p>
+<h3 style="font-family:'Source Serif 4', Georgia, serif;font-size:40px;font-weight:600;color:#16233F">Residual Koopman MPC</h3>
+<p style="font-size:30px;line-height:1.4;color:#3E4756">Can a Koopman (EDMDc) model of only the <b>mismatch</b>, built on the known spinning-equilibrium model of Mueller &amp; D'Andrea, predict and control better than the physics model alone or a full-state Koopman model?</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px;background:#F0EEE6;padding:48px;border-radius:16px">
+<p style="font-size:24px;font-weight:600;color:#B9531C">RQ2 · ADDED AFTER THE PROPOSAL</p>
+<h3 style="font-family:'Source Serif 4', Georgia, serif;font-size:40px;font-weight:600;color:#16233F">Certified detection-delay budget</h3>
+<p style="font-size:30px;line-height:1.4;color:#3E4756">A fault detector needs 30–130 ms to notice a dead rotor. What is the largest delay for which recovery is <b>guaranteed</b>, and how do the RQ1 controllers change it?</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#1E2433"><b>The link:</b> each capture controller (LQR, analytical MPC, residual Koopman MPC) is compared by the detection delay it can tolerate.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">EE650 · Progress review 1</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">2</p>
+<aside>RQ1 is the question from the proposal we presented: build the known physics of the spinning, failed vehicle into the model, and let a Koopman model learn only what the physics gets wrong. RQ2 is new. While reviewing the literature we found that every recovery method assumes the failure is detected instantly, but real detectors take tens to hundreds of milliseconds. RQ2 asks for a guaranteed bound on that delay, using Lyapunov and LMI tools from this course. The two connect: whichever controller catches the vehicle after detection, we can compare them by the delay they tolerate. Nothing from the proposal was dropped.</aside>
+</section>

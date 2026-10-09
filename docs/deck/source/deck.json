@@ -1,0 +1,19 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-10T12:00:00Z"},
+  "lists": "css",
+  "title": "Rotor Loss Recovery: Progress 1",
+  "order": ["cover", "recap", "timeline", "model", "validation", "equilibrium", "structure", "lqr", "rq1", "koopman", "prediction", "limits", "mpc", "rq2", "undetected", "delay", "certificate", "plan", "summary"],
+  "sections": {
+    "s1": {"description": "The problem, the two research questions and the failure timeline", "start": "cover"},
+    "s2": {"description": "Simulator, validation against published results, linear analysis and LQR baseline", "start": "model"},
+    "s3": {"description": "RQ1: residual Koopman models and MPC for the failed vehicle", "start": "rq1"},
+    "s4": {"description": "RQ2: how long fault detection may take before recovery fails", "start": "rq2"},
+    "s5": {"description": "Remaining work and summary", "start": "plan"}
+  },
+  "faces": {
+    "source-serif-4": {"family": "Source Serif 4", "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400..700&display=swap"},
+    "ibm-plex-sans": {"family": "IBM Plex Sans", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"}
+  },
+  "designSystems": []
+}
