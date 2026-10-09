@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# OS
+.DS_Store
+
+# Copyrighted papers: not redistributable, see literature/papers/README.md
+literature/papers/*.pdf
+
+# LaTeX intermediates
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
+
+# Node (deck build)
+node_modules/
