@@ -89,9 +89,12 @@ class FailureLQR:
         self.K, self.P = lqr(self.model.A, self.model.B, Q, R)
         self.f_est = self.eq.f[:3].copy()
         self.t_last = None
+        self._f_prev = self.f_est.copy()
+        self._a = 0.0
 
     def reset(self, f_now):
-        self.f_est = np.clip(np.asarray(f_now[:3], float), self.p.f_min, self.p.f_max)
+        """Set the motor-thrust estimate (a stopped motor may be at 0 N)."""
+        self.f_est = np.clip(np.asarray(f_now[:3], float), 0.0, self.p.f_max)
         self.t_last = None
 
     def state7(self, x):
@@ -108,19 +111,34 @@ class FailureLQR:
         u3 = np.clip(self.eq.f[:3] - self.K @ e, self.p.f_min, self.p.f_max)
         if self.motor_states:
             dt = 0.0 if self.t_last is None else t - self.t_last
-            self.f_est = self.f_est + dt / self.p.sigma_mot * (u3 - self.f_est)
+            self._f_prev = self.f_est.copy()
+            self._a = 1.0 - np.exp(-dt / self.p.sigma_mot)   # exact first-order step
+            self.f_est = self.f_est + self._a * (u3 - self.f_est)
             self.t_last = t
         return np.array([u3[0], u3[1], u3[2], 0.0])
+
+    def correct_last_command(self, u3_applied):
+        """Redo the last motor-filter update with the command actually sent
+        (used when an outer layer modifies the LQR command, e.g. excitation)."""
+        if self.motor_states:
+            self.f_est = self._f_prev + self._a * (np.asarray(u3_applied, float) - self._f_prev)
 
 
 @dataclass
 class SpinUpThenLQR:
-    """Mueller & D'Andrea (2014, Sec. V-D) flight strategy: after the failure is
-    known, fly on the two opposing rotors (1, 3) to build up yaw rate, and enable
-    the relaxed-hover LQR once |w| exceeds w_switch (10 rad/s in the paper)."""
+    """Spin-up strategy after Mueller & D'Andrea (2014, Sec. V-D, Fig. 4): once the
+    failure is known, fly on the two opposing rotors (1, 3) at thrust f_spin each,
+    rotor 2 stopped, with no attitude feedback, and enable the relaxed-hover LQR
+    when |w| exceeds w_switch (10 rad/s in the paper).
+
+    f_spin defaults to 2.95 N, read from the flight data in Fig. 4 (about 3 N per
+    rotor while spinning up; the vehicle climbs). m g / 2 = 2.45 N is the
+    hover-neutral alternative used as a sensitivity case.
+    """
     p: QuadParams
     lqr: FailureLQR
     w_switch: float = 10.0
+    f_spin: float = 2.95
     spinning_up: bool = True
 
     def reset(self, f_now):
@@ -129,9 +147,9 @@ class SpinUpThenLQR:
 
     def __call__(self, t, x):
         if self.spinning_up and np.linalg.norm(x[IDX_W]) < self.w_switch:
-            f13 = self.p.weight / 2.0
+            f13 = min(self.f_spin, self.p.f_max)
             u = np.array([f13, 0.0, f13, 0.0])  # rotor 2 stopped: two-rotor spin-up
-            self.lqr.reset(np.array([f13, self.p.f_min, f13]))
+            self.lqr.reset(np.array([f13, 0.0, f13]))
             self.lqr.t_last = t
             return u
         self.spinning_up = False
@@ -151,6 +169,8 @@ class DelaySupervisor:
     t_fail: float = 0.0
     tau: float = 0.0
     switched: bool = False
+    f_cmd_est: np.ndarray = None   # filtered healthy commands: what the flight computer knows
+    t_last: float = None
 
     def alive(self, t):
         return np.array([True, True, True, t < self.t_fail])
@@ -160,8 +180,17 @@ class DelaySupervisor:
 
     def __call__(self, t, x):
         if self.mode(t) == "healthy":
-            return self.healthy(t, x)
+            u = self.healthy(t, x)
+            # nominal first-order filter of the commands sent; the true thrust is not measured
+            if self.f_cmd_est is None:
+                self.f_cmd_est = np.full(4, self.healthy.p.weight / 4.0)
+            dt = 0.0 if self.t_last is None else t - self.t_last
+            a = 1.0 - np.exp(-dt / self.healthy.p.sigma_mot)
+            self.f_cmd_est = self.f_cmd_est + a * (u - self.f_cmd_est)
+            self.t_last = t
+            return u
         if not self.switched:
-            self.failure.reset(x[IDX_F])
+            f0 = self.f_cmd_est if self.f_cmd_est is not None else np.full(4, self.healthy.p.weight / 4.0)
+            self.failure.reset(f0)
             self.switched = True
         return self.failure(t, x)
