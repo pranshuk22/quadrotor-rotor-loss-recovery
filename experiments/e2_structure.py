@@ -21,25 +21,39 @@ from rotorfail.models import failed_linear, healthy_linear  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
 
 
-def C_rows(states, names):
-    C = np.zeros((len(names), len(states)))
-    for i, s in enumerate(names):
-        C[i, states.index(s)] = 1.0
+def C_rows(states, sensors):
+    """Output matrix with each row divided by its sensor noise standard deviation, so the
+    observability Gramian is dimensionless and comparable across sensor sets."""
+    C = np.zeros((len(sensors), len(states)))
+    for i, (s, sigma) in enumerate(sensors):
+        C[i, states.index(s)] = 1.0 / sigma
     return C
 
 
+# Assumed 1-sigma sensor noise (typical small-quadrotor values)
+GYRO = [("p", 0.005), ("q", 0.005), ("r", 0.005)]           # rad/s
+POSITION = [("x", 0.01), ("y", 0.01), ("z", 0.01)]           # m, motion capture
+ATTITUDE = [("phi", 0.01), ("theta", 0.01), ("psi", 0.01)]   # rad, attitude estimate
+MAG = [("psi", 0.02)]                                        # rad, heading from magnetometer
+TILT = [("n_x", 0.01), ("n_y", 0.01)]                        # tilt estimate of the reduced attitude
+BARO = [("z", 0.1)]                                          # m, barometer
+
 HEALTHY_SENSORS = {
-    "S1 gyro (p,q,r)": ["p", "q", "r"],
-    "S2 gyro + position": ["p", "q", "r", "x", "y", "z"],
-    "S3 gyro + position + magnetometer (psi)": ["p", "q", "r", "x", "y", "z", "psi"],
-    "S4 gyro + attitude (phi,theta,psi)": ["p", "q", "r", "phi", "theta", "psi"],
+    "S1 gyro (p,q,r)": GYRO,
+    "S2 gyro + position": GYRO + POSITION,
+    "S3 gyro + position + magnetometer (psi)": GYRO + POSITION + MAG,
+    "S4 gyro + attitude (phi,theta,psi)": GYRO + ATTITUDE,
 }
 FAILED_SENSORS = {
-    "F1 gyro (p,q,r)": ["p", "q", "r"],
-    "F2 gyro + tilt estimate (n_x,n_y)": ["p", "q", "r", "n_x", "n_y"],
-    "F3 gyro + altitude (baro)": ["p", "q", "r", "z"],
-    "F4 gyro + tilt + altitude": ["p", "q", "r", "n_x", "n_y", "z"],
+    "F1 gyro (p,q,r)": GYRO,
+    "F2 gyro + tilt estimate (n_x,n_y)": GYRO + TILT,
+    "F3 gyro + barometer": GYRO + BARO,
+    "F4 gyro + tilt + barometer": GYRO + TILT + BARO,
 }
+NOISE_NOTE = ("Outputs are divided by assumed sensor noise (1σ): gyro 0.005 rad/s, position 0.01 m, "
+              "attitude 0.01 rad, magnetometer heading 0.02 rad, tilt estimate 0.01, barometer 0.1 m. "
+              "The Gramian is then dimensionless; its smallest eigenvalue compares how well the weakest "
+              "direction is seen, for these noise levels.")
 
 
 def fmt_eigs(ev):
@@ -86,7 +100,8 @@ def section(title, model, sensors, T_gram):
     L += ["", f"Controllability Gramian W({T_gram} s): λ_min = {g['lambda_min']:.2e}, "
           f"λ_max = {g['lambda_max']:.2e}, condition number = {g['cond']:.2e}.", ""]
     L += ["**Observability by sensor set:**", "",
-          "| Sensor set | rank O | Unobservable states | λ_min W_o(1 s) | cond W_o |",
+          NOISE_NOTE, "",
+          "| Sensor set | rank O | Unobservable states | λ_min W_o(1 s), noise-normalized | cond W_o |",
           "|---|---|---|---|---|"]
     for name, rows in sensors.items():
         C = C_rows(model.states, rows)
@@ -114,10 +129,11 @@ def main():
           "and the altitude unobservable.",
           "- Failed model, F3: because the relaxed hover is *tilted* (n̄_y ≠ 0), vertical acceleration depends "
           "on tilt to first order (∂v̇_z/∂n_y ≠ 0). This coupling does not exist at a level hover, and it makes "
-          "the full reduced attitude observable from gyro + barometer alone (F3). The Gramian columns show how "
-          "weak this observability is compared with a direct tilt measurement (F4): it is a structural "
-          "property, not a practical estimator design. It is a candidate for the observability part of the "
-          "project (to be checked against the estimation literature).",
+          "the full reduced attitude observable from gyro + barometer alone (F3). With the assumed noise "
+          "levels, the noise-normalized Gramian shows this observability is much weaker than with a direct "
+          "tilt measurement (F4); it is a structural remark, not a practical estimator design. Practical "
+          "estimators for the spinning vehicle use the accelerometer and vision (Sun et al. 2021; "
+          "Solanki & de Visser 2022).",
           "- Controllability of the reduced attitude from three rotors reproduces Mueller & D'Andrea "
           "(not a contribution).", ""]
     out = ROOT / "results/tables/e2_structure.md"
