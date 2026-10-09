@@ -29,9 +29,9 @@ Simulator: `rotorfail/` (Mueller & D'Andrea ICRA 2014 model). Independent implem
 | n_z | 0.914 | 0.910 | +0.40% |  |
 | **Fig. 3 minima** | | | | |
 | min |ω| | 18.618 | 19.000 | -2.01% | rad/s |
-| ρ at min |ω| | 0.675 | 0.655 | +3.05% |  |
+| ρ at min |ω| | 0.675 | 0.655 | +3.03% |  |
 | min f1 | 2.029 | 2.040 | -0.53% | N |
-| ρ at min f1 | 0.580 | 0.563 | +3.02% |  |
+| ρ at min f1 | 0.579 | 0.563 | +2.79% |  |
 
 **Reading.** The two-rotor and single-rotor equilibria are reproduced to every published digit, including the single-rotor case, which exercises the gyroscopic and propeller-momentum terms with p ≠ 0. In the one-rotor case, f, r and n_z match, but q and n_y are 6% lower. Substituting the paper's own published values into its eq. (12) leaves a roll-torque residual of -0.0113 N·m (7% of the rotor-2 torque), so that published case is not an exact equilibrium of the paper's own model with the stated parameters. We treat it as an inconsistency in that single published case, not a model error.
 
@@ -49,7 +49,7 @@ The IJRR model differs from ICRA 2014 in two ways: propeller thrust uses the spe
 | rotors 3, 4 failed (adjacent) | (1067, 218, 0, 0) | (26.00, 0.00, 23.30) | (24.94, 0.06, 23.57) | (26.15, -0.03, 23.17) | 0.995 |
 | rotors 2, 3, 4 failed | (1103, 0, 0, 0) | (28.00, -1.60, 24.50) | (26.73, -1.45, 24.93) | (28.25, -1.65, 24.42) | 0.994 |
 
-**Reading.** With the published parameters, the hover solutions are within 0–4%. The two high-rate cases are the most sensitive to the drag and inertia values, which are published to 1–2 significant figures. One value inside the rounding of the published I_xx = 2.7e-3 (2.75e-3) brings all five cases within 0.7% in ω and 0.6% in force balance. The two-rotor speed 643 rad/s is explained only by air-relative thrust: κ_f(643 − 24.5)² = mg/2, while κ_f·643² is 8% too high.
+**Reading.** With the published parameters, the hover solutions are within 0–4%. The two high-rate cases are the most sensitive to the drag and inertia values, which are published to 1–2 significant figures. As a sensitivity check, I_xx = 2.75e-3 (the upper end of the rounding interval of the published 2.7e-3) brings all five cases within 0.7% in ω and 0.6% in force balance; because this value was chosen to fit the same cases, it is not an independent validation. The two-rotor speed 643 rad/s is explained only by air-relative thrust: κ_f(643 − 24.5)² = mg/2, while κ_f·643² is 8% too high.
 
 **Consequence for our simulator.** The ICRA model we simulate omits air-relative thrust. At the one-rotor equilibrium (r ≈ 19 rad/s; propeller speeds −565, +399, −565 rad/s) it changes the thrust of rotors 1 and 3 by about −7% and of rotor 2 by about +10%. That is comparable in size to the uniform thrust loss in our truth families (`params.truth_family`), but different in structure, because it acts per rotor. Adding air-relative thrust to the truth plant is a cheap and valuable next step (task K11).
 
@@ -62,12 +62,13 @@ The IJRR model differs from ICRA 2014 in two ways: propeller thrust uses the spe
 
 **Reading.** Our solver equals the paper's own closed form exactly. The paper's quoted numbers are about 1.5% below its own formula evaluated with its Table III, which is internal to the paper.
 
-## 4. Against flight data (where the model is known to be imperfect)
+## 4. Against flight data
 
 | Quantity | Our model | The paper's model | Flight | Source |
 |---|---|---|---|---|
-| Time to |ω| > 10 rad/s on two rotors after propeller 4 is disabled | 0.81 s (closed form 0.80 s) | not reported | 0.62 s | ICRA 2014, Fig. 4 |
+| Time to |ω| > 10 rad/s on rotors 1 and 3 at the flight thrust (≈ 2.95 N each, read from Fig. 4) | 0.65 s (closed form 0.64 s) | not reported | 0.62 s | ICRA 2014, Fig. 4 |
+| Same, at m g / 2 = 2.45 N each (hover-neutral thrust) | 0.81 s (closed form 0.80 s) | not reported | not flown | n/a |
 | Spin rate about n, one rotor lost | 19.6 rad/s (ρ = 0.5) | 19.9 rad/s (min-power solution) | 15.8 rad/s | IJRR 2016, Sec. 5.3 |
 | Height offset, two rotors, from thrust loss while spinning | not in the nominal model | not in the model | ≈ 2.4 m | ICRA 2014, Sec. V-E |
 
-**Reading.** The nominal model spins up about 30% slower than the flight and over-predicts the spin rate by about 20% (both papers attribute the gaps to unmodelled aerodynamics). These are the reasons the project (i) keeps a model-mismatch truth plant for RQ1 and (ii) must report the RQ2 delay results with a sensitivity study on the yaw-drag and thrust parameters (task D7). The empirical delay tolerance in E4 depends on spin-up speed.
+**Reading.** With the thrust the flight actually used during spin-up, the model reaches 10 rad/s within 4% of the flight time. The spin-up time depends strongly on this thrust, so the detection-delay results (E4) are reported for both values. The papers' models over-predict the steady spin rate by about 20% and do not contain the thrust loss seen in flight; the truth plants used for learning contain a thrust-loss effect for this reason.

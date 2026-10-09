@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from rotorfail.dynamics import make_state, rk4_step  # noqa: E402
-from rotorfail.equilibrium import relaxed_hover, single_rotor_hover, two_rotor_hover  # noqa: E402
+from rotorfail.equilibrium import fig3_minima, relaxed_hover, single_rotor_hover, two_rotor_hover  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
 from rotorfail.params import G, QuadParams  # noqa: E402
 from rotorfail.validation import IJRR_CASES, GeneralMulticopter, ijrr_speeds  # noqa: E402
@@ -54,13 +54,10 @@ def main():
           row("f1", s1.f[0], 5.37, "N"), row("propeller speed ω1", s1.prop_speeds[0], -915, "rad/s"),
           row("p", s1.w[0], 14.7, "rad/s"), row("q", s1.w[1], 0.0, "rad/s"), row("r", s1.w[2], 33.0, "rad/s"),
           row("n_x", s1.n[0], 0.41), row("n_z", s1.n[2], 0.91)]
-    rhos = np.linspace(0.3, 1.0, 141)
-    sols = [relaxed_hover(P, r) for r in rhos]
-    wn = np.array([np.linalg.norm(s.w) for s in sols])
-    f1 = np.array([s.f[0] for s in sols])
+    m3 = fig3_minima(P)
     L += ["| **Fig. 3 minima** | | | | |",
-          row("min |ω|", wn.min(), 19.0, "rad/s"), row("ρ at min |ω|", rhos[wn.argmin()], 0.655),
-          row("min f1", f1.min(), 2.04, "N"), row("ρ at min f1", rhos[f1.argmin()], 0.563)]
+          row("min |ω|", m3["w_min"], 19.0, "rad/s"), row("ρ at min |ω|", m3["rho_w"], 0.655),
+          row("min f1", m3["f1_min"], 2.04, "N"), row("ρ at min f1", m3["rho_f"], 0.563)]
     # residual of the paper's own eq. (12) at its published equilibrium
     om = P.prop_speeds(np.array([2.05, 1.02, 2.05, 0.0]))
     res12 = (P.kappa_f * om[1] ** 2 * P.l - (P.Izz_T - P.Ixx_T) * 5.69 * 18.89 - P.Izz_P * 5.69 * om.sum())
@@ -92,8 +89,9 @@ def main():
         L.append(f"| {name} | {c['Omega']} | {vec(c['w'])} | {vec(w0)} | {vec(w1)} | {M1.vertical_force_ratio(Om, w1):.3f} |")
     L += ["", "**Reading.** With the published parameters, the hover solutions are within 0–4%. The two high-rate cases "
           "are the most sensitive to the drag and inertia values, which are published to 1–2 significant figures. "
-          "One value inside the rounding of the published I_xx = 2.7e-3 (2.75e-3) brings all five cases within 0.7% "
-          "in ω and 0.6% in force balance. The two-rotor speed 643 rad/s is explained only by air-relative thrust: "
+          "As a sensitivity check, I_xx = 2.75e-3 (the upper end of the rounding interval of the published 2.7e-3) brings all five cases within 0.7% "
+          "in ω and 0.6% in force balance; because this value was chosen to fit the same cases, it is not an independent "
+          "validation. The two-rotor speed 643 rad/s is explained only by air-relative thrust: "
           "κ_f(643 − 24.5)² = mg/2, while κ_f·643² is 8% too high.", "",
           "**Consequence for our simulator.** The ICRA model we simulate omits air-relative thrust. At the one-rotor "
           "equilibrium (r ≈ 19 rad/s; propeller speeds −565, +399, −565 rad/s) it changes the thrust of rotors 1 and 3 "
@@ -113,24 +111,32 @@ def main():
           "1.5% below its own formula evaluated with its Table III, which is internal to the paper.", ""]
 
     # ---------------- flight data
-    x = make_state()
-    u = np.array([P.weight / 2, 0.0, P.weight / 2, 0.0])
-    alive = np.array([True, True, True, False])
-    t, dt = 0.0, 1e-3
-    while np.linalg.norm(x[10:13]) < 10.0:
-        x = rk4_step(x, u, dt, P, alive)
-        t += dt
-    t_exact = -P.Izz_B / P.gamma * np.log(1 - 10.0 / (P.kappa_tau * P.weight / P.gamma))
-    L += ["## 4. Against flight data (where the model is known to be imperfect)", "",
+    def spin_up_time(f13):
+        x = make_state()
+        u = np.array([f13, 0.0, f13, 0.0])
+        alive = np.array([True, True, True, False])
+        t, dt = 0.0, 1e-3
+        while np.linalg.norm(x[10:13]) < 10.0:
+            x = rk4_step(x, u, dt, P, alive)
+            t += dt
+        closed = -P.Izz_B / P.gamma * np.log(1 - 10.0 * P.gamma / (2 * P.kappa_tau * f13))
+        return t, closed
+
+    t_half, c_half = spin_up_time(P.weight / 2)
+    t_flt, c_flt = spin_up_time(2.95)
+    L += ["## 4. Against flight data", "",
           "| Quantity | Our model | The paper's model | Flight | Source |", "|---|---|---|---|---|",
-          f"| Time to |ω| > 10 rad/s on two rotors after propeller 4 is disabled | {t:.2f} s (closed form {t_exact:.2f} s) | not reported | 0.62 s | ICRA 2014, Fig. 4 |",
+          f"| Time to |ω| > 10 rad/s on rotors 1 and 3 at the flight thrust (≈ 2.95 N each, read from Fig. 4) | "
+          f"{t_flt:.2f} s (closed form {c_flt:.2f} s) | not reported | 0.62 s | ICRA 2014, Fig. 4 |",
+          f"| Same, at m g / 2 = {P.weight / 2:.2f} N each (hover-neutral thrust) | {t_half:.2f} s (closed form {c_half:.2f} s) "
+          "| not reported | not flown | n/a |",
           f"| Spin rate about n, one rotor lost | {np.linalg.norm(eq.w):.1f} rad/s (ρ = 0.5) | 19.9 rad/s (min-power solution) | 15.8 rad/s | IJRR 2016, Sec. 5.3 |",
           "| Height offset, two rotors, from thrust loss while spinning | not in the nominal model | not in the model | ≈ 2.4 m | ICRA 2014, Sec. V-E |",
-          "", "**Reading.** The nominal model spins up about 30% slower than the flight and over-predicts the spin rate by "
-          "about 20% (both papers attribute the gaps to unmodelled aerodynamics). These are the reasons the project "
-          "(i) keeps a model-mismatch truth plant for RQ1 and (ii) must report the RQ2 delay results with a sensitivity "
-          "study on the yaw-drag and thrust parameters (task D7). The empirical delay tolerance in E4 depends on "
-          "spin-up speed.", ""]
+          "", "**Reading.** With the thrust the flight actually used during spin-up, the model reaches 10 rad/s within "
+          f"{abs(t_flt - 0.62) / 0.62 * 100:.0f}% of the flight time. The spin-up time depends strongly on this thrust, so the "
+          "detection-delay results (E4) are reported for both values. The papers' models over-predict the steady spin "
+          "rate by about 20% and do not contain the thrust loss seen in flight; the truth plants used for learning "
+          "contain a thrust-loss effect for this reason.", ""]
 
     (ROOT / "results/tables/validation_report.md").write_text("\n".join(L))
     print("\n".join(L))
