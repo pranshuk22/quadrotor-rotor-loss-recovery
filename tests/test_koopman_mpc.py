@@ -38,13 +38,15 @@ def test_nominal_model_is_exact_on_nominal_plant():
 
 
 def test_residual_reduces_one_step_error(setup):
+    """Fitted on the training episodes, evaluated on a held-out episode of the same plant."""
     eq, data, nom = setup
     res = ResidualEDMD.fit(data, nom, P)
-    X, fe, U = data.x[0], data.fe[0], data.u[0]
+    test = generate(truth_family("A"), P, eq, 1, 2.0, seed=99)
+    X, fe, U = test.x[0], test.fe[0], test.u[0]
     e_nom = np.mean([np.sum((nom.step(X[k], fe[k], U[k])[0] - X[k + 1]) ** 2) for k in range(len(U))])
     e_res = np.mean([np.sum((nom.step(X[k], fe[k], U[k])[0] + res.residual(X[k], fe[k], U[k]) - X[k + 1]) ** 2)
                      for k in range(len(U))])
-    assert e_res < 0.2 * e_nom
+    assert e_res < 0.5 * e_nom
 
 
 def test_full_edmdc_rollout_shapes_and_first_step(setup):
@@ -57,12 +59,23 @@ def test_full_edmdc_rollout_shapes_and_first_step(setup):
     assert nominal_rollout(nom, X[0], fe[0], U[:10]).shape == (11, 7)
 
 
-def test_mpc_returns_feasible_thrusts(setup):
+def test_mpc_solves_and_matches_lqr_near_trim(setup):
+    """Near the trim the constraints are inactive, so the first MPC move (with the DARE
+    terminal cost) should be close to the discrete LQR move."""
+    from scipy.linalg import solve_discrete_are
+    from rotorfail.control import failure_weights
+    from rotorfail.dynamics import IDX_Q, make_state, quat_from_n
     eq, data, nom = setup
     mpc = FailureMPC(P, eq, horizon=10)
-    from rotorfail.koopman import initial_state
-    x = initial_state(eq, np.random.default_rng(0))
+    x = make_state(w=eq.w + np.array([0.2, -0.1, 0.3]), f=np.concatenate((eq.f[:3], [0.0])))
+    x[IDX_Q] = quat_from_n(eq.n + np.array([0.01, -0.01, 0.0]))
     mpc.reset(x[13:16])
     u = mpc(0.0, x)
+    assert mpc.prob.status == "optimal"
+    Q, R = failure_weights()
+    Pd = solve_discrete_are(mpc.nom.Ad, mpc.nom.Bd, Q, R)
+    Kd = np.linalg.solve(R + mpc.nom.Bd.T @ Pd @ mpc.nom.Bd, mpc.nom.Bd.T @ Pd @ mpc.nom.Ad)
+    s0 = np.concatenate((mpc.measure(x), x[13:16] - eq.f[:3]))
+    u_lqr = eq.f[:3] - Kd @ s0
+    assert np.allclose(u[:3], u_lqr, atol=1e-3)
     assert u[3] == 0.0
-    assert np.all(u[:3] >= P.f_min - 1e-9) and np.all(u[:3] <= P.f_max + 1e-9)

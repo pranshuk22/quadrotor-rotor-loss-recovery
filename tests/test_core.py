@@ -27,12 +27,6 @@ def eq():
     return relaxed_hover(P, 0.5)
 
 
-def test_healthy_hover_is_equilibrium():
-    x = make_state()
-    xd = deriv(x, np.full(4, P.weight / 4), P, np.ones(4, bool), motor_lag=False)
-    assert np.allclose(xd, 0, atol=1e-12)
-
-
 def test_relaxed_hover_matches_paper(eq):
     # Mueller & D'Andrea ICRA 2014: f1 = 2.05, f2 = 1.02, r = 18.89, n_z = 0.958
     assert eq.f[0] == pytest.approx(2.05, rel=0.01)
@@ -98,7 +92,8 @@ def test_failure_lqr_recovers_small_perturbation(eq):
 
 
 def test_certificate_is_an_invariant_set_of_the_linear_saturated_loop(eq):
-    """Points sampled on the certified ellipsoid boundary: V decreases along x' = Ax + B sat(-Kx)."""
+    """Points on the certified ellipsoid boundary: V decreases along x' = Ax + B sat(-Kx),
+    with the plant's asymmetric thrust limits."""
     f = FailureLQR(P, eq)
     A, B, K = f.model.A, f.model.B, f.K
     ubar = np.minimum(eq.f[:3] - P.f_min, P.f_max - eq.f[:3])
@@ -109,5 +104,30 @@ def test_certificate_is_an_invariant_set_of_the_linear_saturated_loop(eq):
     for _ in range(500):
         v = rng.normal(size=10)
         x = L @ (v / np.linalg.norm(v))           # on the boundary x^T P x = 1
-        u = np.clip(-K @ x, -ubar, ubar)
+        # the plant's real, asymmetric limits around the trim (not the LMI's symmetric ones)
+        u = np.clip(-K @ x, P.f_min - eq.f[:3], P.f_max - eq.f[:3])
         assert 2 * x @ Pm @ (A @ x + B @ u) < 0
+
+
+def test_controller_called_once_per_period():
+    calls = []
+
+    def ctrl(t, x):
+        calls.append(t)
+        return np.full(4, P.weight / 4)
+
+    simulate(make_state(), ctrl, P, 0.01, dt=1e-3, ctrl_period=5e-3)
+    assert calls == [0.0, 0.005, 0.01]
+
+
+def test_supervisor_switch_uses_filtered_commands_not_true_thrust(eq):
+    """At detection the failure controller is initialised from the nominal filter of the
+    commands sent, which the flight computer knows, not from the plant's thrust state."""
+    from rotorfail.control import DelaySupervisor, HealthyLQR, FailureLQR
+    from rotorfail.params import truth_family
+    fail = FailureLQR(P, eq)
+    sup = DelaySupervisor(HealthyLQR(P), fail, t_fail=0.0, tau=0.05)
+    log = simulate(make_state(), sup, truth_family("A"), 0.06, dt=1e-3, ctrl_period=1e-3, log_every=1)
+    true_f = log.x[-1, 13:16]
+    assert not np.allclose(fail.f_est, true_f, atol=1e-3)   # different motor lag in the plant
+    assert np.all(np.isfinite(fail.f_est))

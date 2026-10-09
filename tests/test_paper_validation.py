@@ -35,9 +35,14 @@ def test_icra_one_rotor_loss_equilibrium():
     assert eq.f[1] == pytest.approx(1.02, abs=0.006)
     assert eq.w[2] == pytest.approx(18.89, rel=0.006)
     assert eq.n[2] == pytest.approx(0.958, abs=0.005)
-    # Known gap: q = 5.37 vs published 5.69 (-6%). The paper's own numbers leave a residual in its
-    # eq. (12); the other two published equilibria below are reproduced exactly with the same model.
-    assert eq.w[1] == pytest.approx(5.69, rel=0.07)
+
+
+@pytest.mark.xfail(strict=True, reason="published q = 5.69 leaves a residual in the paper's own eq. (12); "
+                                       "the paper's two other equilibria are reproduced exactly")
+def test_icra_one_rotor_loss_pitch_rate():
+    """[ICRA14] eq. (51): q = 5.69 rad/s. Ours is 5.37 (-6%); see the docstring of the xfail."""
+    eq = relaxed_hover(P, 0.5)
+    assert eq.w[1] == pytest.approx(5.69, rel=0.01)
 
 
 def test_icra_eq21_yaw_rate():
