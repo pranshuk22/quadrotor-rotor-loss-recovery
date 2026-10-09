@@ -1,7 +1,5 @@
 % ---------------------------------------------------------------------------
 % References for the EE650 progress report.
-% Entries marked "note = {...to be verified}" carry details that the project
-% has not yet checked against the primary source.
 % ---------------------------------------------------------------------------
 
 % ---- Complete rotor loss: physics and control ------------------------------
@@ -98,11 +96,13 @@
 }
 
 @article{ast2024motionplanning,
-  key     = {AST2024},
+  author  = {Nam, Youngim and Lee, Kangmin and Shin, Hyo-Sang and Kwon, Cheolhyeon},
   title   = {Fault tolerant motion planning for a quadrotor subject to complete rotor failure},
   journal = {Aerospace Science and Technology},
+  volume  = {154},
+  pages   = {109529},
   year    = {2024},
-  note    = {Author list to be verified}
+  doi     = {10.1016/j.ast.2024.109529}
 }
 
 % ---- Koopman operator, EDMD and residual learning ----------------------------
@@ -176,10 +176,12 @@
 }
 
 @misc{fu2025residual,
-  author = {Fu and others},
+  author = {Fu, Yonghao and Hu, Cheng and Xiong, Haokun and Bao, Zhanpeng and Du, Wenyuan and Ghignone, Edoardo and Magno, Michele and Xie, Lei and Su, Hongye},
   title  = {Residual {K}oopman model predictive control for enhanced vehicle dynamics with small on-track data input},
   year   = {2025},
-  note   = {arXiv:2507.18396; author list to be verified}
+  eprint = {2507.18396},
+  archivePrefix = {arXiv},
+  note   = {arXiv:2507.18396}
 }
 
 % ---- Saturation, LMIs, set-based fault-tolerant control -----------------------
@@ -372,4 +374,73 @@
   booktitle = {AIAA SciTech 2022 Forum},
   year      = {2022},
   doi       = {10.2514/6.2022-0857}
+}
+
+% ---- Software (metadata from Crossref / arXiv) ----------------------------------
+@article{harris2020numpy,
+  author  = {Harris, Charles R. and others},
+  title   = {Array programming with {NumPy}},
+  journal = {Nature},
+  volume  = {585},
+  number  = {7825},
+  pages   = {357--362},
+  year    = {2020},
+  doi     = {10.1038/s41586-020-2649-2}
+}
+
+@article{virtanen2020scipy,
+  author  = {Virtanen, Pauli and others},
+  title   = {{SciPy} 1.0: Fundamental algorithms for scientific computing in {P}ython},
+  journal = {Nature Methods},
+  volume  = {17},
+  number  = {3},
+  pages   = {261--272},
+  year    = {2020},
+  doi     = {10.1038/s41592-019-0686-2}
+}
+
+@article{hunter2007matplotlib,
+  author  = {Hunter, John D.},
+  title   = {Matplotlib: A {2D} graphics environment},
+  journal = {Computing in Science \& Engineering},
+  volume  = {9},
+  number  = {3},
+  pages   = {90--95},
+  year    = {2007},
+  doi     = {10.1109/MCSE.2007.55}
+}
+
+@inproceedings{fuller2021control,
+  author    = {Fuller, Sawyer and Greiner, Ben and Moore, Jason and Murray, Richard and van Paassen, Ren{\'e} and Yorke, Rory},
+  title     = {The {P}ython {C}ontrol {S}ystems {L}ibrary (python-control)},
+  booktitle = {Proc. 60th IEEE Conference on Decision and Control (CDC)},
+  pages     = {4875--4881},
+  year      = {2021},
+  doi       = {10.1109/CDC45484.2021.9683368}
+}
+
+@article{odonoghue2016scs,
+  author  = {O'Donoghue, Brendan and Chu, Eric and Parikh, Neal and Boyd, Stephen},
+  title   = {Conic optimization via operator splitting and homogeneous self-dual embedding},
+  journal = {Journal of Optimization Theory and Applications},
+  volume  = {169},
+  number  = {3},
+  pages   = {1042--1068},
+  year    = {2016},
+  doi     = {10.1007/s10957-016-0892-3}
+}
+
+@misc{goulart2024clarabel,
+  author = {Goulart, Paul J. and Chen, Yuwen},
+  title  = {Clarabel: An interior-point solver for conic programs with quadratic objectives},
+  year   = {2024},
+  note   = {arXiv:2405.12762}
+}
+
+@misc{pytest,
+  author       = {Krekel, Holger and others},
+  title        = {pytest},
+  year         = {2026},
+  howpublished = {\url{https://pytest.org}},
+  note         = {Version 9.1}
 }
