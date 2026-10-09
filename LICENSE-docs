@@ -1,0 +1,17 @@
+Documentation license
+
+Copyright (c) 2026 The quadrotor-rotor-loss-recovery authors
+
+The documentation, report, slides, proposal and other written material in this
+repository (docs/, proposal/, progress/, literature/, history/, results/ and
+all Markdown, LaTeX, PDF and PPTX files) are licensed under the Creative
+Commons Attribution 4.0 International License (CC BY 4.0).
+
+You are free to share and adapt this material for any purpose, provided you
+give appropriate credit, provide a link to the license, and indicate if
+changes were made.
+
+Full legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+The source code (rotorfail/, experiments/, tests/, docs/deck/build_pptx.js) is
+licensed under the MIT License; see LICENSE.
