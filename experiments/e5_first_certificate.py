@@ -10,6 +10,12 @@ Outputs
   results/tables/e5_first_certificate.md
   results/figures/e5_certificate_slice.png
 """
+import os
+
+# One BLAS/OpenMP thread per process: the experiments parallelize over runs instead.
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
 import sys
 import warnings
 from concurrent.futures import ProcessPoolExecutor
@@ -134,7 +140,14 @@ def main():
           f"(certified β at decay {DECAY}: see table).", "",
           f"## 2-D slice (Δr, Δn_y), others at equilibrium; decay rate {DECAY}", "",
           f"Grid points recovered without inversion: {len(ok_pts)} / {len(ok_pts) + len(bad_pts)}. "
-          f"Fraction of those inside the certified slice: {frac_cert:.0%} (the rest is the conservatism gap).", ""]
+          f"Fraction of those inside the certified slice: {frac_cert:.0%} (the rest is the conservatism gap).", "",
+          "Where the failures lie (grid points not recovered without inversion), by yaw-rate deviation:", "",
+          "| Δr = r − r̄ (rad/s) | r (rad/s) | Failed / grid points |", "|---|---|---|"]
+    for a_ in dr:
+        tot = sum(1 for g, o in zip(grid, res) if o and np.isclose(g[i_r], a_))
+        bad = sum(1 for g, o in zip(grid, res) if o and np.isclose(g[i_r], a_) and not (o["captured"] and o["upright"]))
+        L.append(f"| {a_:+.0f} | {eq.w[2] + a_:.1f} | {bad} / {tot} |")
+    L.append("")
     (ROOT / "results/tables/e5_first_certificate.md").write_text("\n".join(L))
     print("\n".join(L))
 

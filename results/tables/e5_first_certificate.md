@@ -26,10 +26,36 @@ Without the motor-state bound the LMI is ill-conditioned: the open-loop linear m
 | 0.7 | yes | yes | 0.42 |
 | 0.8 | yes | no | 1.34 |
 | 0.9 | yes | no | 5.77 |
-| 1.0 | no | no | 14.90 |
+| 1.0 | no | no | 14.92 |
 
 Empirical: every β ≤ 0.7 recovers without inversion along this direction (certified β at decay 0.1: see table).
 
 ## 2-D slice (Δr, Δn_y), others at equilibrium; decay rate 0.1
 
 Grid points recovered without inversion: 376 / 441. Fraction of those inside the certified slice: 7% (the rest is the conservatism gap).
+
+Where the failures lie (grid points not recovered without inversion), by yaw-rate deviation:
+
+| Δr = r − r̄ (rad/s) | r (rad/s) | Failed / grid points |
+|---|---|---|
+| -20 | -1.2 | 21 / 21 |
+| -18 | 0.8 | 21 / 21 |
+| -16 | 2.8 | 21 / 21 |
+| -14 | 4.8 | 2 / 21 |
+| -12 | 6.8 | 0 / 21 |
+| -10 | 8.8 | 0 / 21 |
+| -8 | 10.8 | 0 / 21 |
+| -6 | 12.8 | 0 / 21 |
+| -4 | 14.8 | 0 / 21 |
+| -2 | 16.8 | 0 / 21 |
+| +0 | 18.8 | 0 / 21 |
+| +2 | 20.8 | 0 / 21 |
+| +4 | 22.8 | 0 / 21 |
+| +6 | 24.8 | 0 / 21 |
+| +8 | 26.8 | 0 / 21 |
+| +10 | 28.8 | 0 / 21 |
+| +12 | 30.8 | 0 / 21 |
+| +14 | 32.8 | 0 / 21 |
+| +16 | 34.8 | 0 / 21 |
+| +18 | 36.8 | 0 / 21 |
+| +20 | 38.8 | 0 / 21 |
