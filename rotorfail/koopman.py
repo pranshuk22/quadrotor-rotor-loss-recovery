@@ -112,6 +112,7 @@ class ExcitedLQR:
             self.t_next = t + self.hold
         u = self.lqr(t, x)
         u[:3] = np.clip(u[:3] + self.exc, self.p.f_min, self.p.f_max)
+        self.lqr.correct_last_command(u[:3])   # the filter must see the command actually sent
         return u
 
 
@@ -191,11 +192,13 @@ class FullEDMDc:
         z = self.dic(xi0)[0]
         out = [x0.copy()]
         zpos = x0[5]
+        vz_prev = x0[6]
         for u in U:
             z = self.A @ z + self.B @ u
             xi = self.C @ z + self.dic.mu
             vz = xi[5]
-            zpos = zpos + TS * vz
+            zpos = zpos + TS * 0.5 * (vz_prev + vz)   # trapezoidal integration of v_z
+            vz_prev = vz
             out.append(np.array([xi[0], xi[1], xi[2], xi[3], xi[4], zpos, vz]))
         return np.array(out)
 
