@@ -15,24 +15,23 @@ The deck is private until you share it from its Share menu. From the deck page y
 
 | # | Slide id | Content | Figure / table used |
 |---|---|---|---|
-| 1 | cover | Title | — |
-| 2 | recap | RQ1 (as proposed) and RQ2 (added), and how they connect | — |
-| 3 | timeline | Failure timeline: healthy → fails → undetected τ → capture → relaxed hover | — |
+| 1 | cover | Title | n/a |
+| 2 | recap | RQ1 (as proposed) and RQ2 (added), and how they connect | n/a |
+| 3 | timeline | Failure timeline: healthy → fails → undetected τ → capture → relaxed hover | n/a |
 | 4 | model | Simulator and vehicle parameters | `rotorfail/params.py` |
 | 5 | validation | Model vs three published papers + flight data | `results/tables/validation_report.md` |
 | 6 | equilibrium | The relaxed-hover equilibrium (E1) | `e1_rho_sweep.png` |
 | 7 | structure | Controllability and observability (E2) | `e2_structure.md` |
 | 8 | lqr | LQR baseline, delay margins (E3) | `e3_failed_lqr_nonlinear.png` |
-| 9 | rq1 | Section divider: RQ1 | — |
-| 10 | koopman | Three predictors, same data | — |
+| 9 | rq1 | Section divider: RQ1 | n/a |
+| 10 | koopman | Three predictors, same data | n/a |
 | 11 | prediction | Multi-step prediction results (E6) | `e6_multistep_error.png` |
 | 12 | limits | Data efficiency; generalization failure (E6) | `e6_data_efficiency.png` |
 | 13 | mpc | Residual Koopman MPC in closed loop (E7) | `e7_altitude.png` |
-| 14 | rq2 | Section divider: RQ2 | — |
+| 14 | rq2 | Section divider: RQ2 | n/a |
 | 15 | undetected | Why the delay matters: idle-thrust bound (E4) | `e4_undetected_phase.png` |
 | 16 | delay | Delay sweep + Monte Carlo (E4) | `e4_delay_sweep.png` |
 | 17 | certificate | First LMI certificate and its limit (E5) | `e5_certificate_slice.png` |
 | 18 | plan | Two-track plan for the remaining weeks | `progress/task-list.md` |
-| 19 | summary | Three takeaways | — |
+| 19 | summary | Three takeaways | n/a |
 
-Placeholder to fill before presenting: team member names on the cover ("[Team member names]").

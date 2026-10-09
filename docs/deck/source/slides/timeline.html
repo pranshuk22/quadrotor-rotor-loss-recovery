@@ -30,10 +30,10 @@
 </div>
 </div>
 <div style="display:flex;flex-direction:column;gap:20px;border-left:4px solid #B9531C;padding:8px 0px 8px 32px">
-<p style="font-size:30px;line-height:1.4;color:#1E2433">Every recovery method with a guarantee that we found assumes <b>τ = 0</b>.</p>
-<p style="font-size:30px;line-height:1.4;color:#3E4756">The only published tolerance (180 ms) is from simulation sweeps on a different vehicle.</p>
+<p style="font-size:30px;line-height:1.4;color:#1E2433">Most recovery methods with a guarantee assume <b>τ = 0</b>.</p>
+<p style="font-size:30px;line-height:1.4;color:#3E4756">Stability with a fixed delay is shown for a linear model; a certified maximum delay under thrust limits was not found.</p>
 </div>
-<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">Mueller &amp; D'Andrea 2014; Simha et al. 2017; Al Lawati &amp; Akhtar 2026; Kulkarni et al. (heli-quad)</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1000px;font-size:24px;color:#6A7180">Simha et al. 2017; Al Lawati &amp; Akhtar 2026; Başak &amp; Prempain 2015; Strack van Schijndel et al. 2021</p>
 <p style="position:absolute;right:128px;bottom:64px;width:200px;font-size:24px;color:#6A7180;text-align:right">3</p>
-<aside>When one rotor dies, a quadrotor cannot hover level any more. Mueller and D'Andrea showed it can still fly by spinning steadily about a tilted axis, called the relaxed hover. But there is a gap in time: the fault detector needs some time tau to notice the failure. During that time the normal controller keeps flying a vehicle that has lost a rotor. Only after detection does the failure controller take over and try to capture the vehicle into the spinning state. All guarantee-based papers we found assume tau equals zero. The one published tolerance figure is empirical and for a different vehicle.</aside>
+<aside>When one rotor dies, a quadrotor cannot hover level any more. Mueller and D'Andrea showed it can still fly by spinning steadily about a tilted axis, called the relaxed hover. But there is a gap in time: the fault detector needs some time tau to notice the failure. During that time the normal controller keeps flying a vehicle that has lost a rotor. Only after detection does the failure controller take over and try to capture the vehicle into the spinning state. Most guarantee-based papers assume tau equals zero. Başak and Prempain proved stability for a linear model with a fixed delay, but without thrust limits and without finding the largest tolerable delay. Fast detectors take 30 to 130 milliseconds.</aside>
 </section>

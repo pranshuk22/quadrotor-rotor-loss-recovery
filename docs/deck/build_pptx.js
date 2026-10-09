@@ -121,7 +121,7 @@ pres.addSection({ title: S1 });
   s.addText("EE650 · BASICS OF MODERN CONTROL SYSTEMS · PROGRESS REVIEW 1", { placeholder: "eyebrow" });
   s.addText("Fault-tolerant control of a quadrotor after complete rotor loss", { placeholder: "title" });
   s.addText("Residual Koopman MPC, and certified limits on fault-detection delay", { placeholder: "body" });
-  text(s, "[Team member names]", { x: 0.8, y: 6.4, w: 7, h: 0.4, fontSize: 16, color: C.accent3, objectName: "team" });
+  text(s, "Pranshu Kumar · Mudita Jain · Prashant Gupta · Aarush Singh Kushwaha", { x: 0.8, y: 6.4, w: 8.4, h: 0.4, fontSize: 16, color: C.accent3, objectName: "team" });
   text(s, "October 2026", { x: 9.5, y: 6.4, w: 3.0, h: 0.4, fontSize: 16, color: C.accent3, align: "right", objectName: "date" });
   s.addNotes(notesFor("cover"));
 }
@@ -167,10 +167,10 @@ pres.addSection({ title: S1 });
     }
   });
   card(s, [
-    { text: "Every recovery method with a guarantee that we found assumes τ = 0.", options: { fontSize: 20, bold: true, color: C.text2, breakLine: true } },
-    { text: "The only published tolerance (180 ms) comes from simulation sweeps on a different vehicle.", options: { fontSize: 16, paraSpaceBefore: 8 } },
+    { text: "Most recovery methods with a guarantee assume τ = 0.", options: { fontSize: 20, bold: true, color: C.text2, breakLine: true } },
+    { text: "Stability with a fixed delay is shown for a linear model; a certified maximum delay under thrust limits was not found.", options: { fontSize: 16, paraSpaceBefore: 8 } },
   ], { x: 0.6, y: 4.2, w: 12.1, h: 1.35, objectName: "gap statement" });
-  text(s, "Mueller & D'Andrea 2014; Simha et al. 2017; Al Lawati & Akhtar 2026; Kulkarni et al. (heli-quad)", { x: 0.6, y: 5.8, w: 12.1, h: 0.35, fontSize: 12, color: C.accent6, objectName: "sources" });
+  text(s, "Simha et al. 2017; Al Lawati & Akhtar 2026; Başak & Prempain 2015; Strack van Schijndel et al. 2021", { x: 0.6, y: 5.8, w: 12.1, h: 0.35, fontSize: 12, color: C.accent6, objectName: "sources" });
 }
 
 // 4 model
@@ -339,7 +339,7 @@ pres.addSection({ title: S4 });
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: S4 });
   s.addText([{ text: "RESEARCH QUESTION 2 · ADDED", options: { color: C.accent5 } }], { placeholder: "eyebrow" });
   s.addText("How long can fault detection take?", { placeholder: "title" });
-  s.addText("Recovery methods assume the failure is detected instantly. Real detectors take 30–130 ms.", { placeholder: "body" });
+  s.addText("Most recovery methods assume instant detection. Fast detectors take 30–130 ms.", { placeholder: "body" });
   s.addNotes(notesFor("rq2"));
 }
 
