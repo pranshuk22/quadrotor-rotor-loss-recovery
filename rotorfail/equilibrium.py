@@ -120,3 +120,12 @@ def single_rotor_hover(p: QuadParams, w_guess=(10.0, 0.0, 30.0)) -> HoverSolutio
     n = w / np.linalg.norm(w) * np.sign(w[2])
     f = np.array([f1, 0.0, 0.0, 0.0])
     return HoverSolution(f, w, n, p.prop_speeds(f))
+
+
+def fig3_minima(p: QuadParams, lo: float = 0.3, hi: float = 1.0) -> dict:
+    """Minimizers over rho of |w| and of f1 (Mueller & D'Andrea 2014, Fig. 3 text)."""
+    from scipy.optimize import minimize_scalar
+    opt = dict(bounds=(lo, hi), method="bounded", options={"xatol": 1e-6})
+    rw = minimize_scalar(lambda r: np.linalg.norm(relaxed_hover(p, r).w), **opt)
+    rf = minimize_scalar(lambda r: relaxed_hover(p, r).f[0], **opt)
+    return {"w_min": float(rw.fun), "rho_w": float(rw.x), "f1_min": float(rf.fun), "rho_f": float(rf.x)}
