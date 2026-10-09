@@ -1,0 +1,62 @@
+# Novelty Assessment and Claim Boundaries (v5: both research questions)
+
+Date of searches: 2026-10-09/10. The full query list is in `../literature/search-log.md`, and per-paper notes are in `../literature/notes/`. The v4-only version is in `../history/v4-novelty-and-claims.md`.
+
+## 1. How the topic evolved
+
+| Version | Core idea | Outcome |
+|---|---|---|
+| v1 (proposal PDF, presented) | Residual Koopman (EDMDc) on top of the Mueller–D'Andrea spin model, for MPC | **Kept as RQ1** |
+| v2 | Same, re-framed around the "region of validity" of the linear predictor | Merged into RQ1 hypotheses |
+| v3 | Certified recoverable set (LMI) for relaxed-hover LQR + delay map + observability | A local certificate cannot contain hover onset → refined into v4 |
+| v4 | Certified fault-detection-delay budget τ\*, capture set robust over the spin-up yaw rate | **Kept as RQ2** |
+| **v5 (current)** | RQ1 + RQ2 in one proposal: residual Koopman MPC is a capture controller; τ\* is the yardstick, and the LMI layer supplies the guarantees residual-Koopman work lacks | — |
+
+## 2. RQ1 (residual Koopman MPC): what exists, do not claim
+
+| Area | Prior work found | Implication |
+|---|---|---|
+| Complete-rotor-loss physics/control | Mueller & D'Andrea 2014; Nan et al. 2022 NMPC (arXiv 2109.12886); INDI FTC (arXiv 2002.07837) | Strong non-learning baselines |
+| RL for rotor failure | arXiv 2109.10488, 2002.11564, 2503.02649 | Learned *policies*, not learned MPC prediction models |
+| Koopman for quadrotors | SE(3) Koopman-MPC (Narayanan et al. 2023); Martini et al. analytical Koopman MPC (ICUAS 2025); Deep Koopman MPC (arXiv 2508.13795) | Koopman MPC for quadrotors is established |
+| Koopman FTC | Bakhtiaridoust et al. 2024 (IET CTA); IEEE 10773232; Koopman FDI (J. Intell. Robot. Syst. 2024) | **Loss of effectiveness only**; all rotors still active |
+| Residual Koopman MPC | Todde et al. ICUAS 2026 (healthy quadrotor, read in full); RK-MPC quadrupeds (arXiv 2604.04221); vehicle dynamics (Fu et al. 2025); soft arm (Bruder et al. 2025) | **The residual-Koopman pattern is not new** |
+| Nominal + learned residual MPC | GP-MPC (arXiv 2102.05773); Neural-MPC (arXiv 2203.07747) | Baselines to mention |
+
+## 3. RQ2 (delay budget): what exists, do not claim
+
+| Topic | Prior work | Consequence |
+|---|---|---|
+| Relaxed hover, controllability, LQR at the spinning equilibrium | Mueller & D'Andrea 2014/2016 | Reproduced, not claimed |
+| Linear robust control at a spinning working point | Lanzon, Freddi & Longhi, JGCD 2014 | Linear baseline; full text not yet read |
+| **LPV control scheduled on yaw rate** | **Stephan, Schmitt & Fichter, JGCD 2018** | **Scheduling on r is not ours.** We use the LPV structure for certification under saturation and detection delay. **Must read** |
+| Recovery from arbitrary attitude/rates | Sun et al. 2020; Nan et al. 2022 | Empirical only; linear controllers' failure region not quantified |
+| Certified regions for failed quadrotors | Simha et al. 2017; Al Lawati & Akhtar 2026 | **Assume zero detection delay** |
+| Detection-delay tolerance | Heli-quad (180 ms, empirical, different vehicle) | Only empirical numbers exist |
+| Measured detector delays | Multiple-model L1 FDD (IEEE 2025): 30–130 ms | Realistic τ range |
+| Set-theoretic FTC | Stoican & Olaru 2013; Shin & Belcastro 2006 | General method known; credit it |
+
+## 4. Claims and estimated certainty (judgment from the searches, not measurements)
+
+| Claim | Wording to use | Est. chance unpublished | Main risk |
+|---|---|---|---|
+| **RQ1-a** Residual Koopman model built on the M&D spinning-equilibrium model, in the complete-loss regime | "We did not find residual Koopman modeling applied to the complete-rotor-loss, spinning-equilibrium regime" | ~85–90% | Paywalled work; the pattern itself is known |
+| **RQ1-b** Comparison of analytical / full-state / residual predictors and MPCs for the failed vehicle, incl. full-state EDMDc instability in this regime | "A controlled comparison in the failed regime" | ~85% | Low novelty per se; value is in the measured results |
+| **RQ2-C1** Certified τ\* for complete rotor loss | "To our knowledge, the first certified (rather than simulated) bound on the tolerable fault-detection delay" | ~75–80% | Paywalled venues; Stephan 2018 unread |
+| **RQ2-C2** Saturation-aware capture set robust over spin-up yaw rate | "A capture set for the relaxed-hover controller valid from hover onset" | ~55–65% | Stephan 2018 may contain stability-region analysis |
+| **RQ2-C3** τ\* trade study, incl. healthy-controller and capture-controller dependence (LQR vs analytical MPC vs residual-Koopman MPC) | — | ~80% | Could be seen as a parameter sweep |
+| **Link** Residual clipped at d_max → bounded-disturbance capture certificate for the residual-corrected loop | "Formal capture guarantees for a residual-Koopman controller of the failed vehicle" | ~80% | Certificate may be very conservative |
+
+## 5. What the first results already say (presentation 1)
+
+- RQ1: the residual predictor beats the analytical and full-state predictors on the training mismatch family (E6). It **does not generalize** to an unseen family, and **static** training on randomized vehicles makes it worse. That is a limitation to report and a reason for online adaptation.
+- RQ1: residual-Koopman MPC cuts the steady altitude bias by about 32% (E7), similar to Todde et al. in healthy flight.
+- RQ2: the published recovery strategy tolerates about 10 ms of detection delay (E4). The LTI certificate covers 22% of the way to hover onset (E5).
+
+## 6. Must-do checks before the final report
+
+1. Read **Stephan, Schmitt & Fichter (JGCD 2018)** and **Lanzon, Freddi & Longhi (JGCD 2014)**.
+2. Verify the PDF references flagged in `proposal.md` §8: the "Lee et al. 2024" Koopman FT-MPC attribution, and the RK-MPC "unstable within seconds" statement.
+3. Re-run the searches in `../literature/search-log.md` before submission.
+4. Get exact detector-delay numbers (IEEE 11235993).
+5. Wording rule: "not found in our search", never "first ever" without the qualifier.
