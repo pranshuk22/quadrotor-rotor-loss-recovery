@@ -1,0 +1,261 @@
+% ---------------------------------------------------------------------------
+% References for the EE650 progress report.
+% Entries marked "note = {...to be verified}" carry details that the project
+% has not yet checked against the primary source.
+% ---------------------------------------------------------------------------
+
+% ---- Complete rotor loss: physics and control ------------------------------
+@inproceedings{mueller2014stability,
+  author    = {Mueller, Mark W. and D'Andrea, Raffaello},
+  title     = {Stability and control of a quadrocopter despite the complete loss of one, two, or three propellers},
+  booktitle = {Proc. IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {45--52},
+  year      = {2014}
+}
+
+@article{mueller2016relaxed,
+  author  = {Mueller, Mark W. and D'Andrea, Raffaello},
+  title   = {Relaxed hover solutions for multicopters: Application to algorithmic redundancy and novel vehicles},
+  journal = {The International Journal of Robotics Research},
+  volume  = {35},
+  number  = {8},
+  pages   = {873--889},
+  year    = {2016},
+  doi     = {10.1177/0278364915596233}
+}
+
+@article{stephan2018lpv,
+  author  = {Stephan, Johannes and Schmitt, Lorenz and Fichter, Walter},
+  title   = {Linear parameter-varying control for quadrotors in case of complete actuator loss},
+  journal = {Journal of Guidance, Control, and Dynamics},
+  volume  = {41},
+  number  = {10},
+  pages   = {2232--2246},
+  year    = {2018},
+  doi     = {10.2514/1.G003441}
+}
+
+@article{lanzon2014flight,
+  author  = {Lanzon, Alexander and Freddi, Alessandro and Longhi, Sauro},
+  title   = {Flight control of a quadrotor vehicle subsequent to a rotor failure},
+  journal = {Journal of Guidance, Control, and Dynamics},
+  volume  = {37},
+  number  = {2},
+  year    = {2014}
+}
+
+@inproceedings{freddi2011feedback,
+  author    = {Freddi, Alessandro and Lanzon, Alexander and Longhi, Sauro},
+  title     = {A feedback linearization approach to fault tolerance in quadrotor vehicles},
+  booktitle = {Proc. 18th IFAC World Congress},
+  pages     = {5413--5418},
+  year      = {2011}
+}
+
+@misc{sun2020upset,
+  author = {Sun, Sihao and Baert, Matthias and Strack van Schijndel, Bram and de Visser, Coen},
+  title  = {Upset recovery control for quadrotors subjected to a complete rotor failure from large initial disturbances},
+  year   = {2020},
+  note   = {arXiv:2002.09425}
+}
+
+@article{sun2020incremental,
+  author  = {Sun, Sihao and Wang, Xuerui and Chu, Qiping and de Visser, Coen},
+  title   = {Incremental nonlinear fault-tolerant control of a quadrotor with complete loss of two opposing rotors},
+  journal = {IEEE Transactions on Robotics},
+  year    = {2020},
+  doi     = {10.1109/TRO.2020.3010626},
+  note    = {arXiv:2002.07837}
+}
+
+@article{nan2022nmpc,
+  author  = {Nan, Fang and Sun, Sihao and Foehn, Philipp and Scaramuzza, Davide},
+  title   = {Nonlinear {MPC} for quadrotor fault-tolerant control},
+  journal = {IEEE Robotics and Automation Letters},
+  year    = {2022},
+  note    = {arXiv:2109.12886}
+}
+
+@misc{kulkarni2020heliquad,
+  author = {Kulkarni, Eeshan and Sundararajan, Narasimhan and Sundaram, Suresh},
+  title  = {Heli-quad design for full-attitude fault-tolerant control under complete failure of an actuator},
+  year   = {2024},
+  note   = {arXiv:2011.07529v3}
+}
+
+@misc{allawati2026quasi,
+  author = {Al Lawati, Mohamed and Akhtar, Adeel},
+  title  = {Quasi-static fault-tolerant feedback control of a quadrotor under rotor failure with provable safety guarantees},
+  year   = {2026},
+  note   = {arXiv:2609.23918}
+}
+
+@misc{simha2017geometric,
+  author = {Simha and Vadgama and Raha},
+  title  = {A geometric approach to rotor failure tolerant trajectory tracking control design for a quadrotor},
+  year   = {2017},
+  note   = {arXiv:1704.00327}
+}
+
+@article{ast2024motionplanning,
+  key     = {AST2024},
+  title   = {Fault tolerant motion planning for a quadrotor subject to complete rotor failure},
+  journal = {Aerospace Science and Technology},
+  year    = {2024},
+  note    = {Author list to be verified}
+}
+
+@article{ieee2025mml1,
+  key     = {IEEE2025},
+  title   = {Failure detection and recovery for quadrotors in the presence of severe rotor failures with multiple model {$\mathcal{L}_1$} adaptive controller},
+  journal = {IEEE Xplore document 11235993},
+  year    = {2025},
+  note    = {Author list to be verified}
+}
+
+% ---- Koopman operator, EDMD and residual learning ----------------------------
+@article{williams2015edmd,
+  author  = {Williams, Matthew O. and Kevrekidis, Ioannis G. and Rowley, Clarence W.},
+  title   = {A data-driven approximation of the {K}oopman operator: Extending dynamic mode decomposition},
+  journal = {Journal of Nonlinear Science},
+  volume  = {25},
+  pages   = {1307--1346},
+  year    = {2015}
+}
+
+@article{korda2018linear,
+  author  = {Korda, Milan and Mezi{\'c}, Igor},
+  title   = {Linear predictors for nonlinear dynamical systems: {K}oopman operator meets model predictive control},
+  journal = {Automatica},
+  volume  = {93},
+  pages   = {149--160},
+  year    = {2018}
+}
+
+@article{brunton2016koopman,
+  author  = {Brunton, Steven L. and Brunton, Bingni W. and Proctor, Joshua L. and Kutz, J. Nathan},
+  title   = {Koopman invariant subspaces and finite linear representations of nonlinear dynamical systems for control},
+  journal = {PLoS ONE},
+  volume  = {11},
+  number  = {2},
+  pages   = {e0150171},
+  year    = {2016}
+}
+
+@inproceedings{todde2026residual,
+  author    = {Todde, Edoardo and Martini, Simone and Rizzo, Alessandro and Valavanis, Kimon P.},
+  title     = {Residual {K}oopman-based model predictive control of quadrotors},
+  booktitle = {Proc. International Conference on Unmanned Aircraft Systems (ICUAS)},
+  pages     = {50--56},
+  year      = {2026},
+  doi       = {10.1109/ICUAS69441.2026.11598621}
+}
+
+@inproceedings{martini2025kmpc,
+  author    = {Martini, S. and Todde, E. and Stefanovic, M. and Rutherford, M. J. and Rizzo, A. and Valavanis, K. P.},
+  title     = {{K}oopman-based model predictive control of quadrotors},
+  booktitle = {Proc. International Conference on Unmanned Aircraft Systems (ICUAS)},
+  pages     = {207--213},
+  year      = {2025}
+}
+
+@article{narayanan2023se3,
+  author  = {Narayanan, S. S. and Tellez-Castro, D. and Sutavani, S. and Vaidya, U.},
+  title   = {{SE}(3) {K}oopman-{MPC}: Data-driven learning and control of quadrotor {UAV}s},
+  journal = {IFAC-PapersOnLine},
+  volume  = {56},
+  number  = {3},
+  pages   = {607--612},
+  year    = {2023}
+}
+
+@misc{narayanan2026rkmpc,
+  author = {Narayanan and Vaidya},
+  title  = {{RK-MPC}: Residual {K}oopman model predictive control for quadruped locomotion in offroad environments},
+  year   = {2026},
+  note   = {arXiv:2604.04221}
+}
+
+@article{bruder2025residual,
+  author  = {Bruder, D. and Bombara, D. and Wood, R. J.},
+  title   = {A {K}oopman-based residual modeling approach for the control of a soft robot arm},
+  journal = {The International Journal of Robotics Research},
+  year    = {2025}
+}
+
+@misc{fu2025residual,
+  author = {Fu and others},
+  title  = {Residual {K}oopman model predictive control for enhanced vehicle dynamics with small on-track data input},
+  year   = {2025},
+  note   = {arXiv:2507.18396; author list to be verified}
+}
+
+@misc{lee2024koopmanftmpc,
+  author = {Lee and others},
+  title  = {{K}oopman fault-tolerant model predictive control for multirotor with actuator fault},
+  year   = {2024},
+  note   = {Cited in the project proposal; attribution to be verified}
+}
+
+@article{lee2024koopmanfdi,
+  author  = {Lee and others},
+  title   = {Data-driven fault detection and isolation for multirotor system using {K}oopman operator},
+  journal = {Journal of Intelligent \& Robotic Systems},
+  year    = {2024},
+  note    = {Author list to be verified}
+}
+
+% ---- Saturation, LMIs, set-based fault-tolerant control -----------------------
+@book{hu2001saturation,
+  author    = {Hu, Tingshu and Lin, Zongli},
+  title     = {Control Systems with Actuator Saturation: Analysis and Design},
+  publisher = {Birkh{\"a}user},
+  address   = {Boston},
+  year      = {2001}
+}
+
+@book{boyd1994lmi,
+  author    = {Boyd, Stephen and El Ghaoui, Laurent and Feron, Eric and Balakrishnan, Venkataramanan},
+  title     = {Linear Matrix Inequalities in System and Control Theory},
+  publisher = {SIAM},
+  address   = {Philadelphia},
+  year      = {1994}
+}
+
+@book{stoican2013set,
+  author    = {Stoican, Florin and Olaru, Sorin},
+  title     = {Set-Theoretic Fault-Tolerant Control in Multisensor Systems},
+  publisher = {Wiley-ISTE},
+  year      = {2013}
+}
+
+@article{shin2006performance,
+  author  = {Shin, Jong-Yeob and Belcastro, Christine M.},
+  title   = {Performance analysis on fault tolerant control system},
+  journal = {IEEE Transactions on Control Systems Technology},
+  volume  = {14},
+  number  = {5},
+  pages   = {920--925},
+  year    = {2006}
+}
+
+% ---- Tools ----------------------------------------------------------------------
+@article{diamond2016cvxpy,
+  author  = {Diamond, Steven and Boyd, Stephen},
+  title   = {{CVXPY}: A {P}ython-embedded modeling language for convex optimization},
+  journal = {Journal of Machine Learning Research},
+  volume  = {17},
+  number  = {83},
+  pages   = {1--5},
+  year    = {2016}
+}
+
+@article{stellato2020osqp,
+  author  = {Stellato, Bartolomeo and Banjac, Goran and Goulart, Paul and Bemporad, Alberto and Boyd, Stephen},
+  title   = {{OSQP}: An operator splitting solver for quadratic programs},
+  journal = {Mathematical Programming Computation},
+  volume  = {12},
+  number  = {4},
+  pages   = {637--672},
+  year    = {2020}
+}
