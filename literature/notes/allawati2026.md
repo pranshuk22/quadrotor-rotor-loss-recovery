@@ -12,4 +12,4 @@
 
 ## Use in v4
 - Example of guarantee-bearing work that **assumes zero detection delay**, which supports C1.
-- Note: an automated web summary wrongly said this paper handles detection delay and LPV. **It does not.**
+- Note: a secondary summary of this paper wrongly said it handles detection delay and LPV. **It does not.**

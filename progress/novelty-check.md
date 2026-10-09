@@ -87,7 +87,7 @@ Suggested: "This applies LMI certificates with bounded learned error, as in SafE
 
 ## 4. Search log (2026-10-10)
 
-Tools: WebSearch (standard and extended), WebFetch, Semantic Scholar Graph API (citations, match), OpenAlex API (abstracts, full-text search), Crossref API (metadata, reference lists), arXiv API, HAL API, figshare API. PDFs were downloaded to `/private/tmp/nc_pdfs` and `/private/tmp/nc_basak` and read with `pdftotext`.
+Sources: web search engines, Semantic Scholar Graph API (citations, match), OpenAlex API (abstracts, full-text search), Crossref API (metadata, reference lists), arXiv API, HAL API, figshare API. PDFs were downloaded to `/private/tmp/nc_pdfs` and `/private/tmp/nc_basak` and read with `pdftotext`.
 
 **Web searches**
 1. Koopman quadrotor complete rotor failure spinning (extended)

@@ -22,7 +22,7 @@ Purpose: record what was searched, so novelty claims can be re-checked and defen
 | 14 | Yang Ozay CDC 2017 FTC detection delay invariant | Not found (PDF link unreachable) | n/a |
 | 15 | "Fault tolerant motion planning for a quadrotor subject to complete rotor failure" | UNIST record; AST Nov 2024 | Not overlapping |
 
-**Primary-source verification done this session:** full-text grep/read of arXiv 2002.09425, 2609.23918, 2109.12886, 2011.07529 and 2002.07837, plus a full read of Todde et al. 2026 (local PDF). A web-tool summary of 2609.23918 claimed it handled detection delay and LPV; **the actual text contradicts that** (it assumes instantaneous transition). Always check primary text.
+**Primary-source verification done this session:** full-text grep/read of arXiv 2002.09425, 2609.23918, 2109.12886, 2011.07529 and 2002.07837, plus a full read of Todde et al. 2026 (local PDF). A secondary summary of 2609.23918 claimed it handled detection delay and LPV; **the actual text contradicts that** (it assumes instantaneous transition). Always check primary text.
 
 ## Earlier sessions (from v3 notes)
 
