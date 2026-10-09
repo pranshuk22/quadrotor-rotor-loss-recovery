@@ -20,7 +20,7 @@
 
 \title{Fault-Tolerant Control of a Quadrotor\\ After Complete Rotor Loss\\[0.3em]
 \Large Residual Koopman MPC and Certified\\ Fault-Detection-Delay Budgets\\[0.8em]
-\large EE650 Basics of Modern Control Systems: Progress Report 1}
+\large EE650 Basics of Modern Control Systems: Progress Report}
 \author{\begin{tabular}{ll}
 Pranshu Kumar (220799) & Mudita Jain (220675)\\
 Prashant Gupta (220803) & Aarush Singh Kushwaha (230019)
@@ -31,7 +31,7 @@ Prashant Gupta (220803) & Aarush Singh Kushwaha (230019)
 \maketitle
 
 \begin{abstract}
-When one rotor of a quadrotor fails completely, the vehicle can no longer hover level. Its only steady state is a constant spin about a tilted body axis, the \emph{relaxed hover} of Mueller and D'Andrea. This project studies how to recover a quadrotor into this state reliably, in simulation. We use the known physics of the spinning vehicle as a backbone and learn only its mismatch with a Koopman (EDMDc) model inside model predictive control. We also ask how long fault detection may take before recovery can no longer be guaranteed. This report covers the first phase of the work. We built a simulator of the vehicle used by Mueller and D'Andrea and validated it against three published papers. It reproduces their two-rotor and three-rotor-loss equilibria to every published digit and five hover solutions of their detailed model to within 0.7\%. We analysed controllability and observability and designed LQR baselines. The residual Koopman model gives the lowest multi-step prediction error on the training plant and needs less data than a full-state Koopman model, and a residual-corrected MPC removes about one third of a steady altitude error. The learned models do not yet generalize to an unseen plant. In our simulation of the published model, the published recovery strategy meets a strict safety criterion only up to about 10\,ms of detection delay, while a fast reported detector needs 30--130\,ms. A first saturation-aware LMI certificate covers 22\% of the way from the equilibrium to the state right after a failure in hover. We close with the limitations and the plan for the remaining weeks.
+When one rotor of a quadrotor fails completely, the vehicle can no longer hover level. Its only steady state is a constant spin about a tilted body axis, the \emph{relaxed hover} of Mueller and D'Andrea. This project studies how to recover a quadrotor into this state reliably, in simulation. We use the known physics of the spinning vehicle as a backbone and learn only its mismatch with a Koopman (EDMDc) model inside model predictive control. We also ask how long fault detection may take before recovery can no longer be guaranteed. This report covers the first phase of the work. We built a simulator of the vehicle used by Mueller and D'Andrea and validated it against three published papers: it reproduces their two-rotor and three-rotor-loss equilibria to every published digit, five hover solutions of their detailed model within 4\%, and the spin-up time of their flight within about 4\%. We analysed controllability and observability and designed LQR baselines. For horizons of 100\,ms and longer, the residual Koopman model is the most accurate predictor on the training plant, and it needs less data than a full-state Koopman model; a residual-corrected MPC reduces a steady altitude error caused by model mismatch by one third. The learned models do not yet generalize to an unseen plant. In our simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about 12\,ms, and below 0.5 beyond about 19\,ms, while fast detectors need 30 to 130\,ms. A first saturation-aware LMI certificate covers 22\% of the way from the equilibrium to the state right after a failure in hover. We close with the limitations and the plan for the remaining weeks.
 \end{abstract}
 
 \tableofcontents
@@ -44,9 +44,9 @@ Quadrotors have no actuator redundancy. If one rotor stops, the remaining three 
 
 Recovering a real vehicle into this state raises two connected problems. The first is model accuracy. The physics model captures the dominant spinning motion but misses effects such as thrust loss at high spin rate, parameter errors and motor dynamics. A natural remedy is to keep the physics model and learn only its mismatch, then use the corrected model inside model predictive control (MPC). Koopman-operator methods suit this, because they give linear predictors that keep the MPC problem convex~\cite{korda2018linear,williams2015edmd}. Residual Koopman models of this kind exist for healthy quadrotors and other robots~\cite{todde2026residual,bruder2025residual,narayanan2026rkmpc}, but we did not find them applied to the spinning regime after complete rotor loss.
 
-The second problem is timing. A fault detector needs time to notice the failure. Fast detectors for propeller loss report delays of 30--130\,ms~\cite{strack2021fast}. During that time the normal controller keeps flying a vehicle that has lost a rotor, and the failure-mode controller must then capture the vehicle from wherever it has drifted. Most recovery methods with formal guarantees assume that detection is instantaneous~\cite{simha2017geometric,allawati2026quasi}. Başak and Prempain prove stability for a switched linear model that includes a fixed detection delay~\cite{basak2015switching,basak2018thesis}, and passive schemes avoid the detection step altogether~\cite{ke2023uniform,chen2025learning}. We did not find a certified \emph{maximum} tolerable detection delay that accounts for thrust saturation and the drift of the undetected phase.
+The second problem is timing. A fault detector needs time to notice the failure. Fast detectors for propeller loss report delays of 30 to 130\,ms~\cite{strack2021fast}. During that time the normal controller keeps flying a vehicle that has lost a rotor, and the failure-mode controller must then capture the vehicle from wherever it has drifted. Most recovery methods with formal guarantees assume that detection is instantaneous~\cite{simha2017geometric,allawati2026quasi}. Ba\c{s}ak and Prempain prove stability for a switched linear model that includes a fixed detection delay~\cite{basak2015switching,basak2018thesis}, and passive schemes avoid the detection step altogether~\cite{ke2023uniform,chen2025learning}. We did not find a certified \emph{maximum} tolerable detection delay that accounts for thrust saturation and the drift of the undetected phase.
 
-This project addresses both problems together. Its central question is whether a physics-informed residual Koopman model gives a better predictor for MPC than the physics model alone or a full-state Koopman model. Its second aim is a certified bound $\tau^\star$ on the tolerable detection delay. The two are linked: every controller that captures the vehicle after detection, whether LQR, analytical MPC or residual-Koopman MPC, can be compared by the delay it tolerates. The learned residual is clipped to a known bound, which also allows a bounded-disturbance certificate for the residual-corrected loop.
+This project addresses both problems together. Its central question is whether a physics-informed residual Koopman model gives a better predictor for MPC than the physics model alone or a full-state Koopman model. Its second aim is a certified bound $\tau^\star$ on the tolerable detection delay. The two are linked: every controller that captures the vehicle after detection, whether LQR, analytical MPC or residual-Koopman MPC, can be compared by the delay it tolerates.
 
 \paragraph{Work reported here.} (i) A simulator of the Mueller--D'Andrea vehicle, validated against three papers (Section~\ref{sec:validation}). (ii) Linear analysis and LQR baselines (Section~\ref{sec:linear}). (iii) Residual Koopman predictors and MPC (Section~\ref{sec:koopman}). (iv) The effect of detection delay and a first LMI certificate (Section~\ref{sec:delay}). Section~\ref{sec:limits} lists the limitations and Section~\ref{sec:plan} the remaining work. Everything is in simulation; no hardware is used.
 
@@ -55,7 +55,7 @@ This project addresses both problems together. Its central question is whether a
 %=====================================================================
 \paragraph{Complete rotor loss.} Freddi, Lanzon and Longhi gave up yaw control and stabilised a horizontal spin with feedback linearization and $H_\infty$ loop shaping~\cite{freddi2011feedback,lanzon2014flight}. Mueller and D'Andrea derived the relaxed hover for one, two and three lost propellers, proved controllability of its linearization and validated it in flight~\cite{mueller2014stability,mueller2016relaxed}. Stephan et al.\ designed an LPV controller scheduled on the yaw rate to cover the transient after the loss~\cite{stephan2018lpv}, and Khattab et al.\ combined an LPV reduced-attitude model with sliding-mode control~\cite{khattab2019lpv}. Sun et al.\ used incremental nonlinear dynamic inversion at high speed~\cite{sun2020incremental} and a quadratic-programming allocation for recovery from large upsets~\cite{sun2020upset}. Nan et al.\ used nonlinear MPC with per-rotor thrust limits~\cite{nan2022nmpc}, and Sun, Zhang and Lang learned an unknown complete rotor failure inside nonlinear MPC~\cite{sun2022ftmpc}. Ke, Cai and Quan proposed a passive controller that tolerates one to three rotor failures without detection~\cite{ke2023uniform}.
 
-\paragraph{Guarantees and detection delay.} Simha et al.\ give an analytic region of attraction for a geometric controller, with the fault assumed to be known from the start~\cite{simha2017geometric}. Al Lawati and Akhtar prove path invariance under quasi-static feedback and state that they assume a reliable fault-detection module and an instantaneous transition~\cite{allawati2026quasi}. Başak and Prempain model the recovery as a switched system and use multiple Lyapunov functions and dwell-time conditions that include a fixed detection delay; their analysis uses a linearized model without thrust saturation and does not compute the largest tolerable delay~\cite{basak2015switching,basak2018thesis}. Qi et al.\ compute a recoverable set at the relaxed hover with sum-of-squares programming and rotor-speed limits~\cite{qi2016recoverable}. Reported tolerances are empirical: 180\,ms for a variable-pitch vehicle~\cite{kulkarni2020heliquad}, and recovery with about 0.1--0.18\,s of detection delay for nonlinear controllers in simulation and flight~\cite{chen2025learning,zhou2025rotorfailureaware}. Fast detectors report 30--130\,ms~\cite{strack2021fast} and about 45\,ms~\cite{yang2026mml1}. Set-theoretic fault-tolerant control uses invariant and reachable sets for detection and reconfiguration in general~\cite{stoican2013set}, and detection delay has been analysed for general fault-tolerant systems~\cite{shin2006performance}. A motion planner based on backward reachability exists for the failed quadrotor after the fault is handled~\cite{ast2024motionplanning}.
+\paragraph{Guarantees and detection delay.} Simha et al.\ give an analytic region of attraction for a geometric controller, with the fault assumed to be known from the start~\cite{simha2017geometric}. Al Lawati and Akhtar prove path invariance under quasi-static feedback and state that they assume a reliable fault-detection module and an instantaneous transition~\cite{allawati2026quasi}. Ba\c{s}ak and Prempain model the recovery as a switched system and use multiple Lyapunov functions and dwell-time conditions that include a fixed detection delay; their analysis uses a linearized model without thrust saturation and does not compute the largest tolerable delay~\cite{basak2015switching,basak2018thesis}. Qi et al.\ compute a recoverable set at the relaxed hover with sum-of-squares programming and rotor-speed limits~\cite{qi2016recoverable}. Reported tolerances are empirical: 180\,ms for a variable-pitch vehicle~\cite{kulkarni2020heliquad}, and recovery with about 0.1 to 0.18\,s of detection delay for nonlinear controllers in simulation and flight~\cite{chen2025learning,zhou2025rotorfailureaware}. Fast detectors report 30 to 130\,ms~\cite{strack2021fast} and about 45\,ms~\cite{yang2026mml1}. Set-theoretic fault-tolerant control uses invariant and reachable sets for detection and reconfiguration in general~\cite{stoican2013set}, and detection delay has been analysed for general fault-tolerant systems~\cite{shin2006performance}. A motion planner based on backward reachability exists for the failed quadrotor after the fault is handled~\cite{ast2024motionplanning}.
 
 \paragraph{Koopman models and residual learning.} EDMD approximates the Koopman operator on a dictionary of observables~\cite{williams2015edmd}. With inputs it gives linear predictors for MPC~\cite{korda2018linear,brunton2016koopman}. Koopman MPC exists for healthy quadrotors~\cite{narayanan2023se3,martini2025kmpc}. Koopman-based fault-tolerant MPC and fault detection address partial loss of effectiveness, with all rotors still working~\cite{lee2024koopmanftmpc,lee2024koopmanfdi}. Physics models corrected by learned Koopman residuals exist for soft robots, ground vehicles, quadrupeds and healthy quadrotors~\cite{bruder2025residual,fu2025residual,narayanan2026rkmpc,todde2026residual,jin2025dekc}. Todde et al.\ evaluate the residual outside the quadratic program and inject it as a measured disturbance, which keeps the problem convex, and list formal robustness guarantees as future work~\cite{todde2026residual}. LMI-based controller design with bounded Koopman approximation errors is developed in SafEDMD~\cite{strasser2024safedmd}. We did not find residual Koopman models applied to the complete-loss, spinning-equilibrium regime, nor a certified maximum tolerable detection delay under thrust saturation. We state this as the outcome of our search, not as proof that no such work exists.
 
@@ -70,14 +70,14 @@ We follow the model of~\cite{mueller2014stability}. The body frame has $z$ along
   \qquad \omega_\Sigma = \textstyle\sum_i \omega_i, \label{eq:rot}\\
   \vect\tau &= \big(\,l(f_2-f_4),\; l(f_3-f_1),\; \kappa_\tau(f_1-f_2+f_3-f_4) - \gamma r\,\big). \nonumber
 \end{align}
-Here $I^B$ is the body inertia, $I^T = I^B + 4I^P$ includes the propellers, and $\gamma$ is a linear yaw-drag coefficient. As in the paper, the term $I^P\dot{\vect\omega}$ is neglected. Each motor follows its command with a first-order lag, $\dot f_i = (\operatorname{sat}(u_i)-f_i)/\sigma$. A running motor produces $f_i\in[f_{\min}, f_{\max}]$, and a command $u_i\le 0$ stops it. A failed rotor produces no thrust. The attitude is stored as a quaternion and integrated with RK4 at 0.5--1\,ms. Controllers run at 1--5\,ms with a zero-order hold.
+Here $I^B$ is the body inertia, $I^T = I^B + 4I^P$ includes the propellers, and $\gamma$ is a linear yaw-drag coefficient. As in the paper, the term $I^P\dot{\vect\omega}$ is neglected. Each motor follows its command with a first-order lag, $\dot f_i = (\operatorname{sat}(u_i)-f_i)/\sigma$. A running motor produces $f_i\in[f_{\min}, f_{\max}]$, and a command $u_i\le 0$ stops it. A failed rotor produces no thrust. The attitude is stored as a quaternion and integrated with a fixed-step fourth-order Runge--Kutta method at 0.5 to 1\,ms. Controllers run at 1 to 5\,ms with a zero-order hold.
 
 \paragraph{Reduced attitude.} After the failure we control only the direction $\vect n = R^\top\vect e_3$, which is the inertial ``up'' direction seen from the body. It obeys
 \begin{equation}
   \dot{\vect n} = -\vect\omega\times\vect n .
 \end{equation}
 
-\paragraph{Relaxed hover.} An equilibrium has constant $\vect\omega$ and $\vect n$ in the body frame. This requires $\dot{\vect\omega}=0$ in~\eqref{eq:rot}, $\vect n \parallel \vect\omega$ (so that $\dot{\vect n}=0$), and $f_\Sigma n_z = mg$ for zero mean vertical acceleration. With rotor 4 lost, $f_1=f_3$ and $f_2=\rho f_1$, the rate equations have a closed form: $p=0$, $r=\kappa_\tau(f_1-f_2+f_3)/\gamma$ and $q = l f_2/\big((I^T_{zz}-I^T_{xx})r + I^P_{zz}\omega_\Sigma\big)$. A one-dimensional root search on $f_1$ then gives the equilibrium.
+\paragraph{Relaxed hover.} An equilibrium has constant $\vect\omega$ and $\vect n$ in the body frame. This requires $\dot{\vect\omega}=0$ in~\eqref{eq:rot}, $\vect n \parallel \vect\omega$ (so that $\dot{\vect n}=0$), and $f_\Sigma n_z = mg$ for zero mean vertical acceleration. With rotor 4 lost, $f_1=f_3$ and $f_2=\rho f_1$, the rate equations have a closed form: $p=0$, $r=\kappa_\tau(f_1-f_2+f_3)/\gamma$ and $q = l f_2/\big((I^T_{zz}-I^T_{xx})r + I^P_{zz}\omega_\Sigma\big)$. A one-dimensional root search on $f_1$ then gives the equilibrium. For the design ratio $\rho=0.5$, $\vect f = (2.04, 1.02, 2.04, 0)$\,N, the vehicle spins at 19.6\,rad/s about its axis $\bar{\vect n}$, and this axis is tilted by 16$^\circ$ from the body $z$ axis.
 
 \subsection{Parameters and truth plants}
 All parameters are those of the vehicle in~\cite[Sec.~V-A]{mueller2014stability} (Table~\ref{tab:params}). For the learning experiments we also use \emph{truth plants} that contain effects the nominal model lacks. The first is a loss of thrust efficiency at high body rate, $\eta = 1 - k\|\vect\omega\|^2$; the paper reports less thrust than expected while spinning. The others are an inertia error and a different motor time constant. Family A is used for training. Family B uses different magnitudes and is held out.
@@ -92,12 +92,13 @@ Quantity & Symbol & Value \\
 Mass, arm length & $m$, $l$ & 0.50\,kg, 0.17\,m \\
 Total inertia & $I^T_{xx}$, $I^T_{zz}$ & $3.2$, $5.5\times10^{-3}$\,kg\,m$^2$ \\
 Propeller inertia & $I^P_{zz}$ & $1.5\times10^{-5}$\,kg\,m$^2$ \\
-Thrust, torque coefficients & $\kappa_f$, $\kappa_\tau$ & $6.41\times10^{-6}$\,N\,s$^2$, 0.0169\,m \\
-Yaw drag & $\gamma$ & $2.75\times10^{-3}$\,N\,m\,s \\
+Thrust coefficient & $\kappa_f$ & $6.41\times10^{-6}$\,N\,s$^2$/rad$^2$ \\
+Torque-to-thrust ratio & $\kappa_\tau$ & 0.0169\,m \\
+Yaw drag & $\gamma$ & $2.75\times10^{-3}$\,N\,m\,s/rad \\
 Thrust range, motor lag & $[f_{\min},f_{\max}]$, $\sigma$ & [0.2, 3.8]\,N, 15\,ms \\
 \midrule
-Truth family A & & $k=1.5\times10^{-4}$, $I_{xx}\times1.08$, $I_{zz}\times0.95$, $\sigma=20$\,ms \\
-Truth family B (held out) & & $k=2.5\times10^{-4}$, $I_{xx}\times0.94$, $I_{zz}\times1.06$, $\sigma=12$\,ms \\
+Family A (training) & & $k=1.5\times10^{-4}$\,s$^2$/rad$^2$, $I_{xx}\times1.08$, $I_{zz}\times0.95$, $\sigma=20$\,ms \\
+Family B (held out) & & $k=2.5\times10^{-4}$\,s$^2$/rad$^2$, $I_{xx}\times0.94$, $I_{zz}\times1.06$, $\sigma=12$\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -105,7 +106,7 @@ Truth family B (held out) & & $k=2.5\times10^{-4}$, $I_{xx}\times0.94$, $I_{zz}\
 %=====================================================================
 \section{Model validation}\label{sec:validation}
 %=====================================================================
-We validated the simulator in two ways. First, 45 automated tests compare it with hand-derived results: free fall; thrust direction; closed-form torque-free precession; conservation of inertial angular momentum and kinetic energy (to $10^{-8}$); reduced-attitude kinematics against the matrix exponential; the first-order yaw spin-up; the motor-lag step response; the fourth-order convergence of RK4; and an independent transcription of the paper's rate equations. Second, we compared it with published numbers from three papers (Table~\ref{tab:validation}).
+We validated the simulator in two ways. First, automated tests compare it with hand-derived results: free fall; thrust direction; closed-form torque-free precession; conservation of inertial angular momentum and kinetic energy (to $10^{-8}$); reduced-attitude kinematics against the matrix exponential; the first-order yaw spin-up; the motor-lag step response; the fourth-order convergence of the integrator; and an independent transcription of the paper's rate equations. Second, we compared it with published numbers from three papers (Table~\ref{tab:validation}).
 
 \begin{table}[h]
 \centering\small
@@ -114,18 +115,19 @@ We validated the simulator in two ways. First, 45 automated tests compare it wit
 \toprule
 Source & What was compared & Result \\
 \midrule
-ICRA 2014~\cite{mueller2014stability} & Two-rotor-loss equilibrium, eqs.~(57)--(59) & $f=2.453$\,N, $\omega_1=-618.6$\,rad/s, $r=30.14$\,rad/s vs.\ 2.45, $-619$, 30.1: all digits (${\le}0.14\%$) \\
-ICRA 2014 & Three-rotor-loss equilibrium, eqs.~(62)--(64) & $\vect\omega=(14.68, 0, 32.99)$ vs.\ (14.7, 0, 33.0), $\vect n=(0.407,0,0.914)$ vs.\ (0.41, 0, 0.91): all digits \\
+ICRA 2014~\cite{mueller2014stability} & Two-rotor-loss equilibrium, eqs.~(57) to (59) & $f=2.453$\,N, $\omega_1=-618.6$\,rad/s, $r=30.14$\,rad/s against 2.45, $-619$, 30.1: all digits (${\le}0.14\%$) \\
+ICRA 2014 & Three-rotor-loss equilibrium, eqs.~(62) to (64) & $\vect\omega=(14.68, 0, 32.99)$ against (14.7, 0, 33.0), $\vect n=(0.407,0,0.914)$ against (0.41, 0, 0.91): all digits \\
 ICRA 2014 & One-rotor-loss equilibrium, $\rho=0.5$ & $f$, $r$, $n_z$ within 0.5\%; $q$ and $n_y$ 6\% lower (see text) \\
-ICRA 2014 & Coupling constant $\bar a$, eq.~(28); controllability loss, eq.~(39) & Exact; controllability rank drops from 7 to 6 with $p$ uncontrollable exactly when $\bar a=0$ \\
-IJRR 2016~\cite{mueller2016relaxed} & Five hover solutions (no failure; one; two opposing; two adjacent; three rotors lost), independent implementation of their model & 0--4\% with the published parameters; within 0.7\% with $I_{xx}=2.75\times10^{-3}$, inside the rounding of the published $2.7\times10^{-3}$ \\
+ICRA 2014 & Fig.~3: minima over $\rho$ & Values within 2\%, locations within about 3\% \\
+ICRA 2014 & Coupling constant $\bar a$, eq.~(28); controllability loss, eq.~(39) & Exact; controllability rank drops from 7 to 6, with $p$ uncontrollable, exactly when $\bar a=0$ \\
+IJRR 2016~\cite{mueller2016relaxed} & Five hover solutions (no failure; one; two opposing; two adjacent; three rotors lost), independent implementation of their model & Body-rate vector within 4\% with the published parameters \\
 Sun et al.~\cite{sun2020incremental} & Bebop 2, two-rotor loss, eq.~(60) & Equal to the paper's formula; the paper's quoted values are 1.5\% below its own formula \\
-Flight data~\cite{mueller2014stability,mueller2016relaxed} & Time to spin up to 10\,rad/s on two rotors & Model 0.80\,s vs.\ flight 0.62\,s: \textbf{model about 30\% slower} \\
+Flight data~\cite{mueller2014stability} & Time to spin up to 10\,rad/s on two rotors at the flight thrust (2.95\,N, Fig.~4) & 0.647\,s against 0.62\,s in flight (4\%) \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Two points need comment. In the one-rotor case, the paper's published values do not satisfy its own roll-rate equation: they leave a residual torque of $-0.011$\,N\,m. Its other two equilibria match exactly with the same parameters, so we treat this as an inconsistency in that one published case. The IJRR model computes thrust from the propeller speed relative to the air, $\Omega_i + r$, and uses quadratic drag. We implemented it separately. With these effects switched off, it reduces exactly to our simulator, which the tests confirm. The remaining gap is with flight data: the real vehicle spun up faster than either model predicts, and the IJRR authors report a measured spin rate 20\% below their simulation. The delay results of Section~\ref{sec:delay} depend on spin-up speed and must be read with this in mind.
+Three points need comment. In the one-rotor case, the paper's published values do not satisfy its own roll-rate equation: they leave a residual torque of $-0.011$\,N\,m. Its other two equilibria match exactly with the same parameters, so we treat this as an inconsistency in that one published case. The IJRR model computes thrust from the propeller speed relative to the air, $\Omega_i + r$, and uses quadratic drag. We implemented it separately; with these effects switched off, it reduces exactly to our simulator, which the tests confirm. As a sensitivity check, an inertia $I_{xx}=2.75\times10^{-3}$\,kg\,m$^2$ (the upper end of the rounding interval of the published value) brings all five cases within 0.7\%; because this value was chosen to fit the same cases, it is not an independent validation. Finally, the spin-up time depends strongly on the thrust of the two remaining rotors: at the thrust used in flight the model is within about 4\% of the flight, while at $mg/2$ it would take 0.81\,s. The delay results of Section~\ref{sec:delay} are therefore reported for both thrusts. The papers' models over-predict the steady spin rate in flight by about 20\%~\cite{mueller2016relaxed}.
 
 %=====================================================================
 \section{Linear analysis and baseline control}\label{sec:linear}
@@ -134,32 +136,32 @@ Two points need comment. In the one-rotor case, the paper's published values do 
 At hover the healthy vehicle has 12 states and four inputs. After the failure we use $\vect s = (p,q,r,n_x,n_y,z,v_z)$ with inputs $(f_1,f_2,f_3)$. These equations are autonomous in body coordinates, so their linearization about the relaxed hover is time invariant. Both models are Jacobians of the exact equations, checked against finite differences. The failed model has open-loop eigenvalues $\pm10.10j$ (gyroscopic coupling $\bar a$), $\pm19.56j$ (equal to $\|\bar{\vect\omega}\|$), $-0.51$ (yaw drag) and a double integrator (altitude). The exact coefficient of $n_y$ in $\dot n_x$ is $\bar r + \bar q\bar n_y/\bar n_z = 20.3$; the simplified matrix in~\cite{mueller2014stability} uses $\bar r = 18.8$.
 
 \subsection{Controllability and observability}
-Both models are controllable: the controllability matrix has full rank and every mode passes the PBH test. Table~\ref{tab:obs} lists observability for four sensor sets of the failed vehicle. Gyros alone see neither tilt nor altitude. The relaxed hover is tilted ($\bar n_y\neq0$), so the vertical acceleration depends on tilt to first order. Gyro plus barometer therefore makes the full state observable. The smallest eigenvalue of the 1\,s observability Gramian is, however, about 2,700 times smaller than with a direct tilt measurement. This is a structural remark, not a practical estimator; practical estimators for the spinning vehicle use the accelerometer and vision~\cite{sun2021vision,solanki2022attitude}. For the healthy vehicle, gyro plus position leaves the heading unobservable, as expected.
+Both models are controllable: the controllability matrix has full rank and every mode passes the PBH test. Table~\ref{tab:obs} lists observability for four sensor sets of the failed vehicle. To make the observability Gramians comparable, each output is divided by an assumed sensor noise level (gyro 0.005\,rad/s, tilt estimate 0.01, barometer 0.1\,m). Gyros alone see neither tilt nor altitude. The relaxed hover is tilted ($\bar n_y\neq0$), so the vertical acceleration depends on tilt to first order, and gyro plus barometer makes the full state observable. For these noise levels, however, the smallest eigenvalue of the 1\,s Gramian is about 2,700 times smaller than with a direct tilt measurement. This is a structural remark, not a practical estimator; practical estimators for the spinning vehicle use the accelerometer and vision~\cite{sun2021vision,solanki2022attitude}. For the healthy vehicle, gyro plus position leaves the heading unobservable, as expected.
 
 \begin{table}[h]
 \centering\small
-\caption{Observability of the failed vehicle's linear model (7 states).}\label{tab:obs}
+\caption{Observability of the failed vehicle's linear model (7 states). Gramian computed with noise-normalized outputs.}\label{tab:obs}
 \begin{tabular}{lccc}
 \toprule
 Sensors & Rank & Unobservable & $\lambda_{\min}$ of $W_o(1\,\mathrm{s})$ \\
 \midrule
 Gyro $(p,q,r)$ & 3/7 & $n_x, n_y, z, v_z$ & 0 \\
 Gyro + tilt estimate $(n_x, n_y)$ & 5/7 & $z, v_z$ & 0 \\
-Gyro + barometer $(z)$ & 7/7 & none & $2.4\times10^{-5}$ \\
-Gyro + tilt + barometer & 7/7 & none & $6.6\times10^{-2}$ \\
+Gyro + barometer $(z)$ & 7/7 & none & $2.4\times10^{-3}$ \\
+Gyro + tilt + barometer & 7/7 & none & $6.6$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{LQR baselines}
-The healthy LQR uses Bryson weights. The failure-mode LQR uses the weights of~\cite{mueller2014stability} (1 on $p,q$; 20 on $n_x,n_y$; 1\,N$^{-2}$ on the inputs). We add the motor states and altitude, and reconstruct the motor states from the controller's own commands. Table~\ref{tab:lqr} gives the closed-loop properties. On the nonlinear model with motor lag and thrust limits, the failure LQR returns from a perturbed start: tilt and altitude settle in 1--2\,s and the spin rate in about 4\,s (Fig.~\ref{fig:lqr}). The input-delay margin of the failure LQR is only 18\,ms, against 40\,ms for the healthy one.
+The healthy LQR uses Bryson weights. The failure-mode LQR uses the weights of~\cite{mueller2014stability} (1 on $p,q$; 20 on $n_x,n_y$; 1\,N$^{-2}$ on the inputs). We add the motor states and altitude; the motor states are not measured, so the controller reconstructs them by filtering its own commands. Table~\ref{tab:lqr} gives the closed-loop properties. On the nonlinear model with motor lag and thrust limits, the failure LQR returns from a perturbed start (Fig.~\ref{fig:lqr}); the tilt settles within 0.01 in 2.1\,s, the altitude within 5\,cm in 1.8\,s, and the yaw rate within 0.5\,rad/s in 2.5\,s. The least-damped mode is the oscillation at about $\|\bar{\vect\omega}\|$ ($-3.80\pm19.68j$, damping ratio 0.19). The input-delay margin of the failure LQR is only 18\,ms, against 40\,ms for the healthy one.
 
 \begin{table}[h]
 \centering\small
 \caption{LQR designs. The delay margin is the largest pure input delay that keeps the linear closed loop stable.}\label{tab:lqr}
 \begin{tabular}{lll}
 \toprule
-Controller & Slowest closed-loop poles & Delay margin \\
+Controller & Closed-loop poles (slowest first) & Delay margin \\
 \midrule
 Healthy LQR (12 states) & $-1.72\pm1.02j$, $-1.89$, $-1.94\pm1.56j$ & 40\,ms \\
 Failure LQR (7 + 3 motor states) & $-1.09$, $-2.01\pm1.04j$, $-3.80\pm19.68j$ & 18\,ms \\
@@ -189,7 +191,7 @@ All predictors use the same data. These are 40 closed-loop episodes of 4\,s on t
 \end{itemize}
 
 \subsection{Prediction results}
-Figure~\ref{fig:pred} and Table~\ref{tab:pred} show the open-loop multi-step error on held-out episodes. On family A the residual model is the most accurate at every horizon of 50\,ms and above. The analytical model drifts: its undamped modes and the unmodelled thrust loss make it worse than the trivial ``no change'' predictor. Full-state EDMDc has 4 of its 55 eigenvalues outside the unit circle (spectral radius 1.0054). It falls behind the no-change predictor between 2 and 3\,s, as our proposal predicted. At 3\,s the residual model also exceeds the no-change error, so long open-loop horizons need feedback.
+Figure~\ref{fig:pred} and Table~\ref{tab:pred} show the open-loop multi-step error on held-out episodes. On family A the residual model is the most accurate predictor at every horizon from 100\,ms on; at shorter horizons the full-state model is slightly better. The analytical model drifts: its undamped modes and the unmodelled thrust loss make it worse than the trivial ``no change'' predictor. Full-state EDMDc has 4 of its 55 eigenvalues outside the unit circle (spectral radius 1.0070) and falls behind the no-change predictor by 2\,s, as our proposal predicted. At 2\,s the residual model also exceeds the no-change error, so long open-loop horizons need feedback.
 
 \begin{table}[h]
 \centering\small
@@ -198,12 +200,12 @@ Figure~\ref{fig:pred} and Table~\ref{tab:pred} show the open-loop multi-step err
 \toprule
 & \multicolumn{3}{c}{Test family A} & \multicolumn{3}{c}{Test family B (held out)} \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Predictor & 0.1\,s & 1\,s & 3\,s & 0.1\,s & 1\,s & 3\,s \\
+Predictor & 0.1\,s & 1\,s & 2\,s & 0.1\,s & 1\,s & 2\,s \\
 \midrule
-Analytical & 2.29 & 5.13 & 13.6 & 3.07 & 5.57 & 9.86 \\
-Full-state EDMDc & 0.13 & 0.70 & 4.97 & 4.37 & 12.3 & 148 \\
-Residual EDMDc & \textbf{0.11} & \textbf{0.42} & 3.55 & 4.39 & 11.8 & 8.66 \\
-No change & 1.93 & 2.03 & 2.22 & 1.95 & 1.93 & 2.03 \\
+Analytical & 3.17 & 7.09 & 7.93 & 4.31 & 7.94 & 6.95 \\
+Full-state EDMDc & 0.17 & 0.91 & 3.45 & 6.09 & 26.2 & 131 \\
+Residual EDMDc & \textbf{0.15} & \textbf{0.64} & 2.71 & 5.98 & 19.9 & 24.0 \\
+No change & 2.42 & 2.38 & 2.51 & 2.51 & 2.44 & 2.41 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -214,9 +216,9 @@ No change & 1.93 & 2.03 & 2.22 & 1.95 & 1.93 & 2.03 \\
 \caption{Multi-step prediction error. Top: models trained on family A. Bottom: models trained on randomized plants. Left: test on family A; right: test on the held-out family B.}\label{fig:pred}
 \end{figure}
 
-\paragraph{Data efficiency.} At a 0.5\,s horizon, the residual model trained on 10 episodes (error 0.32) is better than the full-state model trained on 40 (0.43) (Fig.~\ref{fig:eff}). This matters because data from failed flights is scarce.
+\paragraph{Data efficiency.} At a 0.5\,s horizon, the residual model trained on 10 episodes (error 0.42) is more accurate than the full-state model trained on 40 (0.48) (Fig.~\ref{fig:eff}). This matters because data from failed flights is scarce.
 
-\paragraph{Generalization.} On the held-out family B both learned models are worse than the analytical model (Table~\ref{tab:pred}). Training on randomized plants, one random plant per episode, made both models worse on family A as well (Fig.~\ref{fig:pred}, bottom). The likely reason is that the motor time constant and thrust loss of the current plant cannot be inferred from a single state sample, so a static regression averages over them. This is a real limitation of the current approach and motivates online adaptation of $W$, which is linear in the data.
+\paragraph{Generalization.} On the held-out family B, both models trained on family A are worse than the analytical model (Table~\ref{tab:pred}). Training on randomized plants, with one random plant per episode, trades accuracy: it improves the residual model on family B up to about 100\,ms (error 3.68 against 4.31 for the analytical model) but makes both learned models worse on family A (Fig.~\ref{fig:pred}, bottom). The likely reason is that the motor time constant and thrust loss of the current plant cannot be inferred from a single state sample, so a static regression averages over them. This motivates online adaptation of $W$, which is linear in the data.
 
 \begin{figure}[h]
 \centering
@@ -232,21 +234,23 @@ Both MPCs use the analytical discrete model, a horizon of $N=20$ steps of 5\,ms,
 \text{s.t. }\;& \vect s_{j+1} = A_d\vect s_j + B_d\vect u_j + \hat{\vect d},\quad f_{\min}-\bar f_i \le u_{j,i} \le f_{\max}-\bar f_i,
 \end{aligned}
 \end{equation}
-with OSQP~\cite{stellato2020osqp} through CVXPY~\cite{diamond2016cvxpy}. The analytical MPC uses $\hat{\vect d}=0$. The residual-Koopman MPC evaluates the learned residual at the current state outside the optimization and holds it constant over the horizon, as in~\cite{todde2026residual}, so the problem stays a convex QP. Table~\ref{tab:mpc} and Fig.~\ref{fig:mpc} show the results. On family A, the thrust loss causes a steady altitude error of about 0.29\,m for LQR and the analytical MPC. The residual-Koopman MPC reduces it to 0.19\,m, a 32\% reduction, similar to the 35\% reported by Todde et al.\ for healthy flight. On family B all three controllers have small errors. Used as the capture controller after a detection delay (two-rotor spin-up, then the controller), neither MPC improved on LQR. The limiting factor there is the validity of the linear model far from the spin, not constraint handling.
+with OSQP~\cite{stellato2020osqp} through CVXPY~\cite{diamond2016cvxpy}. The analytical MPC uses $\hat{\vect d}=0$. The residual-Koopman MPC evaluates the learned residual at the current state outside the optimization and holds it constant over the horizon, as in~\cite{todde2026residual}, so the problem stays a convex QP. The solver itself needs about 0.7\,ms per step; with the modelling layer the median wall-clock time is 4.4\,ms, which leaves almost no margin to the 5\,ms sample period. A real-time version would call the solver directly.
+
+Table~\ref{tab:mpc} breaks the steady altitude error down by mismatch effect. On family A the error is $-0.29$\,m for LQR and the analytical MPC, of which the thrust loss alone accounts for $-0.10$\,m and the inertia and motor mismatch for the rest. The residual-Koopman MPC reduces the error to $-0.19$\,m (32\% smaller), and it reduces it for each separate effect of family A. On the held-out family B the effects partly cancel; the residual-Koopman MPC reduces the error for the full plant and for its thrust loss alone, but increases it by 47\% when the thrust loss is removed. As the controller that captures the vehicle after a detection delay (spin-up, then the controller, on family A), LQR recovers safely for delays up to 10\,ms and both MPCs only without delay. The likely limiting factor is the validity of the linear prediction model far from the spin, rather than constraint handling.
 
 \begin{table}[h]
 \centering\small
-\caption{Altitude regulation under model mismatch (8 starts, 1\,m below the set-point, 8\,s).}\label{tab:mpc}
-\begin{tabular}{llccc}
+\caption{Steady altitude error near the relaxed hover (start 1\,m below the set-point, mean over the last 2 of 8\,s).}\label{tab:mpc}
+\begin{tabular}{lccc}
 \toprule
-Controller & Plant & Steady altitude error & Altitude RMS & QP time (median) \\
+Plant & LQR & MPC, analytical & MPC, residual Koopman \\
 \midrule
-LQR & A & $-0.285$\,m & 0.397\,m & n/a \\
-MPC, analytical & A & $-0.286$\,m & 0.398\,m & 4.8\,ms \\
-MPC, residual Koopman & A & $\mathbf{-0.194}$\,m & 0.340\,m & 4.9\,ms \\
-LQR & B & $-0.029$\,m & 0.273\,m & n/a \\
-MPC, analytical & B & $-0.033$\,m & 0.275\,m & 5.1\,ms \\
-MPC, residual Koopman & B & $+0.022$\,m & 0.265\,m & 4.3\,ms \\
+A (full) & $-0.285$\,m & $-0.286$\,m & $\mathbf{-0.193}$\,m \\
+A without thrust loss & $-0.154$\,m & $-0.154$\,m & $-0.066$\,m \\
+Nominal + A's thrust loss only & $-0.100$\,m & $-0.101$\,m & $-0.033$\,m \\
+B (full, held out) & $-0.029$\,m & $-0.033$\,m & $+0.022$\,m \\
+B without thrust loss & $+0.112$\,m & $+0.111$\,m & $+0.164$\,m \\
+Nominal + B's thrust loss only & $-0.174$\,m & $-0.177$\,m & $-0.107$\,m \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -274,25 +278,31 @@ for any healthy controller whose allocator keeps running motors at or above idle
 \end{figure}
 
 \subsection{Effect of detection delay}
-We simulated hover, rotor failure at $t=0$, the healthy LQR until $t=\tau$, and then the strategy of~\cite{mueller2014stability}: spin up on rotors 1 and 3 until $\|\vect\omega\|>10$\,rad/s, then the relaxed-hover LQR. We fixed the success criterion in code before running the sweep. A run is \emph{safe} if the attitude is captured ($\|\vect n-\bar{\vect n}\|<0.05$ and $\|\vect\omega-\bar{\vect\omega}\|<2$\,rad/s over the last second), the altitude loss is below 2\,m, and the vehicle never turns upside down. With instant detection the strategy loses 0.41\,m of altitude, consistent with the paper's flight. With delay it degrades quickly (Table~\ref{tab:delay}, Fig.~\ref{fig:delay}). The tolerance did not change for three tunings of the healthy controller. With the looser criterion ``attitude captured'' the tolerance is about 40\,ms. Switching the LQR on directly, without spin-up, captures the attitude but turns the vehicle upside down and loses 10--16\,m. These numbers are specific to this strategy and to the published model: nonlinear controllers have recovered with 0.1--0.18\,s of detection delay~\cite{chen2025learning,zhou2025rotorfailureaware}, and our model spins up more slowly than the real vehicle (Section~\ref{sec:validation}).
+We simulated hover, rotor failure at $t=0$, the healthy LQR until $t=\tau$, and then the strategy of~\cite{mueller2014stability}: spin up on rotors 1 and 3 until $\|\vect\omega\|>10$\,rad/s, then the relaxed-hover LQR. The spin-up thrust is 2.95\,N per rotor, read from the flight data in Fig.~4 of~\cite{mueller2014stability}; the hover-neutral value $mg/2=2.45$\,N is a sensitivity case. The success criterion was fixed in code before the runs. A run is \emph{safe} if the attitude is captured ($\|\vect n-\bar{\vect n}\|<0.05$ and $\|\vect\omega-\bar{\vect\omega}\|<2$\,rad/s over the last second of a completed 10\,s run), the altitude loss is below 2\,m, and the vehicle never turns upside down. For each delay we simulate 40 random pre-failure states and report the fraction of safe runs with a 95\% Wilson interval (Fig.~\ref{fig:psafe}, Table~\ref{tab:delay}).
+
+With the flight thrust and no delay, the vehicle first climbs 0.40\,m and then drops only 0.03\,m below its starting height, qualitatively like the flight, which climbs about 0.9\,m. The probability of a safe recovery falls below 0.9 at about 12\,ms of delay and below 0.5 at about 19\,ms; with $mg/2$ the corresponding delays are 7 and 14\,ms. If only attitude capture is required, P(safe) falls below 0.5 at 52\,ms (40\,ms with $mg/2$). The tolerance from the exact hover start is the same for three tunings of the healthy controller. Switching the LQR on directly, without spin-up, captures the attitude but turns the vehicle upside down and loses 9 to 16\,m. Fast detectors need 30 to 130\,ms~\cite{strack2021fast}, so with this strategy a safe recovery is unlikely within the detection time of current detectors. These numbers are specific to this strategy and model: nonlinear controllers have recovered with 0.1 to 0.18\,s of detection delay~\cite{chen2025learning,zhou2025rotorfailureaware}.
 
 \begin{table}[h]
 \centering\small
-\caption{Spin-up + LQR strategy: safe recoveries over 20 random pre-failure states (velocity $\sigma=0.3$\,m/s, angles $\sigma=3^\circ$, rates $\sigma=0.3$\,rad/s).}\label{tab:delay}
+\caption{Spin-up + LQR strategy: fraction of safe recoveries over 40 random pre-failure states (velocity $\sigma=0.3$\,m/s, angles $\sigma=3^\circ$, rates $\sigma=0.3$\,rad/s), with 95\% Wilson intervals.}\label{tab:delay}
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccc}
 \toprule
-Delay $\tau$ & 0\,ms & 10\,ms & 20\,ms & 30\,ms & 50\,ms & 80\,ms \\
+Delay $\tau$ & 0\,ms & 10\,ms & 15\,ms & 20\,ms & 30\,ms & 40\,ms \\
 \midrule
-Safe & 20/20 & 17/20 & 6/20 & 1/20 & 0/20 & 0/20 \\
-Median altitude loss & 0.38\,m & 1.11\,m & 3.20\,m & 9.12\,m & 39.1\,m & 76.5\,m \\
+2.95\,N & 1.00 & 0.97 & 0.80 & 0.42 & 0.17 & 0.07 \\
+ & [0.91, 1] & [0.87, 1] & [0.65, 0.90] & [0.29, 0.58] & [0.09, 0.32] & [0.03, 0.20] \\
+\midrule
+2.45\,N & 1.00 & 0.82 & 0.45 & 0.28 & 0.07 & 0.07 \\
+ & [0.91, 1] & [0.68, 0.91] & [0.31, 0.60] & [0.16, 0.43] & [0.03, 0.20] & [0.03, 0.20] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\linewidth]{figures/e4_delay_sweep.png}
-\caption{Altitude loss and worst tilt versus detection delay (nominal start). The shaded band marks the 30--130\,ms detector delays reported in~\cite{strack2021fast}.}\label{fig:delay}
+\includegraphics[width=0.85\linewidth]{figures/e4_p_safe.png}
+\caption{Probability of a safe recovery versus detection delay for the two spin-up thrusts, with 95\% Wilson bands. The shaded region marks the delays of fast detectors~\cite{strack2021fast}.}\label{fig:psafe}
 \end{figure}
 
 \subsection{A first saturation-aware certificate}
@@ -301,7 +311,9 @@ For the closed loop $\dot{\vect x} = A\vect x + B\operatorname{sat}(F\vect x)$ w
   AQ + QA^\top + B(D F Q + D^- Y) + (D F Q + D^- Y)^\top B^\top + 2\alpha Q &\preceq -\epsilon I \quad \forall D\in\mathcal D, \\
   \begin{bmatrix} \bar u_i^2 & Y_i \\ Y_i^\top & Q\end{bmatrix} &\succeq 0, \quad i=1,\dots,m,
 \end{align}
-where $\mathcal D$ is the set of diagonal 0/1 matrices, $D^- = I-D$, and $\alpha$ is a required decay rate. We maximize the extent of $\mathcal E$ along the direction from the equilibrium to the state right after a failure in hover. The motor states are bounded by their physical range; without this bound the problem is ill-conditioned and certifies a physically meaningless set. The certificate covers $\beta = 0.22$ of the way to the hover-onset state. In nonlinear simulation, every start up to $\beta=0.7$ recovers without inverting, so the certificate is about three times conservative in this direction. On a two-dimensional slice (Fig.~\ref{fig:cert}), the LQR fails only when the spin rate is close to zero, which is where the hover-onset state lies. A certificate built from the linearization at the full spin cannot reach that region. The next step is therefore a certificate valid over the whole spin-up, treating the yaw rate $r$ as a varying parameter. LPV synthesis on the yaw rate~\cite{stephan2018lpv} and recoverable sets at the relaxed hover~\cite{qi2016recoverable} exist; our aim is to use such a set as the capture target of a detection-delay budget.
+where $\mathcal D$ is the set of diagonal 0/1 matrices, $D^- = I-D$, and $\alpha$ is a required decay rate. The symmetric levels are the smaller distance from the trim to either thrust limit, so the certificate also holds for the plant's asymmetric limits. We maximize the extent of $\mathcal E$ along the direction from the equilibrium to the state right after a failure in hover. The motor states are bounded by their physical range; without this bound the problem is ill-conditioned and certifies a physically meaningless set. The problems were solved with CVXPY~\cite{diamond2016cvxpy} and Clarabel~\cite{goulart2024clarabel}, with SCS~\cite{odonoghue2016scs} as a fallback.
+
+The certificate covers $\beta = 0.22$ of the way to the hover-onset state. In nonlinear simulation, every start up to $\beta=0.7$ recovers without inverting, so the certificate is about three times conservative in this direction. This LQR does not recover safely from the hover-onset state itself. On a two-dimensional slice (Fig.~\ref{fig:cert}), all failures occur at spin rates of 4.8\,rad/s or less, and none at 6.8\,rad/s or more. A certificate built from the linearization at the full spin cannot reach that region. The next step is therefore a certificate valid over the whole spin-up, treating the yaw rate $r$ as a varying parameter. LPV synthesis on the yaw rate~\cite{stephan2018lpv} and recoverable sets at the relaxed hover~\cite{qi2016recoverable} exist; our aim is to use such a set as the capture target of a detection-delay budget.
 
 \begin{figure}[h]
 \centering
@@ -313,27 +325,30 @@ where $\mathcal D$ is the set of diagonal 0/1 matrices, $D^- = I-D$, and $\alpha
 \section{Limitations}\label{sec:limits}
 %=====================================================================
 \begin{enumerate}
-  \item \textbf{Model versus flight.} The nominal model, which is the paper's model, spins up about 30\% more slowly than the real vehicle. The delay tolerance of Section~\ref{sec:delay} depends on this, so it holds for the published model; a sensitivity study is planned.
-  \item \textbf{Generalization of the learned models.} The residual model helps only on the plant family it was trained on.
+  \item \textbf{Spin-up thrust.} The delay tolerance depends on the spin-up thrust (12 against 7\,ms for the 90\% level). The flight value is read from a plot, so it carries some uncertainty.
+  \item \textbf{Nominal plant for the delay study.} The delay study uses the nominal plant; the papers' models over-predict the steady spin rate in flight by about 20\%.
+  \item \textbf{Generalization of the learned models.} The residual model helps reliably only on the plant family it was trained on.
   \item \textbf{Linear certificates.} The certificate holds for the linearized saturated loop. The gap to the nonlinear system is measured by simulation, not proven.
   \item \textbf{Truth-plant realism.} The truth plants add thrust loss, inertia error and motor lag, but not yet air-relative thrust or quadratic drag, both of which are validated in our implementation of the IJRR model.
-  \item \textbf{Novelty.} Several closely related papers~\cite{stephan2018lpv,lanzon2014flight,qi2016recoverable,basak2015switching} have not yet been read in full; our novelty statements follow from abstracts, theses and citing papers.
-  \item \textbf{Comparability.} The delay sweep used the nominal plant, while the MPC capture test used truth family A, so their absolute numbers differ.
+  \item \textbf{Certificate for the learned controller.} The clipping level $\vect d_{\max}$ is a percentile of the training residuals, not a bound on the true mismatch, and a constrained MPC needs more than the saturation conditions above. Both must be addressed before the residual-Koopman loop can be certified.
+  \item \textbf{Literature access.} Several closely related papers~\cite{stephan2018lpv,lanzon2014flight,qi2016recoverable,basak2015switching} have not yet been read in full; our novelty statements follow from abstracts, theses and citing papers.
 \end{enumerate}
 
 %=====================================================================
 \section{Plan for the remaining weeks}\label{sec:plan}
 %=====================================================================
+The course has a final progress presentation on 31 October 2026, and the journal-style final report is due on 13 November 2026. The remaining work is planned as follows.
+
 \begin{table}[h]
 \centering\small
 \begin{tabularx}{\linewidth}{l L}
 \toprule
-Weeks & Work \\
+Dates & Work \\
 \midrule
-1--2 & MPC on the full-state Koopman model, the second controller of our proposal, and an integral-action MPC baseline. Read the remaining key papers in full. LPV model in the yaw rate and a certificate over the spin-up. \\
-3--4 & Online adaptation of the residual by recursive least squares. Reachable set of the undetected phase and a containment test, giving a first certified $\tau^\star$. \\
-5--6 & Air-relative thrust in the truth plant and a residual trained on spin-up data. Trade study of $\tau^\star$, including its sensitivity to yaw drag and the thrust model, and $\tau^\star$ for each capture controller with a bounded-residual certificate. \\
-7--8 & Ablations, a simulation check of the certified $\tau^\star$, and the final report. \\
+12 to 18 Oct & LPV model in the yaw rate and a saturation-aware certificate over the spin-up. MPC on the full-state Koopman model (the second controller of our proposal) and an integral-action MPC baseline. Read the remaining key papers in full. \\
+19 to 25 Oct & Reachable set of the undetected phase and the containment test, giving a first certified $\tau^\star$; comparison with the empirical P(safe) curve. Online adaptation of the residual by recursive least squares. \\
+26 to 31 Oct & Sensitivity of $\tau^\star$ to the spin-up thrust, idle thrust and motor lag; air-relative thrust in the truth plant. Final progress presentation on 31 Oct. \\
+1 to 13 Nov & Bound on the true model mismatch and a certificate for the residual-Koopman loop if time allows; final simulations and the journal-style report, due 13 Nov. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -343,18 +358,17 @@ The main risk is that a single quadratic Lyapunov function over the whole spin-u
 %=====================================================================
 \section{Conclusion}
 %=====================================================================
-We built and validated a simulator of a quadrotor with complete rotor loss. On the training plant, the residual Koopman model is the most accurate predictor, needs less data than a full-state Koopman model, and reduces a steady altitude error by about one third inside a convex MPC; it does not yet generalize to an unseen plant. In our simulation of the published model, the published recovery strategy tolerates only about 10\,ms of detection delay under a strict safety criterion, less than fast detectors need. A first LMI certificate confirms that certificates built at the spinning equilibrium cannot cover the moment of failure. The next phase builds a certificate over the spin-up and the certified delay budget, and evaluates every capture controller, including the residual-Koopman MPC, by the delay it tolerates.
+We built and validated a simulator of a quadrotor with complete rotor loss. On the training plant, the residual Koopman model is the most accurate predictor from 100\,ms on, needs less data than a full-state Koopman model, and reduces a steady altitude error by one third inside a convex MPC; it does not yet generalize to an unseen plant. In our simulation, the published recovery strategy recovers safely with high probability only for detection delays of about 10 to 20\,ms, well below the 30 to 130\,ms that fast detectors need. A first LMI certificate covers 22\% of the way to the hover-onset state, and the controller itself fails only at low spin rates, which points to a certificate over the spin-up as the next step. The remaining weeks build that certificate and the certified delay budget, and evaluate each capture controller, including the residual-Koopman MPC, by the delay it tolerates.
 
 \appendix
-\section{Reproducibility}
-The code is a Python package (\texttt{rotorfail/}) with one script per experiment in \texttt{experiments/}; all random seeds are fixed. The repository is\\ \url{https://github.com/pranshuk22/quadrotor-rotor-loss-recovery}.\\ Commands:
+\section{Software and reproducibility}
+The simulator, analysis and experiments are written in Python with NumPy~\cite{harris2020numpy}, SciPy~\cite{virtanen2020scipy}, the Python Control Systems Library~\cite{fuller2021control} and Matplotlib~\cite{hunter2007matplotlib}. Convex problems are modelled with CVXPY~\cite{diamond2016cvxpy} and solved with Clarabel~\cite{goulart2024clarabel}, SCS~\cite{odonoghue2016scs} and OSQP~\cite{stellato2020osqp}; tests use pytest~\cite{pytest}. All random seeds are fixed, and every table and figure is produced by one script in \texttt{experiments/}. The code is available at \url{https://github.com/pranshuk22/quadrotor-rotor-loss-recovery}.
 \begin{verbatim}
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q                        # 45 tests
-.venv/bin/python experiments/v0_validation_report.py # model vs. papers
-.venv/bin/python experiments/e1_equilibrium.py       # ... up to e7
+.venv/bin/python -m pytest -q
+.venv/bin/python experiments/v0_validation_report.py
+.venv/bin/python experiments/e1_equilibrium.py   # and e2 to e7
 \end{verbatim}
-Detailed documentation is in \texttt{docs/}. Generated tables are in \texttt{results/tables/} and figures in \texttt{results/figures/}.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
