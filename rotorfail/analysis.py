@@ -68,7 +68,8 @@ def delay_margin(A, B, K, dt=1e-4, max_delay=0.2):
     """Largest pure input delay h (s) for which x' = A x - B K x(t-h) stays stable.
 
     Checked on an exact ZOH discretization at step dt with an h/dt-step delay line.
-    Returns (h_max, spectral radius at h_max).
+    The delay is scanned upward from zero (no monotonicity assumption), and the
+    first unstable delay ends the scan. Returns h_max in seconds.
     """
     from scipy.signal import cont2discrete
 
@@ -90,12 +91,7 @@ def delay_margin(A, B, K, dt=1e-4, max_delay=0.2):
 
     if not stable(0):
         return 0.0
-    if stable(hi):
-        return float(max_delay)
-    while hi - lo > 1:
-        mid = (lo + hi) // 2
-        if stable(mid):
-            lo = mid
-        else:
-            hi = mid
-    return lo * dt
+    for d in range(1, hi + 1):
+        if not stable(d):
+            return (d - 1) * dt
+    return float(max_delay)
