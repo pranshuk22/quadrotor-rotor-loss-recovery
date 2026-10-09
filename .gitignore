@@ -21,3 +21,6 @@ literature/papers/*.pdf
 
 # Node (deck build)
 node_modules/
+
+# Course material (not ours to publish)
+proposal/EE650 Project Guidelines.pdf
