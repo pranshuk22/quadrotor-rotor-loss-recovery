@@ -10,6 +10,12 @@ H4 (data efficiency) and generalization to family B.
 Outputs: results/tables/e6_koopman_prediction.md, results/figures/e6_multistep_error.png,
          results/figures/e6_data_efficiency.png, results/figures/e6_full_edmdc_eigs.png
 """
+import os
+
+# One BLAS/OpenMP thread per process: the experiments parallelize over runs instead.
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
 import sys
 import warnings
 from pathlib import Path
