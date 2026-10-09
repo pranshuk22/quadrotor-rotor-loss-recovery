@@ -88,11 +88,11 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 **[added] Progress since the proposal** (details in `../progress/presentation-1-plan.md`; tables and figures in `../results/`):
 - Nonlinear simulator of the Mueller & D'Andrea vehicle; their equilibrium reproduced (thrusts, spin rate and n_z within 0.5%).
 - Controllability/observability of the failed vehicle; LQR at the relaxed hover verified on the nonlinear model.
-- The published recovery strategy tolerates only about **10 ms** of fault-detection delay in our simulation, against 30–130 ms reported for real detectors (motivation for RQ2).
+- In our simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about **12 ms** (below 0.5 beyond 19 ms; 40 random starts per delay, flight spin-up thrust), against 30–130 ms reported for real detectors (motivation for RQ2).
 - First saturation-aware LMI certificate: covers 22% of the way to the hover-onset state, against 70% recovered in nonlinear simulation.
-- **The proposal's preliminary finding, repeated in the failed regime (E6):** full-state EDMDc on failed-vehicle data has eigenvalues outside the unit circle (4 of 55) and falls behind the "no-change" predictor between 2 and 3 s. The residual model gives the lowest multi-step error on the training mismatch family (1 s horizon, normalized RMSE: residual 0.42, full-state 0.70, analytical 5.1, no-change 2.0). It needs fewer data (10 episodes beat full-state with 40).
-- **Limitation found (E6):** neither learned model generalizes to an unseen mismatch family, and static training on randomized vehicles makes them worse. Next: online residual adaptation.
-- **Closed loop (E7):** residual-Koopman MPC cuts the steady altitude bias under mismatch by about 32% (−0.29 → −0.19 m), with QP time ≈ 5 ms. As a capture controller after a detection delay it does not yet beat LQR.
+- **The proposal's preliminary finding, repeated in the failed regime (E6):** full-state EDMDc on failed-vehicle data has eigenvalues outside the unit circle (4 of 55) and falls behind the "no-change" predictor by 2 s. From 100 ms on, the residual model gives the lowest multi-step error on the training mismatch family (1 s horizon, normalized RMSE: residual 0.64, full-state 0.91, analytical 7.1, no-change 2.4). It needs less data (10 episodes beat full-state with 40).
+- **Limitation found (E6):** neither learned model generalizes to an unseen mismatch family, and training on randomized vehicles helps the residual on the unseen family only up to about 100 ms while making both models worse on the training family. Next: online residual adaptation.
+- **Closed loop (E7):** residual-Koopman MPC cuts the steady altitude bias under mismatch by 32% (−0.29 → −0.19 m) and reduces it on 5 of 6 test plants, but increases it by 47% on one held-out variant; the QP solver needs 0.7 ms per step. As a capture controller after a detection delay it does not yet beat LQR.
 
 ---
 

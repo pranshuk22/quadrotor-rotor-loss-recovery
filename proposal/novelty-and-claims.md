@@ -49,9 +49,9 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 
 ## 5. What the first results already say (presentation 1)
 
-- RQ1: the residual predictor beats the analytical and full-state predictors on the training mismatch family (E6). It **does not generalize** to an unseen family, and **static** training on randomized vehicles makes it worse. That is a limitation to report and a reason for online adaptation.
-- RQ1: residual-Koopman MPC cuts the steady altitude bias by about 32% (E7), similar to Todde et al. in healthy flight.
-- RQ2: the published recovery strategy tolerates about 10 ms of detection delay (E4). The LTI certificate covers 22% of the way to hover onset (E5).
+- RQ1: from 100 ms on, the residual predictor beats the analytical and full-state predictors on the training mismatch family (E6). It **does not generalize** to an unseen family, and **static** training on randomized vehicles helps there only up to about 100 ms while hurting on the training family. That is a limitation to report and a reason for online adaptation.
+- RQ1: residual-Koopman MPC cuts the steady altitude bias by 32% on the training family and on 5 of 6 test plants, but increases it by 47% on one held-out variant (E7).
+- RQ2: in simulation, the published recovery strategy is safe with probability above 0.9 only up to about 12 ms of detection delay, and below 0.5 beyond 19 ms (E4, flight spin-up thrust). The LTI certificate covers 22% of the way to hover onset (E5); the LQR fails only at spin rates ≤ 4.8 rad/s.
 
 ## 6. Must-do checks before the final report
 

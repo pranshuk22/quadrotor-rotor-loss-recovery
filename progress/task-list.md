@@ -1,7 +1,7 @@
 # Task List (whole project, both research questions)
 
 Legend: ✅ done · 🔜 next · ⬜ later · ★ needed for presentation 1
-RQ1 = residual Koopman MPC (proposal PDF). RQ2 = certified detection-delay budget.
+RQ1 = residual Koopman MPC (the presented proposal). RQ2 = certified detection-delay budget.
 
 ## Phase 0: Literature and novelty gate
 - [ ] 🔜 T0.1 Read Stephan, Schmitt & Fichter, JGCD 2018 (LPV on yaw rate). Decide whether RQ2-C2 stays (IITK library / AIAA)
@@ -18,9 +18,9 @@ RQ1 = residual Koopman MPC (proposal PDF). RQ2 = certified detection-delay budge
 - [x] ✅★ T1.4 Controllability, PBH, Gramians; observability for sensor sets (E2)
 - [x] ✅★ T1.5 Healthy LQR + failure LQR; poles and delay margins; nonlinear check (E3)
 - [x] ✅★ T1.6 Truth-plant families A / B / randomized (thrust loss at high body rate, inertia error, motor lag)
-- [x] ✅ T1.7 Test suite: 45 tests, incl. physics invariants and published-number validation (`tests/`)
+- [x] ✅ T1.7 Test suite: 46 tests plus 1 expected failure, incl. physics invariants and published-number validation (`tests/`)
 - [x] ✅ T1.9 Model validation against 3 papers + their flight data (`results/tables/validation_report.md`)
-- [ ] ★ T1.8 Build the slides from `progress/presentation-1-plan.md`
+- [x] ✅★ T1.8 Progress report and slides (`docs/report/`, `docs/deck/`)
 
 ## Track RQ1: residual Koopman MPC
 - [x] ✅★ K1 Data generation (excited closed-loop episodes, 5 ms) and nominal discrete M&D model
@@ -36,24 +36,26 @@ RQ1 = residual Koopman MPC (proposal PDF). RQ2 = certified detection-delay budge
 - [ ] 🔜 K11 Add air-relative thrust (IJRR 2016 eq. 4) and quadratic drag to the truth plant (validated in `rotorfail/validation.py`); retrain and re-test RQ1
 
 ## Track RQ2: certified delay budget
-- [x] ✅★ D1 Detection-delay supervisor + M&D spin-up baseline; τ sweep + Monte Carlo (E4)
+- [x] ✅★ D1 Detection-delay supervisor + M&D spin-up baseline; τ sweep + Monte Carlo P(safe) with Wilson intervals at two spin-up thrusts (E4)
 - [x] ✅★ D2 First saturation-aware LMI certificate (LTI) + nonlinear conservatism (E5)
 - [ ] 🔜 D3 LPV reduced-attitude model in r: A(r), B(r), trims x̄(r)
 - [ ] 🔜 D4 r-robust capture LMIs (common P, then P(r)); moving-trim disturbance term; gate: contains hover onset?
 - [ ] ⬜ D5 Gain-scheduled capture controller K(r), certified
 - [ ] ⬜ D6 Reachable set of the undetected phase; switch map; containment LMI; τ\* by bisection
-- [ ] ⬜ D7 Trade study: τ\* vs healthy tuning, idle thrust f_min, thrust-to-weight, motor lag, sampling, **and yaw drag / thrust model** (our model spins up 30% slower than the ICRA flight, which affects the E4 delay numbers)
+- [ ] ⬜ D7 Trade study: τ\* vs healthy tuning, idle thrust f_min, thrust-to-weight, motor lag, sampling, **spin-up thrust** (E4 shows a strong effect: τ₉₀ = 12 ms at 2.95 N vs 7 ms at mg/2)
 - [ ] ⬜ D8 Certificate for the residual-Koopman MPC loop: bound the true plant mismatch over the plant family (d_max is only a training percentile) and handle the MPC constraints (unconstrained-region or terminal-set argument); τ\* per capture controller
 - [ ] ⬜ D9 Monte Carlo tightness (certified vs empirical τ\*); LQG / output feedback
 
 ## Phase 5: Write-up
-- [ ] ⬜ W1 Final report + figures · W2 final presentation · W3 code clean-up
+- [ ] ⬜ W1 Journal-style final report (due 13 Nov) · W2 final progress presentation (31 Oct) · W3 code clean-up
 
-## Suggested schedule after presentation 1 (adjust to the course calendar)
+## Schedule to the end of the course
 
-| Block | RQ1 | RQ2 | Deliverable |
+Course milestones: final progress presentation on **31 October 2026**; journal-style final report due **13 November 2026**.
+
+| Dates | RQ1 | RQ2 | Deliverable |
 |---|---|---|---|
-| Weeks 1–2 | K5, K6 | T0.1, T0.2, D3, D4 | Full-state Koopman MPC + offset-free baseline; r-robust capture certificate (gate) |
-| Weeks 3–4 | K7 | D5, D6 | Online residual adaptation; first certified τ\* |
-| Weeks 5–6 | K8, K9 | D7, D8 | Trade study incl. τ\* per capture controller (presentation 2) |
-| Weeks 7–8 | K10 (if time) | D9 | Final report and presentation |
+| 12–18 Oct | K5, K6 | T0.1, T0.2, D3, D4 | Full-state Koopman MPC + offset-free baseline; r-robust capture certificate (gate) |
+| 19–25 Oct | K7 | D6 | Online residual adaptation; reachable set of the undetected phase; first certified τ\* compared with the empirical P(safe) curve |
+| 26–31 Oct | K11 | D7 | τ\* sensitivity; air-relative thrust in the truth plant; **final progress presentation (31 Oct)** |
+| 1–13 Nov | K8 or D8 if time allows | D9 | Final simulations; **journal-style final report (13 Nov)** |
