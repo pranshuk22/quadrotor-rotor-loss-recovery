@@ -130,7 +130,7 @@ def main():
           f"{t_flt:.2f} s (closed form {c_flt:.2f} s) | not reported | 0.62 s | ICRA 2014, Fig. 4 |",
           f"| Same, at m g / 2 = {P.weight / 2:.2f} N each (hover-neutral thrust) | {t_half:.2f} s (closed form {c_half:.2f} s) "
           "| not reported | not flown | n/a |",
-          f"| Spin rate about n, one rotor lost | {np.linalg.norm(eq.w):.1f} rad/s (ρ = 0.5) | 19.9 rad/s (min-power solution) | 15.8 rad/s | IJRR 2016, Sec. 5.3 |",
+          f"| Spin rate about n, one rotor lost | {np.linalg.norm(eq.w):.1f} rad/s (ρ = 0.5) | 19.9 rad/s (their simulation) | 15.8 rad/s | IJRR 2016, Sec. 5.4 |",
           "| Height offset, two rotors, from thrust loss while spinning | not in the nominal model | not in the model | ≈ 2.4 m | ICRA 2014, Sec. V-E |",
           "", "**Reading.** With the thrust the flight actually used during spin-up, the model reaches 10 rad/s within "
           f"{abs(t_flt - 0.62) / 0.62 * 100:.0f}% of the flight time. The spin-up time depends strongly on this thrust, so the "

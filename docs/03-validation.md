@@ -48,7 +48,7 @@ Each test compares the simulator with a hand-derived result, never with another 
 |---|---|---|---|
 | Time to ‖ω‖ > 10 rad/s on two rotors at the flight thrust (≈ 2.95 N, read from ICRA Fig. 4) | 0.65 s (closed form 0.64 s) | not reported | 0.62 s |
 | Same, at mg/2 = 2.45 N (hover-neutral thrust) | 0.81 s (closed form 0.80 s) | not reported | not flown |
-| Spin rate about n, one rotor lost (IJRR Sec. 5.3) | 19.6 rad/s (ρ = 0.5) | 19.9 rad/s | 15.8 rad/s |
+| Spin rate about n, one rotor lost (IJRR Sec. 5.4) | 19.6 rad/s (ρ = 0.5) | 19.9 rad/s | 15.8 rad/s |
 | Height offset from thrust loss, two rotors (ICRA Sec. V-E) | not in nominal model | not in model | ≈ 2.4 m |
 
 At the thrust the flight actually used, the model spins up within about 4% of the flight. The spin-up time depends strongly on this thrust, so E4 reports the delay results for both thrusts. The papers' models over-predict the steady spin rate by about 20%, and the nominal model has no thrust loss while spinning; the truth plants used for learning add a thrust-loss effect for this reason.
