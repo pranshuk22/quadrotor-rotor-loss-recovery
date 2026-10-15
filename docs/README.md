@@ -6,8 +6,8 @@ EE650 course project: fault-tolerant control of a quadrotor after complete rotor
 
 | Item | Location |
 |---|---|
-| **Progress report (LaTeX, 17 pages)** | [`report/report.pdf`](report/report.pdf) · source [`report/report.tex`](report/report.tex) · bibliography [`report/references.bib`](report/references.bib) |
-| **Slide deck, progress review (19 slides)** | [`deck/progress-review.pptx`](deck/progress-review.pptx) · [`deck/progress-review.pdf`](deck/progress-review.pdf) · details in [`deck/`](deck/README.md) |
+| **Detailed project report (LaTeX, about 53 pages)** | [`report/report.pdf`](report/report.pdf) · source [`report/report.tex`](report/report.tex) · bibliography [`report/references.bib`](report/references.bib) |
+| **Slide deck, progress review (15 slides + 1 backup, residual Koopman work)** | [`deck/progress-review.pptx`](deck/progress-review.pptx) · [`deck/progress-review.pdf`](deck/progress-review.pdf) · details in [`deck/`](deck/README.md) |
 
 ## Technical documentation
 

@@ -21,7 +21,7 @@ After a rotor fails, a quadrotor can no longer hover level. Its only steady stat
 | Topic | Result |
 |---|---|
 | Model validation | Reproduces the published two-rotor and three-rotor-loss equilibria of Mueller and D'Andrea (ICRA 2014) to every digit, and five hover solutions of their IJRR 2016 model within 4%. At the thrust used in flight, the spin-up time is within about 4% of the flight data. |
-| Prediction | On the training plant, the residual Koopman model has the lowest multi-step error from 100 ms on (normalized RMSE at 1 s: 0.64, against 0.91 for full-state EDMDc and 7.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
+| Prediction | On the training plant, the residual Koopman model has the lowest multi-step error from 100 ms to 1 s (normalized RMSE at 1 s: 0.64, against 0.91 for full-state EDMDc and 7.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
 | Control | A residual-corrected MPC reduces a steady altitude error caused by model mismatch by one third (0.29 m to 0.19 m); the QP solver needs under 1 ms per step. |
 | Detection delay | In simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about 12 ms, and below 0.5 beyond about 19 ms (40 random starts per delay). Fast detectors need 30 to 130 ms. |
 | Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; in simulation, every start up to 70% of the way recovers. |
