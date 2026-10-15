@@ -1,0 +1,30 @@
+%=====================================================================
+\section{Software and reproducibility}\label{app:repro}
+%=====================================================================
+The simulator, analysis and experiments are written in Python with NumPy~\cite{harris2020numpy}, SciPy~\cite{virtanen2020scipy} and Matplotlib~\cite{hunter2007matplotlib}. Convex problems are modelled with CVXPY~\cite{diamond2016cvxpy} and solved with Clarabel~\cite{goulart2024clarabel}, SCS~\cite{odonoghue2016scs} and OSQP~\cite{stellato2020osqp}; tests use pytest~\cite{pytest}. Package versions are pinned in \texttt{requirements.txt}. The code is available at \url{https://github.com/pranshuk22/quadrotor-rotor-loss-recovery}.
+
+\begin{verbatim}
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest -q        # 46 pass + 1 expected failure
+.venv/bin/python experiments/v0_validation_report.py
+.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e7
+\end{verbatim}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\linewidth}{l l L l}
+\toprule
+ID & Script & Question & Runtime \\
+\midrule
+V0 & \texttt{v0\_validation\_report.py} & Does the model match published numbers and flight data? & seconds \\
+E1 & \texttt{e1\_equilibrium.py} & Relaxed hover against the paper; $\rho$ sweep & seconds \\
+E2 & \texttt{e2\_structure.py} & Eigenvalues, controllability, observability by sensor set & seconds \\
+E3 & \texttt{e3\_lqr.py} & LQR designs, delay margins, nonlinear checks & about 15\,s \\
+E4 & \texttt{e4\_delay\_sweep.py} & Effect of detection delay (Monte Carlo) & several minutes \\
+E5 & \texttt{e5\_first\_certificate.py} & LMI certificate and its conservatism & about 8\,min \\
+E6 & \texttt{e6\_koopman\_prediction.py} & Physics vs full-state vs residual EDMDc & about 2.5\,min \\
+E7 & \texttt{e7\_mpc\_closed\_loop.py} & LQR vs analytical MPC vs residual Koopman MPC & about 3\,min \\
+\bottomrule
+\end{tabularx}
+\end{table}
+Each script writes a table to \texttt{results/tables/} and figures to \texttt{results/figures/}; all random seeds are fixed in the scripts (for example seeds 11, 12, 13 and 21 for the training, test and randomized data of E6). Runtimes are for an 8-core laptop.

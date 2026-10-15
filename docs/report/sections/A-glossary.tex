@@ -1,0 +1,104 @@
+%=====================================================================
+\section{Glossary}\label{app:glossary}
+%=====================================================================
+Terms in alphabetical order. The section where each is first used in detail is given in brackets.
+
+\small
+\begin{longtable}{p{0.24\linewidth}p{0.70\linewidth}}
+\toprule
+Term & Meaning \\
+\midrule
+\endhead
+Actuator & A device that acts on the system; here the four motor--propeller units. \\
+Affine & Linear plus a constant term, $A\vect x + \vect d$. \\
+Air-relative thrust & Propeller thrust computed from the propeller's speed relative to the air ($\Omega_i + r$) rather than relative to the body; matters when the body spins fast (\ref{sec:val-ijrr}). \\
+Algebraic Riccati equation & The matrix equation whose solution $P$ gives the optimal LQR gain; ``discrete'' version (DARE) for sampled systems (\ref{sec:background}, \ref{sec:mpc}). \\
+Attainable moment set & The set of torques the remaining rotors can produce within their thrust limits. \\
+Body frame & Coordinate frame fixed to the drone (\ref{sec:model}). \\
+Body rates $(p,q,r)$ & Rotation rates about the body $x$, $y$, $z$ axes: roll rate, pitch rate, yaw rate. \\
+Brent's method & A reliable one-dimensional root finder that needs a bracket where the function changes sign (\ref{sec:model}). \\
+Bryson's rule & Choosing LQR weights as $1/(\text{largest acceptable value})^2$ (\ref{sec:linear}). \\
+Capture & Bringing the drone into the relaxed hover after a failure; a ``capture controller'' does this (\ref{sec:delay}). \\
+Capture set & A set of states from which the capture controller is proven to recover (\ref{sec:certificate}). \\
+Central differences & Numerical derivative $(f(x+\epsilon) - f(x-\epsilon))/2\epsilon$ (\ref{sec:background}). \\
+Certificate & A computer-checked mathematical proof that a property (here, recovery) holds for a whole set of states (\ref{sec:certificate}). \\
+Closed loop & The system together with its feedback controller. \\
+Controllability & Whether the inputs can steer the state anywhere; tested by the rank of $[B, AB, \dots]$ or the PBH test (\ref{sec:linear}). \\
+Convex problem & An optimization problem in which every local minimum is a global one, so solvers find the best solution reliably; QPs with positive semidefinite cost and LMI problems are convex. With a strictly convex cost the solution is unique. \\
+CVXPY & A Python library for writing convex optimization problems; it passes them to solvers such as OSQP or Clarabel. \\
+Damping ratio $\zeta$ & How quickly an oscillation dies out; 0 means never, 1 means no overshoot. \\
+Delay margin & The largest pure input delay a feedback loop tolerates before becoming unstable (\ref{sec:linear}). \\
+Detection delay $\tau$ & Time between the rotor failure and the moment the flight computer knows about it (\ref{sec:delay}). \\
+Dictionary & The list of functions (observables) used to lift the state in EDMD (\ref{sec:koopman}). \\
+EDMD / EDMDc & Extended dynamic mode decomposition (with control): fitting a linear model on a dictionary of functions of the state by least squares (\ref{sec:background}). \\
+Eigenvalue & A number $\lambda$ with $A\vect v = \lambda\vect v$; describes one mode of a linear system (\ref{sec:background}). \\
+Equilibrium (trim) & A state and input at which nothing changes (\ref{sec:background}). \\
+Euler angles & Roll $\phi$, pitch $\theta$, yaw $\psi$: three angles that describe orientation; break down at some orientations (gimbal lock). \\
+Excitation & Random changes added to the inputs during data collection so that the data show how the system responds (\ref{sec:koopman}). \\
+FDI / FDD & Fault detection and isolation / diagnosis: algorithms that notice and locate a failure. \\
+Feedback linearization & A nonlinear control method that cancels the nonlinear terms by the control input so the remaining loop is linear. \\
+Floquet theory & Stability theory for linear systems whose coefficients repeat periodically in time (\ref{sec:model}). \\
+FTC & Fault-tolerant control: control that keeps working after a failure. Active FTC switches controller after detection; passive FTC does not need detection. \\
+Gramian & A matrix measuring how strongly each direction of the state can be reached (controllability) or seen (observability) in a given time (\ref{sec:linear}). \\
+Gyroscopic effect & The torque needed to change the direction of an angular momentum; makes spinning bodies precess (\ref{sec:model}). \\
+$H_\infty$ loop shaping & A robust linear control design that shapes the loop's frequency response and maximizes a robustness margin. \\
+Healthy controller & The normal controller used with four working rotors. \\
+Horizon & How far ahead MPC predicts (here 20 steps, 100\,ms). \\
+INDI & Incremental nonlinear dynamic inversion: a nonlinear control method that uses measured accelerations. \\
+Inertia matrix & How hard it is to change the rotation of a body about each axis. \\
+Interior-point method & A family of algorithms for convex optimization that moves through the inside of the feasible set; Clarabel is one. \\
+Invariant set & A set that no trajectory starting inside it can leave (\ref{sec:certificate}). \\
+Jacobian & Matrix of partial derivatives; the linearization of a nonlinear function (\ref{sec:background}). \\
+Koopman operator & A linear operator that advances functions of the state in time; lets nonlinear systems be described linearly in a lifted space (\ref{sec:background}). \\
+Lifted state & The vector of dictionary functions $\vect z = \psi(\vect x)$. \\
+LMI & Linear matrix inequality: a convex constraint saying a matrix, linear in the unknowns, is positive or negative semidefinite (\ref{sec:certificate}). \\
+LPV & Linear parameter-varying: a linear model whose matrices depend on a measured, changing parameter (here the yaw rate). \\
+LQR & Linear-quadratic regulator: the state-feedback gain minimizing a quadratic cost (\ref{sec:background}). \\
+LTI & Linear time-invariant: a model $\dot{\vect x} = A\vect x + B\vect u$ with constant matrices. \\
+Lyapunov function & An energy-like function that decreases along the motion; its existence proves stability (\ref{sec:certificate}). \\
+Measured disturbance & A known, additive term in an MPC prediction model; used here for the learned residual (\ref{sec:mpc}). \\
+Minkowski sum $\oplus$ & The set of all sums $a + b$ with $a$ from one set and $b$ from another (\ref{sec:certificate}). \\
+Monte Carlo & Repeating a simulation from many random starts to estimate probabilities (\ref{sec:delay}). \\
+Motor lag & Delay of the motor thrust behind its command, modelled as a first-order lag with time constant $\sigma$ (\ref{sec:model}). \\
+MPC & Model predictive control: repeatedly optimize the inputs over a short future horizon and apply the first one (\ref{sec:background}, \ref{sec:mpc}). \\
+NMPC & Nonlinear MPC: MPC with a nonlinear prediction model (no longer a QP). \\
+Normalized RMSE & Root mean square error after dividing each state by its typical size (\ref{sec:koopman}). \\
+Observability & Whether the state can be worked out from the sensor outputs (\ref{sec:linear}). \\
+Offset-free MPC & MPC that estimates a constant disturbance and compensates it, removing steady errors like integral action. \\
+Open loop & Without feedback; an open-loop prediction uses no later measurements. \\
+Operator splitting & A way of solving an optimization problem by alternating between simpler subproblems; used by OSQP. \\
+OSQP & A fast solver for quadratic programs. \\
+Overfitting & Fitting the noise or quirks of the training data instead of the true pattern. \\
+PBH test & Popov--Belevitch--Hautus test: checks controllability (or observability) mode by mode (\ref{sec:linear}). \\
+Plant & The system being controlled (here the drone, or a truth plant in simulation). \\
+Positive definite & A symmetric matrix $P$ with $\vect x^\top P\vect x>0$ for all $\vect x\ne0$, written $P\succ0$; $\succeq$ allows equality (\ref{sec:background}). \\
+QP & Quadratic program: minimize a quadratic cost subject to linear constraints; convex. \\
+Quaternion & Four numbers that describe an orientation without gimbal lock (\ref{sec:model}). \\
+Randomized plants & Training on many plants with randomly drawn parameters, also called domain randomization (\ref{sec:koopman}). \\
+Reaction torque & Twisting torque on the body from a spinning propeller (\ref{sec:intro}). \\
+Reduced attitude $\vect n$ & The inertial ``up'' direction seen in body axes, $R^\top\vect e_3$; all that is controlled after the failure (\ref{sec:model}). \\
+Relaxed hover & The spinning equilibrium of a multicopter that has lost rotors (\ref{sec:model}). \\
+Residual & The difference between the truth and the physics model's prediction (\ref{sec:koopman}). \\
+Ridge regression & Least squares with a penalty on the size of the coefficients (\ref{sec:background}). \\
+RK4 & The classical fourth-order Runge--Kutta integration method (\ref{sec:background}). \\
+Rotation matrix $R$ & Matrix turning body-frame vectors into inertial-frame vectors. \\
+Saturation & Clipping of an input at its physical limits (\ref{sec:background}). \\
+Schur complement & A rule that turns certain nonlinear matrix inequalities into LMIs (\ref{sec:certificate}). \\
+SE(3) & The set of all positions and orientations of a rigid body. \\
+Singular values & Numbers that measure how much a matrix stretches vectors in each direction; a value near zero means a direction the matrix almost loses. \\
+Sliding-mode control & A robust nonlinear control method that forces the state onto a chosen surface by switching control. \\
+Spectral radius & The largest eigenvalue magnitude of a discrete-time matrix; above 1 means growth. \\
+Spin-up & Flying on two opposing rotors with no attitude feedback until the drone spins fast enough for the failure LQR (\ref{sec:delay}). \\
+S-procedure & A standard technique that turns ``one quadratic inequality implies another'' into an LMI (\ref{sec:certificate}). \\
+Standardize & Subtract the mean and divide by the standard deviation. \\
+State & The smallest set of numbers that determines the future of a system given its inputs (\ref{sec:background}). \\
+Sum-of-squares (SOS) programming & An extension of LMI methods that certifies polynomial inequalities, used for nonlinear stability regions. \\
+Supervisor & The logic that switches from the healthy to the failure controller after detection (\ref{sec:delay}). \\
+Switched system & A system that jumps between several models, for example healthy and faulty; ``dwell time'' is the minimum average time between switches for which stability is guaranteed. \\
+Thrust & The upward force of a propeller, $f = \kappa_f\Omega^2$. \\
+Truth plant & A simulated plant with effects the nominal model lacks, used to generate data and to test controllers (\ref{sec:truth}). \\
+Wilson interval & A confidence interval for a probability estimated from a count (\ref{sec:delay}). \\
+Zero-order hold (ZOH) & Holding a digital command constant until the next sample (\ref{sec:background}). \\
+\bottomrule
+\end{longtable}
+\normalsize

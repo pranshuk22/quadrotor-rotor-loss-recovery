@@ -1,0 +1,62 @@
+%=====================================================================
+\section{Discussion, limitations and next steps}\label{sec:discussion}
+%=====================================================================
+\subsection{Status of the hypotheses}
+\begin{table}[H]
+\centering\small
+\caption{Status of the hypotheses of Section~\ref{sec:intro}.}\label{tab:hyp}
+\begin{tabularx}{\linewidth}{l L p{5.6cm}}
+\toprule
+& Hypothesis & Status \\
+\midrule
+H1 & Full-state EDMDc on the failed drone is unstable and loses to ``no change'' at long horizons & Supported (4 of 55 eigenvalues slightly outside the unit circle) \\
+H2 & The residual model predicts best & Supported from 100\,ms to 1\,s, on the training plant only (beyond about 2\,s ``no change'' is better) \\
+H3 & Residual Koopman MPC removes the steady bias under mismatch & Partly: reduced by 32\% on the training plant; worse on one held-out variant \\
+H4 & The residual model needs less data & Supported (10 episodes beat 40) \\
+H5 & The linear certificate does not contain the failure state; one over the spin-up does & First half supported ($\beta = 0.22$); second half not yet tested \\
+H6 & The certified $\tau^\star$ is finite and of the order of real detector delays & Not yet tested; the empirical limit (12 to 19\,ms) is shorter than detectors need \\
+H7 & The certified $\tau^\star$ is within 2 to 3 times the empirical value & Not yet tested \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What the results mean}
+\paragraph{Physics first, learning second.} The physics model of Mueller and D'Andrea, which we reproduced to every printed digit except in one internally inconsistent published case, already describes the spinning drone well: it gives the right equilibrium, the right flight spin-up time and a controller that works. Learning helps only in the second order, and only when the learned part is restricted to the error. Learning everything from data produced an unstable model, as our proposal predicted.
+
+\paragraph{A calibration, not yet a general model.} The learned residual is accurate on the plant it saw and harmful on a different plant. As it stands it behaves like an offline calibration of one vehicle. Online adaptation, or a residual that also uses a short history of states, is needed before it can be called a general correction for rotor failure.
+
+\paragraph{Detection time is the bottleneck.} The most striking result is how little detection delay the published strategy tolerates in our simulation: around 10 to 20\,ms, while published detectors need about 20 to 130\,ms. The cause is simple and robust: the healthy controller cannot stop the roll because the opposite rotor cannot go below idle thrust. This makes a certified delay budget, and controllers that tolerate longer delays, practically important.
+
+\subsection{Limitations}
+\begin{enumerate}
+  \item \textbf{Spin-up thrust.} The delay tolerance depends on the spin-up thrust (12 against 7\,ms for the 90\% level). The flight value is read from a plot and carries some uncertainty.
+  \item \textbf{Nominal plant for the delay study.} The delay study uses the nominal plant; the published models over-predict the steady spin rate in flight by about 20 to 27\%.
+  \item \textbf{Generalization.} The residual model helps reliably only on the plant family it was trained on.
+  \item \textbf{Linear certificates.} The certificate holds for the linearized loop with saturation. The gap to the nonlinear system is measured by simulation, not proven.
+  \item \textbf{Truth-plant realism.} The truth plants add thrust loss, inertia error and motor lag, but not yet air-relative thrust or quadratic drag, both of which we validated in our implementation of the IJRR model. There is no sensor noise and no translational drag yet.
+  \item \textbf{Certificate for the learned controller.} The clipping level $\vect d_{\max}$ is a percentile of the training residuals, not a bound on the true mismatch, and a constrained MPC needs more than the saturation conditions of Section~\ref{sec:certificate}. Both must be addressed before the residual Koopman loop can be certified.
+  \item \textbf{Simulation only.} No result has been tested on hardware.
+  \item \textbf{Full-state measurement.} All controllers are given the exact state. A real spinning drone needs an estimator for the tilt, height and vertical speed, and sensor noise will affect both the learned residual and the MPC.
+  \item \textbf{Closed-loop data.} The learning data are recorded under LQR feedback with added excitation, which correlates states and inputs; possible bias from this is not analysed.
+  \item \textbf{Missing baselines.} An offset-free (integral-action) MPC is the obvious classical alternative for removing a steady error, and grey-box estimation of the few uncertain physical parameters (thrust loss, inertias, motor time constant) is the obvious model-based alternative to a black-box residual. Neither has been compared yet.
+  \item \textbf{Literature access.} Several closely related papers~\cite{stephan2018lpv,lanzon2014flight,qi2016recoverable,basak2015switching} have not yet been read in full; our statements about them rely on abstracts, a thesis and citing papers.
+\end{enumerate}
+
+\subsection{Plan for the remaining weeks}
+The course has a final progress presentation on 31 October 2026, and the journal-style final report is due on 13 November 2026.
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\linewidth}{l L}
+\toprule
+Dates & Work \\
+\midrule
+Until 18 Oct & LPV model in the yaw rate and a saturation-aware certificate over the spin-up. MPC on the full-state Koopman model (the second controller of our proposal) and an integral-action MPC baseline. Read the remaining key papers in full. \\
+19 to 25 Oct & Reachable set of the undetected phase and the containment test, giving a first certified $\tau^\star$; comparison with the empirical curve. Online adaptation of the residual by recursive least squares. \\
+26 to 31 Oct & Sensitivity of $\tau^\star$ to the spin-up thrust, idle thrust and motor lag; air-relative thrust in the truth plant. Final progress presentation on 31 Oct. \\
+1 to 13 Nov & Bound on the true model mismatch and a certificate for the residual Koopman loop if time allows; final simulations and the journal-style report, due 13 Nov. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Conclusion}
+We built a simulator of a quadrotor with complete rotor loss and showed that it reproduces three published papers and the spin-up time of a real flight. On the plant it was trained on, a Koopman model that learns only the error of the physics model is the most accurate predictor from 100\,ms to 1\,s, needs less data than a Koopman model of the full dynamics, and reduces a steady altitude error by one third inside a convex MPC; it does not yet carry over to a plant with different parameters. In our simulation, the published recovery strategy recovers safely with high probability only for detection delays of about 10 to 20\,ms, shorter than most published detectors need (about 20 to 130\,ms), because nothing can stop the roll while the failure is undetected. A first LMI certificate covers 22\% of the way to the failure state, and the controller fails only at low spin rates, which points to a certificate over the spin-up as the next step. The remaining weeks build that certificate and the certified delay budget, and evaluate each capture controller, including the residual Koopman MPC, by the delay it tolerates.

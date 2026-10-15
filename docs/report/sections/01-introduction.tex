@@ -1,0 +1,83 @@
+%=====================================================================
+\section{Introduction}\label{sec:intro}
+%=====================================================================
+
+\subsection{How a quadrotor flies}
+A quadrotor has four propellers, each driven by its own electric motor. Each propeller pushes air down and so produces an upward force called \emph{thrust}. A quadrotor has no wings and no rudder: everything it does, it does by changing the four thrusts.
+\begin{itemize}
+  \item \textbf{Going up and down.} If all four thrusts together are larger than the weight, the drone climbs; if smaller, it descends.
+  \item \textbf{Tilting (roll and pitch).} If the propeller on one side pushes harder than the one on the opposite side, the drone tilts. A tilted drone has its thrust pointing partly sideways, so it moves sideways. This is how a quadrotor travels horizontally.
+  \item \textbf{Turning (yaw).} A spinning propeller also pushes back on the drone with a small twisting effect (a \emph{reaction torque}), in the direction opposite to its spin. Two of the propellers spin clockwise and two anticlockwise, so in normal flight the twisting effects cancel. To turn, the drone speeds up the pair that spins one way and slows down the other pair.
+\end{itemize}
+Four thrusts control exactly four things: total upward force, roll, pitch and yaw. There is no spare actuator. This is why losing even one rotor is serious.
+
+\subsection{What happens when a rotor fails}
+If one rotor stops completely, only three thrusts remain, but the drone still needs to (i) carry its weight, (ii) keep from rolling over and (iii) cancel the yaw twist. With three propellers this is impossible: the reaction torques of the remaining propellers no longer cancel, so the drone starts to spin about its vertical axis, faster and faster, until air drag on the spinning body balances the twist.
+
+Mueller and D'Andrea showed that this is not the end~\cite{mueller2014stability,mueller2016relaxed}. If we \emph{give up} control of the yaw angle (the compass heading) and accept that the drone spins, the remaining three rotors can still hold the drone in the air and steer it. For their drone the paper predicts a constant spin of about 20\,rad/s (about 3 turns per second) around an axis tilted about 17$^\circ$ from the body's vertical axis, while the centre of mass moves on a tiny circle of about 8\,mm radius (our simulator gives 19.6\,rad/s, 16$^\circ$ and 7\,mm; Section~\ref{sec:validation} explains the small difference). They called this state the \emph{relaxed hover}, and they flew it on a real drone.
+
+\begin{plain}
+Think of a spinning top. It cannot stand still upright, but it can stand steadily while spinning. After losing a rotor the drone becomes something like a flying spinning top: it is stable only while it spins, and it moves around by tilting its spin axis.
+\end{plain}
+
+\subsection{The two problems this project studies}
+Getting a real drone into this spinning state raises two connected problems.
+
+\paragraph{Problem 1: the model is not perfect.} A controller is designed using a mathematical model of the drone. The physics model of Mueller and D'Andrea captures the main spinning motion well, but it misses some real effects. For example, in their two-propeller flight the drone stayed about 2.4\,m below its set-point, which the authors attribute to less thrust while spinning fast, and in the one-propeller flights the drone spun about 20 to 27\% slower than predicted~\cite{mueller2014stability,mueller2016relaxed}; the inertia and motor speed are never known exactly. A controller built on an imperfect model makes systematic errors, for example it settles at the wrong height. A natural fix is to keep the physics model and \emph{learn its error} from data. We learn the error with the tools of Koopman methods (EDMD, Section~\ref{sec:background}): a fixed dictionary of nonlinear features of the state and input, and least-squares regression. In the controller the learned correction is evaluated outside the optimization, as Todde et al.\ do~\cite{todde2026residual}, so the optimization problem stays easy (convex) to solve. Such ``residual Koopman'' models already exist for healthy drones and other robots~\cite{todde2026residual,bruder2025residual,narayanan2026rkmpc}, but we did not find them applied to the spinning state after a complete rotor loss.
+
+\paragraph{Problem 2: detection takes time.} The flight computer does not know immediately that a rotor has failed. A fault-detection algorithm has to notice it first, and published detectors need about 20 to 130\,ms~\cite{strack2021fast,yang2026mml1,zhou2025rotorfailureaware}. During this time the normal (healthy-flight) controller keeps flying a drone that has lost a rotor, and the drone tilts and drops. When the failure is finally detected, the failure-mode controller must catch the drone from wherever it has drifted. Several recovery methods that come with a mathematical guarantee start their analysis at the moment the failure is known and do not model the undetected interval~\cite{simha2017geometric,allawati2026quasi}, and many studies assume the failure is known in advance~\cite{zhou2025rotorfailureaware}. For linear systems whose remaining actuators can still compensate a fault, LMI methods exist that maximize the tolerated detection delay under actuator saturation~\cite{rotondo2015virtual,rotondo2016virtual}. For complete rotor loss of a quadrotor, where the steady state after the failure is a spin, we did not find a certified \emph{maximum} tolerable detection delay that accounts for the limited thrust of real motors.
+
+\subsection{Research questions}
+\begin{description}[leftmargin=1.2em]
+  \item[RQ1 (as proposed).] Can a Koopman-style (EDMD) model of only the mismatch, built on top of the known spinning-equilibrium model of Mueller and D'Andrea, predict and control the failed drone better than the physics model alone, or than a Koopman model of the full dynamics? ``Better'' means a smaller multi-step prediction error on new data, and a smaller steady error in closed loop.
+  \item[RQ2 (added after the proposal).] What is the largest fault-detection delay $\tau^\star$ for which recovery into the spinning state can be guaranteed mathematically (as a first step, for the linearized model with thrust limits), given the healthy controller, the failure-mode controller, thrust limits, motor lag and sampling? How do the controllers of RQ1 change $\tau^\star$?
+\end{description}
+The two questions are linked: every controller that catches the drone after detection (LQR, analytical MPC, residual Koopman MPC) can be compared by the detection delay it tolerates.
+
+\paragraph{Hypotheses.} Before the experiments we wrote down what we expected:
+\begin{description}[leftmargin=1.2em,itemsep=1pt]
+  \item[H1.] A Koopman model of the full failed-drone dynamics has eigenvalues outside the unit circle and loses to a ``nothing changes'' predictor at long horizons.
+  \item[H2.] The residual model has a smaller multi-step prediction error than both the physics model and the full Koopman model.
+  \item[H3.] An MPC that uses the residual removes the steady error that model mismatch causes in an MPC built on the physics model.
+  \item[H4.] The residual model reaches a given prediction error with less training data than the full Koopman model.
+  \item[H5.] A certificate built from the linearization at the spinning equilibrium does not cover the state right after a failure; one valid over the whole spin-up does.
+  \item[H6.] The certified $\tau^\star$ is finite and of the same order as real detector delays.
+  \item[H7.] The certified $\tau^\star$ is within 2 to 3 times the delay found by simulation.
+\end{description}
+H1 to H4 belong to RQ1 and H5 to H7 to RQ2. Section~\ref{sec:discussion} gives the status of each.
+
+\subsection{What we did}
+Everything is done in simulation; no hardware is used. In order:
+\begin{enumerate}
+  \item We wrote a simulator of the drone used by Mueller and D'Andrea (Sections~\ref{sec:model} and~\ref{sec:code}).
+  \item \textbf{V0, E1:} we checked it against three published papers, against flight data and against hand-derived physics results (Section~\ref{sec:validation}).
+  \item \textbf{E2, E3:} we analysed the linearized models (controllability, observability) and designed LQR controllers (Section~\ref{sec:linear}).
+  \item \textbf{E6:} we built three predictors of the failed drone (physics only, full Koopman, residual Koopman) and compared them (Section~\ref{sec:koopman}).
+  \item \textbf{E7:} we built MPC controllers on the physics model with and without the learned residual (Section~\ref{sec:mpc}).
+  \item \textbf{E4:} we measured how the probability of a safe recovery falls as detection takes longer (Section~\ref{sec:delay}).
+  \item \textbf{E5:} we computed a first mathematical certificate (an LMI-based invariant ellipsoid) and compared it with simulation (Section~\ref{sec:certificate}).
+\end{enumerate}
+The labels V0 and E1 to E7 are the experiment names used in figure titles and in the code (Appendix~\ref{app:repro}).
+
+\paragraph{What is reproduction and what is new.} The model, the equilibrium, its controllability, the LQR weights and the spin-up strategy are from Mueller and D'Andrea; we reimplemented and checked them, and found one inconsistency in a published case. New in this work, as far as our search found: the comparison of physics-only, full Koopman and residual models in the spinning regime after complete rotor loss and its use in MPC (RQ1); the idle-thrust argument and the measured probability of safe recovery against detection delay; and the first saturation-aware certificate for this controller, as a step towards a certified delay budget (RQ2).
+Section~\ref{sec:discussion} discusses the results, the limitations and the remaining work. Appendix~\ref{app:glossary} is a glossary of all technical terms, Appendix~\ref{app:symbols} lists the symbols, and Appendix~\ref{app:repro} explains how to reproduce every number.
+
+\subsection{Main results in one table}
+\begin{table}[H]
+\centering\small
+\caption{Main results so far. Details and caveats are in the sections given.}\label{tab:main}
+\begin{tabularx}{\linewidth}{l L l}
+\toprule
+Topic & Result & Section \\
+\midrule
+Simulator validation & Two-rotor and three-rotor-loss equilibria of~\cite{mueller2014stability} reproduced to every published digit; five cases of~\cite{mueller2016relaxed} within 4\%; flight spin-up time within 4\% & \ref{sec:validation} \\
+Linear analysis & Failed drone is controllable from three rotors; gyroscopes alone cannot see tilt or height & \ref{sec:linear} \\
+LQR baseline & Recovers on the nonlinear model; tolerates only 18\,ms of input delay (healthy LQR: 40\,ms) & \ref{sec:linear} \\
+Prediction (RQ1) & Residual model best from 100\,ms to 1\,s (1\,s error 0.64 vs 0.91 full Koopman vs 7.09 physics only); needs less data & \ref{sec:koopman} \\
+Generalization (RQ1) & Learned models fail on a plant with different parameters & \ref{sec:koopman} \\
+MPC (RQ1) & Residual Koopman MPC cuts the steady altitude error by 32\% on the training plant; on one held-out variant (plant B without its thrust loss) the error is 47\% larger & \ref{sec:mpc} \\
+Detection delay (RQ2) & Safe-recovery probability below 0.9 from 12\,ms and below 0.5 from 19\,ms of delay & \ref{sec:delay} \\
+Certificate (RQ2) & For the linearized model with thrust limits: certified 22\% of the way to the failure state; simulation recovers up to 70\% & \ref{sec:certificate} \\
+\bottomrule
+\end{tabularx}
+\end{table}

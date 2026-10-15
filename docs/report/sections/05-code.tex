@@ -1,0 +1,129 @@
+%=====================================================================
+\section{How the model is coded}\label{sec:code}
+%=====================================================================
+All code is our own and written in Python 3.12 with NumPy~\cite{harris2020numpy} and SciPy~\cite{virtanen2020scipy}. It lives in a small package, \texttt{rotorfail/}, plus one script per experiment in \texttt{experiments/} and automated tests in \texttt{tests/}. This section walks through the parts that implement Section~\ref{sec:model}. The listings are excerpts of the real code, shortened for reading (options such as the motor-lag switch, solver fallbacks and iteration limits are left out).
+
+\subsection{Package layout}
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\linewidth}{l L}
+\toprule
+Module & What it contains \\
+\midrule
+\texttt{params.py} & All vehicle parameters in one frozen data class \texttt{QuadParams}; the truth-plant families \\
+\texttt{dynamics.py} & The 17-entry state layout, quaternion helpers, saturation, the equations of motion, one RK4 step \\
+\texttt{sim.py} & The simulation loop with a sampled (zero-order-hold) controller \\
+\texttt{equilibrium.py} & Solvers for the relaxed hover (one, two and three rotors lost) \\
+\texttt{models.py} & The healthy and failed nonlinear models in design coordinates; numerical Jacobians; motor-lag augmentation \\
+\texttt{analysis.py} & Controllability and observability tests, Gramians, delay margin \\
+\texttt{control.py} & Healthy LQR, failure LQR, spin-up strategy, detection-delay supervisor \\
+\texttt{metrics.py} & The success criterion, fixed before the experiments \\
+\texttt{koopman.py} & Data generation, dictionary, full-state and residual EDMDc, error evaluation \\
+\texttt{mpc.py} & Linear MPC with an optional learned residual \\
+\texttt{certify.py} & LMI certificate (saturation-aware invariant ellipsoid) \\
+\texttt{validation.py} & Independent implementation of the IJRR 2016 model, used only for validation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Parameters}
+\texttt{QuadParams} is a frozen data class: once created, its values cannot change by accident. Derived quantities are computed properties, for example $I^B_{xx} = I^T_{xx} - 4I^P_{xx}$ and the torque vector~\eqref{eq:torque}:
+\begin{lstlisting}
+@dataclass(frozen=True)
+class QuadParams:
+    m: float = 0.50              # kg
+    l: float = 0.17              # m, arm length
+    Ixx_T: float = 3.2e-3        # total inertia about x and y
+    ...
+    thrust_loss: float = 0.0     # truth-plant effect k (0 in the nominal model)
+    prop_sign: tuple = (-1.0, 1.0, -1.0, 1.0)
+
+    def body_torque(self, f, r):
+        f1, f2, f3, f4 = f
+        return np.array([self.l * (f2 - f4),
+                         self.l * (f3 - f1),
+                         self.kappa_tau * (f1 - f2 + f3 - f4) - self.gamma * r])
+\end{lstlisting}
+A truth plant is created with \texttt{dataclasses.replace}, which copies the nominal parameters and changes only some of them, for example family A: \texttt{replace(base, thrust\_loss=1.5e-4, Ixx\_T=base.Ixx\_T*1.08, ...)}.
+
+\subsection{Equations of motion}
+\texttt{deriv(x, f\_cmd, p, alive)} returns $\dot{\vect x}$ for the 17-entry state. It is a direct transcription of equations~\eqref{eq:trans} to~\eqref{eq:torque}:
+\begin{lstlisting}
+def body_rate_derivative(w, f, p):
+    w_sigma = np.sum(p.prop_speeds(f))                    # sum of signed propeller speeds
+    h = p.I_T @ w + p.Izz_P * w_sigma * E3                # angular momentum
+    tau = p.body_torque(f * p.thrust_efficiency(w), w[2])
+    return np.linalg.solve(p.I_B, tau - np.cross(w, h))   # eq. (rot)
+
+def deriv(x, f_cmd, p, alive, motor_lag=True):
+    q, w = x[IDX_Q], x[IDX_W]
+    f_sat = saturate(f_cmd, p, alive)                     # 0 if stopped/failed, else clipped
+    f = np.where(alive, x[IDX_F], 0.0)
+    f_dot = np.where(alive, (f_sat - f) / p.sigma_mot, 0.0)   # motor lag
+    R = quat_to_rot(q)
+    acc = R @ E3 * np.sum(f) * p.thrust_efficiency(w) / p.m - G * E3
+    q_dot = 0.5 * quat_mult(q, np.concatenate(([0.0], w)))
+    w_dot = body_rate_derivative(w, f, p)
+    return np.concatenate((x[IDX_V], acc, q_dot, w_dot, f_dot))
+\end{lstlisting}
+The boolean vector \texttt{alive} says which rotors work; a failed rotor's thrust is forced to zero. The same function \texttt{body\_rate\_derivative} is used by the simulator, by the equilibrium solver and by the linear models, so they cannot disagree with each other.
+
+\subsection{Integration and the sampled controller}
+\texttt{rk4\_step} performs one classical Runge--Kutta step and then renormalizes the quaternion:
+\begin{lstlisting}
+def rk4_step(x, f_cmd, dt, p, alive):
+    k1 = deriv(x, f_cmd, p, alive)
+    k2 = deriv(x + 0.5 * dt * k1, f_cmd, p, alive)
+    k3 = deriv(x + 0.5 * dt * k2, f_cmd, p, alive)
+    k4 = deriv(x + dt * k3, f_cmd, p, alive)
+    x_new = x + dt / 6.0 * (k1 + 2 * k2 + 2 * k3 + k4)
+    x_new[IDX_Q] /= np.linalg.norm(x_new[IDX_Q])
+    return x_new
+\end{lstlisting}
+\texttt{simulate} runs the loop. The plant is integrated with step $\Delta t$ (0.5 to 1\,ms), but the controller is called only once per control period (1 to 5\,ms) and its command is held constant in between. This is exactly a digital controller with a zero-order hold:
+\begin{lstlisting}
+for k in range(n_steps + 1):
+    t = k * dt
+    if k % ctrl_every == 0:
+        u = controller(t, x)          # sampled controller, held between calls
+    ...                               # logging, optional early stop
+    x = rk4_step(x, u, dt, p, alive_fn(t), motor_lag)
+\end{lstlisting}
+Every controller is a Python object called as \texttt{controller(t, x)} that returns four thrust commands. Controllers that keep internal state (filters, mode flags) provide a \texttt{reset} method. A supervisor may provide \texttt{alive(t)} to say when the rotor fails.
+
+\subsection{Equilibrium solver}
+\texttt{relaxed\_hover(p, rho)} implements Section~\ref{sec:model}: a closed-form function for the rates and a one-dimensional root search for $f_1$:
+\begin{lstlisting}
+def relaxed_hover(p, rho=0.5):
+    def residual(f1):
+        f = np.array([f1, rho * f1, f1, 0.0])
+        w = _rates_for_thrust(f, p, w_guess)          # p = 0, r and q in closed form
+        n = w / np.linalg.norm(w) * np.sign(w[2])
+        return np.sum(f) * p.thrust_efficiency(w) * n[2] - p.weight
+    f_lo = p.weight / (2 + rho)                       # thrust if the drone were level
+    f1 = brentq(residual, f_lo * (1 + 1e-9), 6 * f_lo, xtol=1e-14)
+    ...
+\end{lstlisting}
+When thrust loss is switched on, or the thrusts do not satisfy $f_1 = f_3$ and $f_4 = 0$, the closed form no longer applies, and \texttt{\_rates\_for\_thrust} falls back to SciPy's \texttt{fsolve} on $\dot{\vect\omega}=0$.
+
+\subsection{Linear models}
+The linear models are not typed in by hand. \texttt{failed\_f} writes the 7-state equations, reusing \texttt{body\_rate\_derivative}, and \texttt{jacobians} differentiates them numerically by central differences with $\epsilon = 10^{-6}$:
+\begin{lstlisting}
+def failed_f(s, u3, p):
+    w, nx, ny = s[0:3], s[3], s[4]
+    nz = np.sqrt(max(1.0 - nx * nx - ny * ny, 1e-12))
+    n = np.array([nx, ny, nz])
+    f = np.array([u3[0], u3[1], u3[2], 0.0])
+    w_dot = body_rate_derivative(w, f, p)
+    n_dot = -np.cross(w, n)
+    vz_dot = np.sum(f) * nz / p.m - G
+    return np.array([*w_dot, n_dot[0], n_dot[1], s[6], vz_dot])
+
+def jacobians(fun, x0, u0, eps=1e-6):
+    for i in range(n):          # A[:, i] = (f(x0 + e_i eps) - f(x0 - e_i eps)) / (2 eps)
+        ...
+\end{lstlisting}
+This avoids transcription errors, and the tests check the result against finite differences of the same nonlinear function and against the paper's closed-form entries (for example $\bar a$). \texttt{add\_motor\_lag} then appends the three motor states.
+
+\subsection{Reproducibility}
+Every random number comes from \texttt{numpy.random.default\_rng(seed)} with a fixed seed written in the experiment script. Every table and figure in this report is written by one script in \texttt{experiments/}. Success criteria are written in code (\texttt{metrics.py}) before the experiments are run, so they cannot be tuned afterwards. Appendix~\ref{app:repro} lists the commands.

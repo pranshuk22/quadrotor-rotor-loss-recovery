@@ -1,0 +1,48 @@
+%=====================================================================
+\section{Symbols}\label{app:symbols}
+%=====================================================================
+\small
+\begin{longtable}{p{0.18\linewidth}p{0.55\linewidth}p{0.18\linewidth}}
+\toprule
+Symbol & Meaning & Value / unit \\
+\midrule
+\endhead
+$m$ & mass & 0.50\,kg \\
+$g$ & gravity & 9.81\,m/s$^2$ \\
+$l$ & arm length & 0.17\,m \\
+$I^B$, $I^T$, $I^P$ & inertia of body, body with propellers, one propeller & kg\,m$^2$ \\
+$\kappa_f$ & thrust coefficient, $f = \kappa_f\Omega^2$ & $6.41\times10^{-6}$\,N\,s$^2$/rad$^2$ \\
+$\kappa_\tau$ & reaction torque per unit thrust & 0.0169\,m \\
+$\gamma$ & linear yaw-drag coefficient & $2.75\times10^{-3}$\,N\,m\,s/rad \\
+$f_i$, $f_\Sigma$ & thrust of rotor $i$, total thrust & N \\
+$f_{\min}$, $f_{\max}$ & running-motor thrust limits & 0.2, 3.8\,N \\
+$\sigma$ & motor time constant & 15\,ms \\
+$u_i$ & thrust command of rotor $i$ & N \\
+$\Omega_i$, $\Omega_\Sigma$ & signed speed of propeller $i$, and their sum & rad/s \\
+$\vect d$, $\vect v$ & position and velocity (inertial frame) & m, m/s \\
+$R$, $\vect q$ & rotation matrix and quaternion (body to inertial) & \\
+$\vect\omega = (p,q,r)$ & body rates & rad/s \\
+$\vect n = R^\top\vect e_3$ & reduced attitude & \\
+$\vect e_3$ & $(0,0,1)$ & \\
+$\eta$, $k$ & thrust efficiency $1 - k\|\vect\omega\|^2$ and its coefficient & s$^2$/rad$^2$ \\
+$\rho$ & thrust ratio $f_2/f_1$ at the relaxed hover & 0.5 \\
+$\bar{(\cdot)}$ & value at the equilibrium & \\
+$\bar a$ & gyroscopic coupling constant & $-10.10$\,rad/s \\
+$A, B$ & continuous-time linear model & \\
+$A_d, B_d$ & discrete-time (ZOH) model & \\
+$\Ts$ & sample period of learning and MPC & 5\,ms \\
+$K$, $F=-K$ & feedback gain & \\
+$Q, R$ & LQR / MPC weights (Section~\ref{sec:certificate}: $Q = P^{-1}$) & \\
+$P$, $P_N$ & Riccati solution / Lyapunov matrix; MPC terminal cost & \\
+$N$ & MPC horizon & 20 steps \\
+$\hat{\vect f}$ & filtered-command estimate of the motor thrusts & N \\
+$\vect\xi$, $\psi$, $\vect\zeta$ & learning features, dictionary, lifted state & \\
+$W$, $\vect d_{\max}$ & residual regression matrix, clipping level & \\
+$\tau$, $\tau^\star$ & detection delay, certified maximum delay & ms \\
+$\bar{\vect u}$ & symmetric saturation levels & (1.76, 0.82, 1.76)\,N \\
+$\mu$ & required decay rate in the certificate & 1/s \\
+$\beta$ & certified fraction of the way to the failure state & \\
+$\alpha$ & aggressiveness factor of the healthy LQR & \\
+\bottomrule
+\end{longtable}
+\normalsize

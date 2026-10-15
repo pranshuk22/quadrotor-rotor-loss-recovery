@@ -1,0 +1,85 @@
+%=====================================================================
+\section{Background: the ideas we use}\label{sec:background}
+%=====================================================================
+This section explains, in simple terms, the ideas from control theory, numerical computing and machine learning that the rest of the report uses. A reader who knows them can skip to Section~\ref{sec:literature}. Each idea is revisited with its exact equations where it is used.
+
+\subsection{Systems, states, inputs and outputs}
+A \emph{system} is anything whose behaviour changes over time and can be influenced: here, the drone. Its \emph{state} $\vect x$ is the smallest list of numbers that, together with future inputs, determines its future. For a drone the state contains position, velocity, orientation (attitude), rotation rates and, because motors cannot change speed instantly, the current thrust of each motor. The \emph{inputs} $\vect u$ are what we command: the four thrusts. The \emph{outputs} $\vect y$ are what sensors measure.
+
+A \emph{state-space model} writes the system as a differential equation
+\begin{equation}
+  \dot{\vect x}(t) = f(\vect x(t), \vect u(t)), \qquad \vect y(t) = h(\vect x(t)),
+\end{equation}
+where the dot means the rate of change in time. The function $f$ comes from physics (Newton's laws). If $f$ has the special form $A\vect x + B\vect u$ with constant matrices $A$ and $B$, the model is \emph{linear time-invariant} (LTI). Linear models are much easier to analyse and to control, so a large part of control theory is about them.
+
+\subsection{Equilibria and linearization}
+An \emph{equilibrium} (also called a \emph{trim point}) is a pair $(\bar{\vect x},\bar{\vect u})$ at which nothing changes: $f(\bar{\vect x},\bar{\vect u})=0$. For a healthy drone, hover with each motor carrying a quarter of the weight is an equilibrium. For a drone with a failed rotor, the relaxed hover is an equilibrium, but only in coordinates that rotate with the drone (Section~\ref{sec:model}).
+
+Close to an equilibrium, a smooth nonlinear model behaves almost like a linear one. Writing small deviations $\delta\vect x = \vect x - \bar{\vect x}$ and $\delta\vect u = \vect u - \bar{\vect u}$, a first-order Taylor expansion gives
+\begin{equation}
+  \delta\dot{\vect x} \approx A\,\delta\vect x + B\,\delta\vect u, \qquad
+  A = \frac{\partial f}{\partial\vect x}\Big|_{\bar{\vect x},\bar{\vect u}}, \quad
+  B = \frac{\partial f}{\partial\vect u}\Big|_{\bar{\vect x},\bar{\vect u}} .
+\end{equation}
+The matrices of partial derivatives $A$ and $B$ are called \emph{Jacobians}, and the process is called \emph{linearization}. We compute the Jacobians numerically by \emph{central differences}: change one entry of $\vect x$ by a tiny amount $\epsilon$ up and down and divide the change in $f$ by $2\epsilon$.
+
+\subsection{Eigenvalues and stability}
+The behaviour of $\dot{\vect x}=A\vect x$ is described by the \emph{eigenvalues} $\lambda$ of $A$ (numbers with $A\vect v = \lambda\vect v$ for some vector $\vect v$). Each eigenvalue is a \emph{mode}: a pattern of motion that grows or decays like $e^{\lambda t}$.
+\begin{itemize}
+  \item Real part negative: the mode decays (stable). The more negative, the faster.
+  \item Real part positive: the mode grows (unstable).
+  \item Real part zero: a simple (non-repeated) eigenvalue gives a mode that neither grows nor decays (marginally stable), for example an undamped oscillation or a single integrator. A repeated zero eigenvalue that forms a chain, such as the double integrator from force to position, grows linearly in time and is therefore unstable.
+  \item Imaginary part $\pm j\omega$: the mode oscillates with angular frequency $\omega$\,rad/s.
+\end{itemize}
+The \emph{damping ratio} $\zeta = -\operatorname{Re}\lambda/|\lambda|$ of an oscillating mode says how quickly the oscillation dies out: $\zeta=1$ means no overshoot, $\zeta$ near 0 means a long ringing.
+
+\paragraph{Discrete time.} Computers act at fixed time steps of length $\Ts$ (the \emph{sample period}). A discrete-time model is $\vect x_{k+1} = A_d\vect x_k + B_d\vect u_k$, where $k$ counts steps. If the input is held constant between samples (a \emph{zero-order hold}, ZOH), the exact discrete matrices are $A_d=e^{A\Ts}$ and $B_d = \int_0^{\Ts}e^{As}\,ds\,B$. In discrete time a mode is stable if its eigenvalue lies inside the unit circle, $|\lambda|<1$. The largest $|\lambda|$ is the \emph{spectral radius}; a value above 1 means some prediction errors grow at every step.
+
+\subsection{Numerical simulation}
+The nonlinear equations cannot be solved by hand, so we integrate them step by step. We use the classical fourth-order \emph{Runge--Kutta} method (RK4): in each step of length $\Delta t$ it evaluates $f$ four times (at the start, twice at the middle, at the end) and takes a weighted average. Its error per unit time shrinks like $\Delta t^4$, so halving the step makes the error about 16 times smaller. We use $\Delta t$ = 0.5 to 1\,ms, much shorter than the fastest motion of the drone.
+
+\subsection{Feedback control and LQR}
+A \emph{feedback controller} measures the state and computes the input from it, for example $\vect u = -K\vect x$ with a \emph{gain matrix} $K$. The closed loop is then $\dot{\vect x} = (A-BK)\vect x$, and the job of control design is to choose $K$ so that all eigenvalues of $A-BK$ have negative real parts with good damping.
+
+The \emph{linear-quadratic regulator} (LQR) chooses $K$ by minimizing a cost
+\begin{equation}
+  J = \int_0^\infty \big(\vect x^\top Q\vect x + \vect u^\top R\vect u\big)\,dt,
+\end{equation}
+where the weight matrix $Q$ penalizes state errors and $R$ penalizes control effort. Large $Q$ entries make the controller aggressive on those states; large $R$ makes it gentle on the motors. The optimal gain is $K = R^{-1}B^\top P$, where $P$ solves the \emph{algebraic Riccati equation} $A^\top P + PA - PBR^{-1}B^\top P + Q = 0$. A common way to choose the weights is \emph{Bryson's rule}: $Q_{ii} = 1/(\text{largest acceptable error in state } i)^2$ and similarly for $R$.
+
+\subsection{Controllability and observability}
+A system is \emph{controllable} if the inputs can move the state from anywhere to anywhere. For an LTI system this holds exactly when the \emph{controllability matrix} $[B, AB, A^2B,\dots,A^{n-1}B]$ has full rank $n$ (the number of states). (The rank is computed from the \emph{singular values} of the matrix, which measure how much it stretches vectors in each direction; a singular value near zero means a direction it almost loses.) The \emph{PBH test} (Popov--Belevitch--Hautus) checks the same property mode by mode: mode $\lambda$ is controllable if the matrix $[\lambda I - A,\; B]$ has full rank.
+
+A system is \emph{observable} if the state can be worked out from the sensor outputs over time. The test is the same with $(A^\top, C^\top)$ in place of $(A, B)$, where $\vect y = C\vect x$. A rank test only says yes or no. To say \emph{how well} a direction can be seen or reached, we use \emph{Gramians}: the observability Gramian $W_o(T)=\int_0^T e^{A^\top s}C^\top C e^{As}ds$ measures how much output ``energy'' each initial state produces in time $T$. A tiny smallest eigenvalue means a direction that is almost invisible to the sensors.
+
+\subsection{Model predictive control (MPC)}
+MPC repeatedly solves a small optimization problem. At every sample it uses a model to predict the next $N$ steps (the \emph{horizon}), chooses the input sequence that minimizes a cost (like the LQR cost) while respecting limits (for example motor thrust limits), applies only the first input, and repeats at the next sample with a new measurement. Re-solving at every step from a new measurement adds feedback: a prediction error made at one step is corrected at the next.
+
+When the model is linear, the cost quadratic and the limits linear, the optimization is a \emph{quadratic program} (QP). With a positive definite weight on the inputs (as in our MPC) the QP is \emph{strictly convex}: it has a single best solution, and solvers find it reliably and fast. Keeping the problem convex is the main reason we want linear prediction models.
+
+\subsection{Saturation and delay}
+Real motors have limits. \emph{Saturation} means that a command outside the range $[f_{\min}, f_{\max}]$ is clipped. A controller that asks for more than the motors can give behaves differently from its linear design, and can even become unstable. \emph{Delay} means that the controller acts on old information. Every feedback loop tolerates only a certain pure delay before it becomes unstable; this amount is its \emph{delay margin}.
+
+\subsection{Koopman operators and EDMD}
+The \emph{Koopman operator} is a way to describe a nonlinear system with linear equations. Instead of following the state $\vect x$ itself, one follows many functions of it, $\psi_1(\vect x), \psi_2(\vect x),\dots$ (called \emph{observables}, collected into a \emph{dictionary}). For a system without inputs and a well-chosen, possibly infinite, set of observables, their evolution is exactly linear. In practice one uses a finite dictionary (for example all products of pairs of states) and finds the best linear map from data, so the result is an approximation; with inputs, the lifted model below is an approximation even for a rich dictionary~\cite{korda2018linear}. This is \emph{extended dynamic mode decomposition} (EDMD)~\cite{williams2015edmd}; its extension to inputs~\cite{korda2018linear} we call EDMDc. The resulting model, $\vect z_{k+1} = A\vect z_k + B\vect u_k$ with $\vect z = \psi(\vect x)$, is linear in a bigger \emph{lifted} state $\vect z$, so it can be used directly in a convex MPC.
+
+\begin{plain}
+Imagine predicting the motion of a ball on a curved track. Its position alone changes in a complicated, nonlinear way. But if you also keep track of its speed, the square of its speed, its height and so on, the rules that update all these numbers together can be close to a simple linear recipe. Koopman methods look for such a set of numbers and the recipe that updates them.
+\end{plain}
+
+\subsection{Regression, ridge regression and residual learning}
+\emph{Linear regression} finds a matrix $W$ so that $\vect y\approx W^\top\vect\phi$ for many examples $(\vect\phi,\vect y)$, by minimizing the sum of squared errors. \emph{Ridge regression} adds a small penalty $\lambda\|W\|^2$; this keeps $W$ from becoming huge when some features are nearly duplicates, and reduces \emph{overfitting} (fitting the noise of the training data instead of the true pattern). The solution has the closed form $W = (\Phi^\top\Phi + \lambda I)^{-1}\Phi^\top Y$.
+
+\emph{Residual learning} keeps a trusted model and learns only what it gets wrong. If the physics model predicts $\vect x^{\text{nom}}_{k+1}$ and the truth is $\vect x_{k+1}$, the learned part predicts the \emph{residual} $\vect e_{k+1} = \vect x_{k+1} - \vect x^{\text{nom}}_{k+1}$. The hope is that the residual is small and simple, so it can be learned from little data.
+
+\subsection{Lyapunov functions and linear matrix inequalities}
+A \emph{Lyapunov function} $V(\vect x)$ is like an energy: it is zero at the equilibrium, positive elsewhere, and always decreases along the motion of the system. If such a function exists, the system returns to the equilibrium. A common choice is $V = \vect x^\top P\vect x$ with a \emph{positive definite} matrix $P$ (written $P\succ0$), which means $\vect x^\top P\vect x>0$ for every $\vect x\ne0$; $P\succeq0$ (positive semidefinite) allows equality, and $P\preceq0$ means $-P\succeq0$. The set where $V\le1$ is an \emph{ellipsoid}; if $V$ decreases everywhere on it, no trajectory can leave it, so it is an \emph{invariant set}, and every state inside it is guaranteed to recover.
+
+A \emph{linear matrix inequality} (LMI) is a condition of the form ``this symmetric matrix, which depends linearly on unknown matrices, is negative (or positive) semidefinite''. The conditions for a Lyapunov function can often be written as LMIs. LMIs are convex, so a computer can find the largest certified ellipsoid reliably~\cite{boyd1994lmi}. Section~\ref{sec:certificate} explains this in detail.
+
+\subsection{Statistics used}
+\begin{itemize}
+  \item \textbf{Monte Carlo simulation}: run the same experiment many times from random starting conditions and count outcomes.
+  \item \textbf{Wilson interval}: a 95\% confidence interval for a success probability estimated from $k$ successes in $n$ trials; it behaves well even when $k$ is 0 or $n$ (Section~\ref{sec:delay}).
+  \item \textbf{RMSE}: root mean square error, $\sqrt{\text{mean of squared errors}}$. We divide each state by its typical size before averaging, so that states with different units can be combined (\emph{normalized} RMSE).
+\end{itemize}

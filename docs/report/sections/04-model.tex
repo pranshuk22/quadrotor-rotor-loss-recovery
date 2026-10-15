@@ -1,0 +1,222 @@
+%=====================================================================
+\section{The mathematical model}\label{sec:model}
+%=====================================================================
+This section builds the model step by step: frames and layout, forces, torques, motors, attitude, the reduced attitude, the spinning equilibrium, and finally the linear models used for control design. We follow Mueller and D'Andrea~\cite{mueller2014stability} throughout and say where we add something.
+
+\subsection{Frames, layout and sign conventions}
+We use two coordinate frames (Figure~\ref{fig:layout}):
+\begin{itemize}
+  \item The \textbf{inertial frame} is fixed to the ground. Its $z$ axis points \emph{up}, so gravity is $-g\vect e_3$ with $g=9.81$\,m/s$^2$ and $\vect e_3=(0,0,1)$.
+  \item The \textbf{body frame} is fixed to the drone and moves with it. Its $z$ axis points along the thrust direction (``up'' for the drone). Its $x$ and $y$ axes point along the arms.
+\end{itemize}
+The rotation matrix $R$ turns a vector written in body coordinates into the same vector in inertial coordinates. Rotor 1 sits on the $+x$ arm, rotor 2 on $+y$, rotor 3 on $-x$ and rotor 4 on $-y$, each at distance $l$ from the centre. Rotors 1 and 3 spin one way (we give them negative speed), rotors 2 and 4 the other way (positive speed). \textbf{Rotor 4 is the failed rotor} throughout, as in the paper; by symmetry any rotor would give the same results.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=1.25,>=Stealth]
+  \draw[thick] (-1.6,0)--(1.6,0); \draw[thick] (0,-1.6)--(0,1.6);
+  \fill[gray!30] (0,0) circle (0.28); \draw (0,0) circle (0.28);
+  \foreach \p/\n/\c/\s in {(1.6,0)/1/blue/{$-$},(0,1.6)/2/blue/{$+$},(-1.6,0)/3/blue/{$-$}} {
+    \draw[\c!60!black,fill=\c!8] \p circle (0.42);
+    \node at \p {\small rotor \n};
+    \node[below=10pt] at \p {\scriptsize spin \s};
+  }
+  \draw[red!70!black,fill=red!6,dashed] (0,-1.6) circle (0.42);
+  \node[red!70!black] at (0,-1.6) {\small rotor 4};
+  \node[red!70!black,below=11pt] at (0,-1.6) {\scriptsize failed};
+  \draw[->,thick] (0,0)--(2.6,0) node[right] {$x_B$};
+  \draw[->,thick] (0,0)--(0,2.6) node[above] {$y_B$};
+  \node at (0.45,0.45) {\scriptsize $z_B$ up};
+  \draw[<->] (0.32,-0.25)--(1.18,-0.25) node[midway,below] {\scriptsize $l$};
+\end{tikzpicture}
+\hspace{1.2cm}
+\begin{tikzpicture}[scale=1.1,>=Stealth]
+  % tilted spin axis
+  \draw[->,thick] (0,0)--(0,2.4) node[above] {inertial up};
+  \draw[->,thick,blue!60!black] (0,0)--(0.75,2.25) node[above right] {\small body $z_B$};
+  \draw[->,thick,orange!80!black] (0,0)--(0,1.7) node[left,pos=0.75] {\small $\bar{\vect\omega}$};
+  \draw (0,0.9) arc (90:71.6:0.9); \node at (0.22,1.12) {\scriptsize $16^\circ$};
+  \draw[->,orange!80!black] (-0.45,1.85) arc (200:-20:0.48 and 0.14);
+  \node[align=center] at (0.2,-0.5) {\small spin axis $\bar{\vect n}\parallel\bar{\vect\omega}$ is vertical;\\ \small the body is tilted about it};
+\end{tikzpicture}
+\caption{Left: rotor layout seen from above (body frame). Rotors 1 and 3 spin with negative speed, rotor 2 with positive speed; rotor 4 has failed. Right: in the relaxed hover the drone spins about the vertical; its own $z$ axis is tilted by about 16$^\circ$ from the spin axis.}\label{fig:layout}
+\end{figure}
+
+\subsection{The state}
+The simulator state has 17 numbers:
+\begin{equation}
+  \vect x = \big(\;\underbrace{\vect d}_{\text{position, 3}},\;\underbrace{\vect v}_{\text{velocity, 3}},\;\underbrace{\vect q}_{\text{attitude quaternion, 4}},\;\underbrace{\vect\omega=(p,q,r)}_{\text{body rates, 3}},\;\underbrace{\vect f}_{\text{motor thrusts, 4}}\;\big).
+\end{equation}
+Position and velocity are in the inertial frame. The body rates $p$, $q$, $r$ are the rotation rates about the body $x$, $y$ and $z$ axes (roll rate, pitch rate and yaw rate), measured in rad/s. The motor thrusts are states because a motor cannot change its thrust instantly.
+
+\subsection{Thrust, propeller speed and the motors}
+Propeller $i$ spinning at speed $\Omega_i$ (rad/s; we use $\Omega$ for propeller speeds to keep $\vect\omega$ for the body rates) produces thrust $f_i = \kappa_f\Omega_i^2$ along the body $z$ axis and a reaction torque of size $\kappa_\tau f_i$ about the same axis, with sign $(-1)^{i+1}$: rotors 1 and 3 push the body one way, rotors 2 and 4 the other way. From a thrust we recover the signed propeller speed as $\Omega_i = s_i\sqrt{f_i/\kappa_f}$ with signs $s=(-1,+1,-1,+1)$.
+
+\paragraph{Motor lag.} Each motor follows its thrust command $u_i$ with a first-order lag of time constant $\sigma = 15$\,ms:
+\begin{equation}
+  \dot f_i = \frac{\operatorname{sat}(u_i) - f_i}{\sigma}.
+\end{equation}
+\begin{plain}
+A first-order lag means that after a step change of the command, the thrust covers 63\% of the change in one time constant (15\,ms), 95\% in three time constants, and so on, like a capacitor charging.
+\end{plain}
+
+\paragraph{Saturation.} A running motor produces between $f_{\min}=0.2$\,N (idle) and $f_{\max}=3.8$\,N. Following the paper, a command $u_i\le0$ \emph{stops} the motor ($f_i=0$); this is how the spin-up strategy runs on only two rotors. A failed rotor always produces zero:
+\begin{equation}
+  \operatorname{sat}(u_i) = \begin{cases} 0 & u_i \le 0 \text{ or rotor $i$ failed},\\ \min(\max(u_i, f_{\min}), f_{\max}) & \text{otherwise.}\end{cases}
+\end{equation}
+
+\paragraph{Thrust loss while spinning (test plants only).} In the two-propeller flight of~\cite{mueller2014stability} the drone stayed about 2.4\,m below its set-point, which the authors attribute to the propellers producing less thrust than expected at high body rates. Our \emph{truth plants} (Section~\ref{sec:truth}) multiply every thrust by an efficiency $\eta(\vect\omega) = \max(0, 1-k\|\vect\omega\|^2)$. The nominal model, used for all designs, has $k=0$ and $\eta=1$.
+
+\subsection{Translation: Newton's second law}
+The thrust of every rotor points along the body $z$ axis, which in inertial coordinates is $R\vect e_3$. So
+\begin{equation}\label{eq:trans}
+  m\ddot{\vect d} = R\,\vect e_3\,\eta(\vect\omega)\,f_\Sigma - mg\,\vect e_3, \qquad f_\Sigma = \textstyle\sum_{i=1}^4 f_i .
+\end{equation}
+We neglect air drag on the body for translation, as the paper does.
+
+\subsection{Rotation: Euler's equation with propellers}
+The rotational dynamics are the paper's eq.~(4) with the propeller's own angular acceleration neglected:
+\begin{equation}\label{eq:rot}
+  I^B\dot{\vect\omega} = \vect\tau - \vect\omega\times\big(I^T\vect\omega + I^P_{zz}\,\Omega_\Sigma\,\vect e_3\big), \qquad \Omega_\Sigma = \textstyle\sum_i \Omega_i .
+\end{equation}
+Each term has a physical meaning:
+\begin{itemize}
+  \item $I^B$ is the inertia matrix of the body without propellers, and $I^T = I^B + 4I^P$ includes the propellers. Both are diagonal, with $I_{xx}=I_{yy}$ by symmetry. As in the paper, the propeller inertia about $x$ and $y$ is neglected, so $I^B_{xx} = I^T_{xx} = 3.2\times10^{-3}$\,kg\,m$^2$ and $I^B_{zz} = I^T_{zz} - 4I^P_{zz} = 5.44\times10^{-3}$\,kg\,m$^2$.
+  \item $I^T\vect\omega$ is the angular momentum of the drone rotating as a rigid object.
+  \item $I^P_{zz}\Omega_\Sigma\vect e_3$ is the extra angular momentum of the propellers spinning relative to the body. In normal hover the propellers cancel pairwise ($\Omega_\Sigma = 0$); after a failure they do not.
+  \item $\vect\omega\times(\cdot)$ is the \emph{gyroscopic} term. When a body that carries angular momentum $\vect h$ rotates with rate $\vect\omega$, the direction of $\vect h$ changes, and that needs a torque $\vect\omega\times\vect h$. This is the same effect that makes a spinning top precess instead of falling.
+\end{itemize}
+The torque vector from the rotors and the yaw drag is
+\begin{equation}\label{eq:torque}
+  \vect\tau = \begin{pmatrix} l\,(f_2 - f_4) \\ l\,(f_3 - f_1) \\ \kappa_\tau\,(f_1 - f_2 + f_3 - f_4) - \gamma r \end{pmatrix}.
+\end{equation}
+The first two rows are lever arm times force: for example rotor 2 at $(0,l,0)$ pushing up with $f_2$ gives $(0,l,0)\times(0,0,f_2) = (l f_2, 0, 0)$. The third row is the sum of reaction torques minus an air-drag torque that grows linearly with the yaw rate $r$. In the truth plants every $f_i$ in~\eqref{eq:torque} is multiplied by $\eta(\vect\omega)$.
+
+\subsection{Attitude}
+We store the attitude as a \emph{unit quaternion} $\vect q = (q_w, q_x, q_y, q_z)$, four numbers with $\|\vect q\|=1$ that encode a rotation. Quaternions avoid the ``gimbal lock'' problem of Euler angles, which matters because the failed drone spins through every heading. The quaternion changes as
+\begin{equation}
+  \dot{\vect q} = \tfrac12\,\vect q\otimes(0,\vect\omega),
+\end{equation}
+where $\otimes$ is quaternion multiplication. After each integration step the quaternion is divided by its length, so that it stays a unit quaternion despite rounding errors. The rotation matrix $R(\vect q)$ is computed from it by the standard formula.
+
+\subsection{The reduced attitude}
+After the failure we give up the heading (the yaw angle), so we do not need the full attitude. We need only the direction of ``up'' as seen from the drone:
+\begin{equation}
+  \vect n = R^\top\vect e_3 .
+\end{equation}
+If the drone is level, $\vect n = (0,0,1)$; if it is upside down, $n_z<0$. Its rate of change follows from $\dot R = R[\vect\omega]_\times$ (where $[\vect\omega]_\times\vect a = \vect\omega\times\vect a$):
+\begin{equation}\label{eq:ndot}
+  \dot{\vect n} = \dot R^\top\vect e_3 = -[\vect\omega]_\times R^\top \vect e_3 = -\vect\omega\times\vect n .
+\end{equation}
+The vertical acceleration also needs only $\vect n$, because the vertical component of $R\vect e_3$ is $\vect e_3^\top R\vect e_3 = n_z$:
+\begin{equation}\label{eq:vz}
+  \ddot z = \frac{\eta f_\Sigma\, n_z}{m} - g .
+\end{equation}
+Equations~\eqref{eq:rot}, \eqref{eq:ndot} and~\eqref{eq:vz} together form a closed set in $(\vect\omega, \vect n, z, v_z)$. They do not contain the heading or the horizontal position. This is the key to the whole approach.
+
+\subsection{The relaxed hover (spinning equilibrium)}
+\paragraph{Conditions.} We look for a state in which $\vect\omega$ and $\vect n$ are constant in body coordinates and the drone neither climbs nor sinks on average:
+\begin{enumerate}
+  \item $\dot{\vect\omega} = 0$ in~\eqref{eq:rot}: the torques balance the gyroscopic term.
+  \item $\dot{\vect n} = 0$ in~\eqref{eq:ndot}: this needs $\vect\omega\times\vect n = 0$, so the spin axis is parallel to ``up'': $\bar{\vect n} = \bar{\vect\omega}/\|\bar{\vect\omega}\|$.
+  \item $\ddot z = 0$ in~\eqref{eq:vz}: $f_\Sigma\,\bar n_z = mg$.
+\end{enumerate}
+Condition 2 says the drone spins about the vertical. The body $z$ axis is tilted from the spin axis, so the thrust has a horizontal part of size $g\tan\theta$ per unit mass ($\theta$ is the tilt), which rotates with the spin. The centre of mass therefore moves on a small horizontal circle of radius
+\begin{equation}
+  \rho_{\text{orbit}} = \frac{\sqrt{1-\bar n_z^2}}{\bar n_z}\,\frac{g}{\|\bar{\vect\omega}\|^2}.
+\end{equation}
+
+\paragraph{Solving it with rotor 4 failed.} With three rotors there are more unknowns than equations, so one free choice is made. Following the paper we set $f_1 = f_3$ and $f_2 = \rho f_1$, with the design ratio $\rho = 0.5$. Then the rate equations can be solved by hand. Write $h_z = I^T_{zz}r + I^P_{zz}\Omega_\Sigma$. With $f_1=f_3$ and $f_4=0$, the torque~\eqref{eq:torque} is $(l f_2,\,0,\,\kappa_\tau(f_1-f_2+f_3)-\gamma r)$ and the gyroscopic term is
+\begin{equation}
+  \vect\omega\times\big(I^T\vect\omega + I^P_{zz}\Omega_\Sigma\vect e_3\big) = \Big( q\big[(I^T_{zz}-I^T_{xx})r + I^P_{zz}\Omega_\Sigma\big],\; -p\big[(I^T_{zz}-I^T_{xx})r + I^P_{zz}\Omega_\Sigma\big],\; 0 \Big).
+\end{equation}
+Setting $\dot{\vect\omega}=0$ row by row:
+\begin{align}
+  \text{row 3:}\quad & r = \kappa_\tau\,(f_1 - f_2 + f_3)/\gamma,\\
+  \text{row 2:}\quad & p = 0,\\
+  \text{row 1:}\quad & q = \frac{l f_2}{(I^T_{zz}-I^T_{xx})\,r + I^P_{zz}\,\Omega_\Sigma}.
+\end{align}
+So for any guess of $f_1$ we know all thrusts, all propeller speeds, and the rates; then $\bar{\vect n} = \vect\omega/\|\vect\omega\|$, and condition 3 becomes one equation in one unknown, $c(f_1) = f_\Sigma(f_1)\,n_z(f_1) - mg = 0$. We solve it with Brent's method, a safe root finder that needs only an interval where $c$ changes sign. The lower end of the interval is $mg/(2+\rho)$ (the thrust needed if the drone were level, $n_z = 1$).
+
+\paragraph{Result for $\rho = 0.5$.}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{l l L}
+\toprule
+Quantity & Value & Meaning \\
+\midrule
+$\bar{\vect f}$ & (2.040, 1.020, 2.040, 0)\,N & rotors 1 and 3 work hardest; total 5.10\,N \\
+$\bar{\vect\omega}$ & (0, 5.37, 18.81)\,rad/s, $\|\bar{\vect\omega}\| = 19.56$ & about 3.1 turns per second \\
+$\bar{\vect n}$ & (0, 0.274, 0.962) & body $z$ tilted $15.9^\circ$ from vertical \\
+propeller speeds & $(-564, +399, -564, 0)$\,rad/s, $\Omega_\Sigma = -729$ & propellers no longer cancel \\
+orbit radius & 7.3\,mm & centre of mass nearly still \\
+\bottomrule
+\end{tabularx}
+\end{center}
+For comparison, healthy hover needs $mg/4 = 1.23$\,N per rotor.
+
+\paragraph{Other failure cases.} With rotors 2 and 4 lost and $f_1 = f_3 = mg/2$, the drone spins about its own $z$ axis without tilt, at $r = 2\kappa_\tau f_1/\gamma = 30.1$\,rad/s. With only rotor 1 left, the thrust and all three rates must be solved together numerically; the result is $f_1 = 5.37$\,N, $\vect\omega = (14.68, 0, 32.99)$\,rad/s, $\vect n = (0.407, 0, 0.914)$. We use both cases for validation (Section~\ref{sec:validation}).
+
+\subsection{Linear models}\label{sec:linmodels}
+Control design uses linear models obtained by linearizing the nonlinear equations at an equilibrium. We build two.
+
+\paragraph{Healthy hover (12 states, 4 inputs).} States $(x,y,z,v_x,v_y,v_z,\phi,\theta,\psi,p,q,r)$, where $\phi,\theta,\psi$ are roll, pitch and yaw angles (Euler angles in the order yaw, pitch, roll); inputs are the four thrusts, trimmed at $mg/4$. Euler angles are fine here because the healthy drone stays near level. The open-loop eigenvalues are eleven zeros and $-0.506$\,s$^{-1}$ (the yaw-drag mode, $-\gamma/I^B_{zz}$). Near hover, positions, velocities, angles and the roll and pitch rates all act as integrators; the repeated zeros form chains of integrators, so the open loop is unstable.
+
+\paragraph{Failed drone (7 states, 3 inputs).} States $\vect s = (p, q, r, n_x, n_y, z, v_z)$ and inputs $(f_1, f_2, f_3)$. Only $n_x$ and $n_y$ are states, because $n_z = \sqrt{1-n_x^2-n_y^2}$ follows from them. Because equations~\eqref{eq:rot}, \eqref{eq:ndot} and~\eqref{eq:vz} do not depend on the heading or on time, \textbf{the linearization about the relaxed hover is time invariant}, even though the drone is spinning in the inertial frame. (In inertial coordinates the spinning equilibrium would be a periodic orbit, and one would need Floquet theory, the stability theory of linear systems with periodic coefficients.) The numerical Jacobians at $\rho=0.5$ are
+\begin{equation}
+A = \begin{pmatrix}
+ 0 & -10.10 & -3.86 & 0 & 0 & 0 & 0\\
+ 10.10 & 0 & 0 & 0 & 0 & 0 & 0\\
+ 0 & 0 & -0.51 & 0 & 0 & 0 & 0\\
+ 0 & -0.96 & 0.27 & 0 & 20.34 & 0 & 0\\
+ 0.96 & 0 & 0 & -18.81 & 0 & 0 & 0\\
+ 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+ 0 & 0 & 0 & 0 & -2.91 & 0 & 0
+\end{pmatrix},\qquad
+B = \begin{pmatrix}
+ 3.48 & 48.21 & 3.48\\
+ -53.13 & 0 & 53.13\\
+ 3.11 & -3.11 & 3.11\\
+ 0 & 0 & 0\\ 0 & 0 & 0\\ 0 & 0 & 0\\
+ 1.92 & 1.92 & 1.92
+\end{pmatrix}.
+\end{equation}
+Every entry can be traced to the physics:
+\begin{itemize}
+  \item $A_{pq} = -A_{qp} = \bar a = \frac{I^T_{xx}-I^T_{zz}}{I^B_{xx}}\bar r - \frac{I^P_{zz}}{I^B_{xx}}\bar\Omega_\Sigma = -10.10$: the gyroscopic coupling between roll and pitch rate (the paper's eq.~28).
+  \item $A_{pr} = -\bar q(I^T_{zz}-I^T_{xx})/I^B_{xx} = -3.86$: a change of yaw rate changes the gyroscopic roll torque.
+  \item $A_{rr} = -\gamma/I^B_{zz} = -0.51$: yaw drag.
+  \item The $\vect n$ rows are the linearization of $\dot{\vect n} = -\vect\omega\times\vect n$. The coefficient of $n_y$ in $\dot n_x$ is $\bar r + \bar q\bar n_y/\bar n_z = 20.34$, because $n_z$ changes with $n_y$. The paper's simplified matrix (its eq.~27) uses $\bar r = 18.81$ there; we use the exact Jacobian.
+  \item $A_{v_z n_y} = -\bar f_\Sigma\bar n_y/(m\bar n_z) = -2.91$: tilting the thrust away from vertical reduces the vertical force. This entry exists only because the equilibrium is tilted.
+  \item $B_{p,f_2} = l/I^B_{xx} = 53.13$ minus a gyroscopic correction (changing $f_2$ changes propeller 2's speed and so $\Omega_\Sigma$), giving 48.21. The same correction gives the small entries 3.48 for $f_1$ and $f_3$.
+  \item $B_{v_z,f_i} = \bar n_z/m = 1.92$: more thrust, more vertical acceleration.
+\end{itemize}
+The eigenvalues of $A$ are $\pm10.10j$ (the $p$--$q$ gyroscopic oscillation), $\pm19.56j$ (the tilt of the spin axis seen from the spinning body; its frequency equals $\|\bar{\vect\omega}\|$), $-0.51$ (yaw drag) and a double zero (altitude: height is the integral of vertical speed, which is the integral of the vertical force). No eigenvalue has a positive real part, but the open loop is not stable: the two oscillations are undamped and the altitude double integrator drifts (its height error grows linearly). Feedback is needed.
+
+\paragraph{Adding the motors.} The motors are added as three more states with $\dot{\vect f} = (\vect u - \vect f)/\sigma$; the thrusts in $B$ then act through these states. This gives the 10-state model used by the failure LQR, the MPC and the certificate.
+
+\subsection{Truth plants for learning}\label{sec:truth}
+If we generated learning data with the same model that the controller uses, a learned correction would have nothing to learn, and any improvement would be an artefact. We therefore generate data from \emph{truth plants} that contain effects the nominal model lacks (Table~\ref{tab:params}). Family A is used for training, family B (different magnitudes, in different directions) only for testing. A third, randomized family draws new values for every training episode; its ranges cover A but not B.
+
+\begin{table}[h]
+\centering\small
+\caption{Nominal parameters~\cite{mueller2014stability} and truth-plant families. $k$ is the thrust-loss coefficient in $\eta = 1-k\|\vect\omega\|^2$.}\label{tab:params}
+\begin{tabularx}{\linewidth}{l l L}
+\toprule
+Quantity & Symbol & Value \\
+\midrule
+Mass, arm length & $m$, $l$ & 0.50\,kg, 0.17\,m \\
+Total inertia & $I^T_{xx}$, $I^T_{zz}$ & $3.2$, $5.5\times10^{-3}$\,kg\,m$^2$ \\
+Propeller inertia & $I^P_{zz}$ & $1.5\times10^{-5}$\,kg\,m$^2$ \\
+Thrust coefficient & $\kappa_f$ & $6.41\times10^{-6}$\,N\,s$^2$/rad$^2$ \\
+Torque-to-thrust ratio & $\kappa_\tau$ & 0.0169\,m \\
+Yaw drag & $\gamma$ & $2.75\times10^{-3}$\,N\,m\,s/rad \\
+Thrust range, motor lag & $[f_{\min},f_{\max}]$, $\sigma$ & [0.2, 3.8]\,N, 15\,ms \\
+\midrule
+Family A (training) & & $k=1.5\times10^{-4}$\,s$^2$/rad$^2$, $I_{xx}\times1.08$, $I_{zz}\times0.95$, $\sigma=20$\,ms \\
+Family B (held out) & & $k=2.5\times10^{-4}$\,s$^2$/rad$^2$, $I_{xx}\times0.94$, $I_{zz}\times1.06$, $\sigma=12$\,ms \\
+Randomized & & $k\in[0, 2\times10^{-4}]$, $I_{xx}\times[0.96,1.10]$, $I_{zz}\times[0.93,1.03]$, $\sigma\in[15,22]$\,ms \\
+\bottomrule
+\end{tabularx}
+\end{table}
+At the relaxed hover ($\|\vect\omega\|\approx19.6$\,rad/s), family A loses about 6\% of its thrust and family B about 10\%.

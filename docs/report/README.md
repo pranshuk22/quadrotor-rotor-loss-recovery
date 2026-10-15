@@ -1,7 +1,7 @@
-# Progress Report 1 (LaTeX)
+# Detailed project report (LaTeX)
 
-- `report.pdf`: compiled report (15 pages)
-- `report.tex`: source
+- `report.pdf`: compiled report (about 53 pages), written for readers without a control background: every term is explained and listed in a glossary
+- `report.tex`: main file; the sections are in `sections/` (one file per section, plus appendices for the glossary, symbols and reproducibility)
 - `references.bib`: bibliography (30 entries; all papers cited in the proposal and the work so far)
 - `figures/`: copies of `results/figures/*.png` used by the report
 
