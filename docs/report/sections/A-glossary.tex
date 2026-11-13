@@ -46,9 +46,12 @@ Healthy controller & The normal controller used with four working rotors. \\
 Horizon & How far ahead MPC predicts (here 20 steps, 100\,ms). \\
 INDI & Incremental nonlinear dynamic inversion: a nonlinear control method that uses measured accelerations. \\
 Inertia matrix & How hard it is to change the rotation of a body about each axis. \\
+Innovation & The difference between a measurement and the model's prediction of it; a filter uses it to correct its estimate (\ref{sec:offsetfree}). \\
+Integral action & Adding the accumulated error to the controller state so that a constant error is driven to zero; used by the LQR with an integrator (\ref{sec:offsetfree}). \\
 Interior-point method & A family of algorithms for convex optimization that moves through the inside of the feasible set; Clarabel is one. \\
 Invariant set & A set that no trajectory starting inside it can leave (\ref{sec:certificate}). \\
 Jacobian & Matrix of partial derivatives; the linearization of a nonlinear function (\ref{sec:background}). \\
+Kalman filter & An estimator that combines a model and measurements using assumed noise levels; here a steady-state version estimates the constant disturbance of the offset-free MPC (\ref{sec:offsetfree}). \\
 Koopman operator & A linear operator that advances functions of the state in time; lets nonlinear systems be described linearly in a lifted space (\ref{sec:background}). \\
 Lifted state & The vector of dictionary functions $\vect z = \psi(\vect x)$. \\
 LMI & Linear matrix inequality: a convex constraint saying a matrix, linear in the unknowns, is positive or negative semidefinite (\ref{sec:certificate}). \\
@@ -75,6 +78,7 @@ Positive definite & A symmetric matrix $P$ with $\vect x^\top P\vect x>0$ for al
 QP & Quadratic program: minimize a quadratic cost subject to linear constraints; convex. \\
 Quaternion & Four numbers that describe an orientation without gimbal lock (\ref{sec:model}). \\
 Randomized plants & Training on many plants with randomly drawn parameters, also called domain randomization (\ref{sec:koopman}). \\
+Re-lifting & Computing the lifted state again from the current measurement at every control step instead of carrying it over from the previous step (\ref{sec:fullkoopmanmpc}). \\
 Reaction torque & Twisting torque on the body from a spinning propeller (\ref{sec:intro}). \\
 Reduced attitude $\vect n$ & The inertial ``up'' direction seen in body axes, $R^\top\vect e_3$; all that is controlled after the failure (\ref{sec:model}). \\
 Relaxed hover & The spinning equilibrium of a multicopter that has lost rotors (\ref{sec:model}). \\

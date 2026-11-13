@@ -7,7 +7,7 @@ Every later result depends on the simulator, so before using it we checked it in
   \item \textbf{Published numbers}: compare with the numbers printed in three papers. These catch modelling errors (a wrong sign, a missing term, a wrong parameter).
   \item \textbf{Flight data}: compare with measurements from a real flight. This tells us how close the \emph{model itself} is to reality.
 \end{enumerate}
-All checks are automated tests that run with one command (\texttt{pytest}). At the time of writing, 46 tests pass and 1 is marked as an expected failure (explained in Section~\ref{sec:val-icra}). A script in the \texttt{experiments} folder (\texttt{v0\_validation\_report.py}) also writes all comparisons into one table in \texttt{results/tables}.
+All checks are automated tests that run with one command (\texttt{pytest}). At the time of writing, 59 tests pass and 1 is marked as an expected failure (explained in Section~\ref{sec:val-icra}). A script in the \texttt{experiments} folder (\texttt{v0\_validation\_report.py}) also writes all comparisons into one table in \texttt{results/tables}.
 
 \subsection{Layer 1: physics tests against hand-derived results}
 Each test sets up a situation whose answer is known exactly, runs the simulator and compares. None of them compares the simulator with another run of itself.

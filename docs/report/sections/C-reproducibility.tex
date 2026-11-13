@@ -5,9 +5,9 @@ The simulator, analysis and experiments are written in Python with NumPy~\cite{h
 
 \begin{verbatim}
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q        # 46 pass + 1 expected failure
+.venv/bin/python -m pytest -q        # 59 pass + 1 expected failure
 .venv/bin/python experiments/v0_validation_report.py
-.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e7
+.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e8
 \end{verbatim}
 
 \begin{table}[h]
@@ -24,6 +24,8 @@ E4 & \texttt{e4\_delay\_sweep.py} & Effect of detection delay (Monte Carlo) & se
 E5 & \texttt{e5\_first\_certificate.py} & LMI certificate and its conservatism & about 8\,min \\
 E6 & \texttt{e6\_koopman\_prediction.py} & Physics vs full-state vs residual EDMDc & about 2.5\,min \\
 E7 & \texttt{e7\_mpc\_closed\_loop.py} & LQR vs analytical MPC vs residual Koopman MPC & about 3\,min \\
+E8a & \texttt{e8\_offset\_free.py} & Offset-free MPC variants and LQR with integrator vs residual Koopman MPC & about 9\,min \\
+E8b & \texttt{e8\_full\_koopman\_mpc.py} & MPC on the full-state Koopman model vs the other proposal controllers & about 18\,min \\
 \bottomrule
 \end{tabularx}
 \end{table}

@@ -54,10 +54,12 @@ Everything is done in simulation; no hardware is used. In order:
   \item \textbf{E2, E3:} we analysed the linearized models (controllability, observability) and designed LQR controllers (Section~\ref{sec:linear}).
   \item \textbf{E6:} we built three predictors of the failed drone (physics only, full Koopman, residual Koopman) and compared them (Section~\ref{sec:koopman}).
   \item \textbf{E7:} we built MPC controllers on the physics model with and without the learned residual (Section~\ref{sec:mpc}).
+  \item \textbf{E8a:} we built offset-free baselines (offset-free MPC with a disturbance filter, and an LQR with an integrator) and compared them with the residual Koopman MPC (Section~\ref{sec:offsetfree}).
+  \item \textbf{E8b:} we built the MPC on the full-state Koopman model, the second controller of our proposal, and compared the three proposal controllers (Section~\ref{sec:fullkoopmanmpc}).
   \item \textbf{E4:} we measured how the probability of a safe recovery falls as detection takes longer (Section~\ref{sec:delay}).
   \item \textbf{E5:} we computed a first mathematical certificate (an LMI-based invariant ellipsoid) and compared it with simulation (Section~\ref{sec:certificate}).
 \end{enumerate}
-The labels V0 and E1 to E7 are the experiment names used in figure titles and in the code (Appendix~\ref{app:repro}).
+The labels V0, E1 to E7, E8a and E8b are the experiment names used in figure titles and in the code (Appendix~\ref{app:repro}).
 
 \paragraph{What is reproduction and what is new.} The model, the equilibrium, its controllability, the LQR weights and the spin-up strategy are from Mueller and D'Andrea; we reimplemented and checked them, and found one inconsistency in a published case. New in this work, as far as our search found: the comparison of physics-only, full Koopman and residual models in the spinning regime after complete rotor loss and its use in MPC (RQ1); the idle-thrust argument and the measured probability of safe recovery against detection delay; and the first saturation-aware certificate for this controller, as a step towards a certified delay budget (RQ2).
 Section~\ref{sec:discussion} discusses the results, the limitations and future work. Appendix~\ref{app:glossary} is a glossary of all technical terms, Appendix~\ref{app:symbols} lists the symbols, and Appendix~\ref{app:repro} explains how to reproduce every number.
@@ -76,6 +78,8 @@ LQR baseline & Recovers on the nonlinear model; tolerates only 18\,ms of input d
 Prediction (RQ1) & Residual model best from 100\,ms to 1\,s (1\,s error 0.64 vs 0.91 full Koopman vs 7.09 physics only); needs less data & \ref{sec:koopman} \\
 Generalization (RQ1) & Learned models fail on a plant with different parameters & \ref{sec:koopman} \\
 MPC (RQ1) & Residual Koopman MPC cuts the steady altitude error by 32\% on the training plant; on one held-out variant (plant B without its thrust loss) the error is 47\% larger & \ref{sec:mpc} \\
+Offset-free baselines (RQ1) & An offset-free MPC with a disturbance on all physical states and an LQR with an integrator remove the steady altitude error (at most 0.024\,m) without any learning; the first pre-registered thrust-offset disturbance model does not; the state-model MPC fails the capture even at 0\,ms of delay & \ref{sec:offsetfree} \\
+Full-state Koopman MPC (RQ1) & Stable near the hover when re-lifted at every step, with steady errors close to the residual MPC's; fails capture earlier than the other MPCs and needs 53 to 316\,ms per step & \ref{sec:fullkoopmanmpc} \\
 Detection delay (RQ2) & Safe-recovery probability below 0.9 from 12\,ms and below 0.5 from 19\,ms of delay & \ref{sec:delay} \\
 Certificate (RQ2) & For the linearized model with thrust limits: certified 22\% of the way to the failure state; simulation recovers up to 70\% & \ref{sec:certificate} \\
 \bottomrule

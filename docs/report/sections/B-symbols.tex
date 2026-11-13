@@ -38,6 +38,8 @@ $N$ & MPC horizon & 20 steps \\
 $\hat{\vect f}$ & filtered-command estimate of the motor thrusts & N \\
 $\vect\xi$, $\psi$, $\vect\zeta$ & learning features, dictionary, lifted state & \\
 $W$, $\vect d_{\max}$ & residual regression matrix, clipping level & \\
+$\vect\delta$, $G$ & constant disturbance of the offset-free MPC and its input matrix (Section~\ref{sec:offsetfree}) & \\
+$\vect d_{\mathrm{res}}$ & one-step residual correction used in the prediction & \\
 $\tau$, $\tau^\star$ & detection delay, certified maximum delay & ms \\
 $\bar{\vect u}$ & symmetric saturation levels & (1.76, 0.82, 1.76)\,N \\
 $\mu$ & required decay rate in the certificate & 1/s \\
