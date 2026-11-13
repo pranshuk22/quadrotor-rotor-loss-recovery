@@ -9,7 +9,9 @@ state of the (open-loop) spin-up is certified, and what does it cost? Everything
 Fixed before running (do not tune afterwards)
   - Spin-up thrust 2.95 N (flight data), nominal plant, exact hover start, tau = 0, for the design. The
     spin-up is open loop, so the hand-over state d(w_sw) does not depend on the capture gain.
-  - Hand-over threshold grid w_sw in {10 (published), 8, 6, 4, 3} rad/s.
+  - Hand-over threshold grid w_sw in {10 (published), the later thresholds 12, 14, 16, 18 of plan task D6 step 7,
+    and the earlier thresholds 8, 6, 4, 3} rad/s (a later threshold brings r closer to rbar but lets the tilt grow;
+    an earlier one does the opposite; both directions are tested).
   - Scheduling box for each w_sw from d = d(w_sw): r in [rbar - h_r, rbar + h_r], h_r = 1.15 |d_r|;
     n_z in [0.5, 1]; half-widths H = (max(1.3|d_p|, 2), max(1.3|d_q|, 3), h_r, max(1.3|d_nx|, 0.15),
     max(1.3|d_ny|, 0.2), max(1.3|d_z|, 0.5), max(1.3|d_vz|, 1.0), 1.76, 1.1, 1.76).
@@ -37,8 +39,8 @@ Fixed before running (do not tune afterwards)
   - Empirical protocol (new seeds, separate from the design): E4 Monte Carlo (x0_hover, seeds 1000 to 1039 plus
     the exact hover), tau in {0, 5, ..., 60, 80, 100, 130} ms, 10 s runs, controller period 1 ms, chains:
       published:       FailureLQR, w_sw = 10
-      LQR, w_sw       FailureLQR with the later threshold (w_sw in {8, 6, 4, 3})
-      redesigned K, w_sw   selected K_w with threshold w_sw (all five thresholds, including 10)
+      LQR, w_sw       FailureLQR with another threshold (all thresholds except 10)
+      redesigned K, w_sw   selected K_w with threshold w_sw (all thresholds, including 10)
     P(SAFE) with Wilson intervals, tau_90 and tau_50 as in E4.
   - Regulation at the trim (design seeds 5000 to 5019, small deviations: dw ~ N(0, 1^2) rad/s, dn ~ N(0, 0.05^2),
     dz ~ N(0, 0.2^2) m, dv_z ~ N(0, 0.2^2) m/s, f at trim; FailureLQR vs the globally best K; 8 s runs):
@@ -83,7 +85,7 @@ from rotorfail.plotting import MUTED, REF, SERIES, apply_style, save  # noqa: E4
 from rotorfail.sim import simulate  # noqa: E402
 
 F_SPIN = 2.95
-W_SWS = (10, 8, 6, 4, 3)
+W_SWS = (18, 16, 14, 12, 10, 8, 6, 4, 3)
 GAINS = (2, 4, 8, 16)
 NZ_LO = 0.5
 DECAY = 0.1
