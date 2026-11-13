@@ -14,7 +14,7 @@ Fixed before running (do not tune afterwards)
   - Lifted MPC: lifted state re-computed from the measurement at every step; altitude state integrated
     with the rectangle rule from v_z; weights of FailureMPC mapped to the xi ordering plus 1e-6 I on the
     lifted state; terminal cost from the DARE of the lifted pair without the constant coordinate (the
-    constant coordinate makes the full Riccati solution ill-conditioned, cond 7e14, so it is excluded);
+    constant coordinate makes the full Riccati solution very ill-conditioned, so it is excluded);
     checks: Riccati residual, symmetry and PSD tolerance 1e-8, spectral radius of the closed loop < 1.
     If a check fails there is no terminal cost (documented fallback) and a horizon-40 variant is
     reported as sensitivity. OSQP: 4000 iterations, tolerances 1e-5; on a failed solve the previous

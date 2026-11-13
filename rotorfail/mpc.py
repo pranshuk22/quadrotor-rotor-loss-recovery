@@ -157,7 +157,7 @@ class LiftedKoopmanMPC:
         if terminal != "dare":
             return info
         # The constant coordinate (index 0) is identically zero in centred coordinates and has an
-        # eigenvalue of 1 - 2e-9, which makes the full Riccati solution ill-conditioned (cond 7e14):
+        # eigenvalue of 1 - 2e-9, which makes the full Riccati solution very ill-conditioned:
         # it is excluded from the terminal cost (its P entries are zero).
         keep = np.arange(1, Aa.shape[0])
         Ak, Bk, Qk = Aa[np.ix_(keep, keep)], Ba[keep], Ql[np.ix_(keep, keep)]
