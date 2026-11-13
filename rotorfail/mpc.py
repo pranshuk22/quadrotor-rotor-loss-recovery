@@ -127,7 +127,7 @@ class LiftedKoopmanMPC:
         Ql = np.zeros((nz + 1, nz + 1))
         Ql[:nz, :nz] = C.T @ Qxi @ C + 1e-6 * np.eye(nz)
         Ql[nz, nz] = w_alt
-        self.Aa, self.Ba = Aa, Ba
+        self.Aa, self.Ba, self.Ql, self.R = Aa, Ba, Ql, R
         self.dare = self._terminal(Aa, Ba, Ql, R, terminal, tol)
         PN = self.dare["P"]
 
@@ -151,7 +151,7 @@ class LiftedKoopmanMPC:
         self.n_bad, self.max_std = 0, 0.0
 
     @staticmethod
-    def _terminal(Aa, Ba, Ql, R, terminal, tol):
+    def _terminal(Aa, Ba, Ql, R, terminal, tol, exclude_constant=True):
         info = dict(P=None, kind="none", ok=False, residual=np.nan, sym=np.nan, min_eig=np.nan,
                     rho=np.nan, cond=np.nan, error="")
         if terminal != "dare":
@@ -159,7 +159,7 @@ class LiftedKoopmanMPC:
         # The constant coordinate (index 0) is identically zero in centred coordinates and has an
         # eigenvalue of 1 - 2e-9, which makes the full Riccati solution very ill-conditioned:
         # it is excluded from the terminal cost (its P entries are zero).
-        keep = np.arange(1, Aa.shape[0])
+        keep = np.arange(1 if exclude_constant else 0, Aa.shape[0])
         Ak, Bk, Qk = Aa[np.ix_(keep, keep)], Ba[keep], Ql[np.ix_(keep, keep)]
         try:
             Pk = solve_discrete_are(Ak, Bk, Qk, R)

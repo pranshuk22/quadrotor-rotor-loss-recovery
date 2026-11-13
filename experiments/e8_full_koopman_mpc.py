@@ -27,8 +27,10 @@ Fixed before running (do not tune afterwards)
     mean altitude over the last 2 s; capture after delay tau = 0, 10, 20, 30, 40, 60 ms on family A and the
     nominal plant, spin-up 2.95 N, judged with rotorfail/metrics.py against each controller's own steady
     state (12 s run from the trim).
-  - Also reported: the lifted model's eigenvalues outside the unit circle, the Riccati checks, and the
-    command the lifted MPC issues at the exact trim (a bias of the learned model).
+  - Also reported: the lifted model's eigenvalues outside the unit circle, the Riccati checks, the same
+    checks for the Riccati equation with the constant coordinate included (model check only; this is why
+    the constant coordinate is excluded from the terminal cost), and the command the lifted MPC issues at
+    the exact trim (a bias of the learned model).
 
 Outputs: results/tables/e8_full_koopman_mpc.md, results/figures/e8_full_koopman.png
 """
@@ -162,6 +164,7 @@ def main():
     ev = np.linalg.eigvals(full.A)
     probe = LiftedKoopmanMPC(P, EQ, full)
     d = probe.dare
+    d_inc = LiftedKoopmanMPC._terminal(probe.Aa, probe.Ba, probe.Ql, probe.R, "dare", 1e-8, exclude_constant=False)
     probe.reset(EQ.f[:3])
     u_trim = probe.act(np.zeros(7))
     L = ["# E8b: MPC on the full-state Koopman model (proposal controller 2)", "",
@@ -174,6 +177,9 @@ def main():
          f"- Terminal cost: `{d['kind']}`. Riccati residual (relative) {d['residual']:.1e}, asymmetry {d['sym']:.1e}, "
          f"smallest/largest eigenvalue {d['min_eig']:.1e}, spectral radius of the lifted closed loop {d['rho']:.4f}, "
          f"condition number {d['cond']:.1e}; all checks passed: {d['ok']}.",
+         f"- Same Riccati equation with the constant coordinate included (not used): relative residual "
+         f"{d_inc['residual']:.1e}, smallest/largest eigenvalue {d_inc['min_eig']:.1e}, spectral radius "
+         f"{d_inc['rho']:.10f}, condition number {d_inc['cond']:.1e}.",
          f"- Command issued at the exact trim (should be zero; a bias of the learned model): "
          f"({u_trim[0]:+.3f}, {u_trim[1]:+.3f}, {u_trim[2]:+.3f}) N from the relaxed-hover thrusts.", ""]
 

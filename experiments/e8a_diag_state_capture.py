@@ -122,9 +122,9 @@ def main():
                  f"{'yes' if share > 0.5 else 'no'} |")
     L += ["", f"Dominant components before the first n_z < 0: {', '.join(dom) if dom else 'none'}.", "",
           "## Time series", "",
-          "Commanded thrusts and target input u_s are deviations from the relaxed-hover thrusts (N); "
-          "the commands are the controller's output (rotor 4 is lost).", "",
-          "| t (s) | n_z | r - r_bar (rad/s) | exact target | d_hat (p, q, r, n_x, n_y, z, v_z) | u_s (N) | command (N) |",
+          "u_s is the target input as a deviation from the relaxed-hover thrusts (N); the command column is the "
+          "controller's output as absolute thrusts of rotors 1 to 3 (N; limits 0.2 and 3.8 N).", "",
+          "| t (s) | n_z | r - r_bar (rad/s) | exact target | d_hat (p, q, r, n_x, n_y, z, v_z) | u_s (N, deviation) | command (N, absolute) |",
           "|---|---|---|---|---|---|---|"]
     t_end = (t_inv + 0.2) if len(inv) else t[-1]
     last = -1.0
