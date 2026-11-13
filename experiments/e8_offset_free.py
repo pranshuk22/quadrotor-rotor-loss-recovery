@@ -245,6 +245,7 @@ def main():
             L.append(f"| {t * 1e3:.0f} | " + " | ".join(cells) + " |")
         L.append("")
     L += ["Cells: altitude loss (m) / minimum n_z / SAFE.", "",
+          "E8a ran without the divergence rule that E8b uses (stop at |w| > 100 rad/s or |z| > 100 m), so a run that has inverted keeps falling and its height loss is not meaningful beyond about 100 m (for example, the analytical MPC on family A at 60 ms shows 339.10 m here and a stopped run at 100.07 m in E8b). Read such entries as 'diverged'.", "",
           "### Estimator behaviour during capture (offset-free controllers)", "",
           "| Plant | Controller | τ (ms) | largest abs. d_hat | share of inexact targets | share of d_hat at its bound | non-optimal QPs |",
           "|---|---|---|---|---|---|---|"]
