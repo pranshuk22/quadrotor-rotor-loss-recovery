@@ -1,6 +1,6 @@
 # 3. Validation
 
-Two layers: **automated tests** (pass/fail, 46 tests plus 1 expected failure, ~20 s) and a **validation report** comparing with published numbers (`results/tables/validation_report.md`, produced by `experiments/v0_validation_report.py`).
+Two layers: **automated tests** (pass/fail, 59 tests plus 1 expected failure, ~60 s) and a **validation report** comparing with published numbers (`results/tables/validation_report.md`, produced by `experiments/v0_validation_report.py`).
 
 ## 3.1 Physics tests (`tests/test_physics.py`, 13 tests)
 Each test compares the simulator with a hand-derived result, never with another run of the same code.

@@ -15,3 +15,9 @@ The files in this folder are kept unchanged as archives. File paths mentioned in
 - Sections 6–7 are missing (it jumps from §5 to §8).
 - "Linear and time-invariant" holds only in Mueller & D'Andrea's reduced-attitude body-fixed coordinates.
 - Todde et al. 2026 exists (ICUAS 2026, read in full; see `../literature/notes/todde2026.md`).
+
+## Changes after the first report (2026-11-13 onwards)
+
+- **2026-11-13, E8a (offset-free baselines).** Added `rotorfail/offset_free.py`. The first design (thrust-offset disturbance, 3 states, as pre-registered) left a steady error on the nonlinear mismatched plants (-0.239 m on A) in a single pre-run check; the cause is structural (the steady-state innovation need not vanish with fewer disturbance states than unknown mismatch rows). A second disturbance model (7 physical states) was added and both were then run once under the same pre-registered settings (no estimator parameter was tuned); the MPC regulates the filtered estimate rather than the raw measurement. Results in `results/tables/e8_offset_free.md`.
+- **2026-11-13, E8b (full-state Koopman MPC).** Added `LiftedKoopmanMPC`. The constant coordinate of the dictionary is excluded from the terminal-cost Riccati equation (including it made the solution very ill-conditioned). Comments in the pre-registration docstring and in `mpc.py` were reworded after the run (the number quoted for the condition number was removed because it is not produced by a committed script). Results in `results/tables/e8_full_koopman_mpc.md`.
+- E7 re-run after adding code to `rotorfail/mpc.py`: table identical except the wall-clock timing line (4.3 against 4.4 ms).

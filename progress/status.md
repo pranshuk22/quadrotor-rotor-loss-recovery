@@ -9,8 +9,9 @@ The first phase is complete: simulator, validation, linear analysis, LQR baselin
 | Proposal: all content of the presented proposal kept + RQ2 added (`proposal/`) | ✅ |
 | Simulator, equilibria, linear models, LQR | ✅ validated |
 | RQ1: data, full-state EDMDc, residual EDMDc, analytical + residual-Koopman MPC | ✅ first version |
-| RQ1: MPC on the full-state Koopman model (proposal controller 2) | ❌ not started (K5) |
-| RQ1: offset-free MPC baseline, online residual adaptation | ❌ not started (K6, K7) |
+| RQ1: MPC on the full-state Koopman model (proposal controller 2) | ✅ done (K5, E8b); stable near hover, fails capture earlier |
+| RQ1: offset-free MPC baseline | ✅ done (K6, E8a); state-disturbance model and integral LQR remove the bias, thrust-offset model does not |
+| RQ1: online residual adaptation | ❌ not started (K7) |
 | RQ2: P(safe) versus delay (Monte Carlo), first LTI LMI certificate | ✅ |
 | RQ2: r-robust (LPV) certificate, reachable sets, **certified τ\*** (the main contribution) | ❌ not started (D3–D6) |
 | Novelty gate: read Stephan et al. 2018 and Lanzon et al. 2014 | ❌ needs library access (T0.1, T0.2) |
@@ -29,7 +30,7 @@ The first phase is complete: simulator, validation, linear analysis, LQR baselin
 
 ## Validation: what has been checked, and how
 
-**46 automated tests pass, plus 1 expected failure** (`.venv/bin/python -m pytest -q`, ~20 s):
+**59 automated tests pass, plus 1 expected failure** (`.venv/bin/python -m pytest -q`, ~60 s):
 
 | File | Tests | What it checks |
 |---|---|---|

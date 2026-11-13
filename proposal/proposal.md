@@ -93,6 +93,7 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 - **The proposal's preliminary finding, repeated in the failed regime (E6):** full-state EDMDc on failed-vehicle data has eigenvalues outside the unit circle (4 of 55) and falls behind the "no-change" predictor by 2 s. From 100 ms on, the residual model gives the lowest multi-step error on the training mismatch family (1 s horizon, normalized RMSE: residual 0.64, full-state 0.91, analytical 7.1, no-change 2.4). It needs less data (10 episodes beat full-state with 40).
 - **Limitation found (E6):** neither learned model generalizes to an unseen mismatch family, and training on randomized vehicles helps the residual on the unseen family only up to about 100 ms while making both models worse on the training family. Next: online residual adaptation.
 - **Closed loop (E7):** residual-Koopman MPC cuts the steady altitude bias under mismatch by 32% (−0.29 → −0.19 m) and reduces it on 5 of 6 test plants, but increases it by 47% on one held-out variant; the QP solver needs 0.7 ms per step. As a capture controller after a detection delay it does not yet beat LQR.
+- **Proposal controllers and offset-free baselines (E8a, E8b):** all three controllers of the proposal now have results. An offset-free MPC with a disturbance on all physical states and an LQR with an integrator remove the steady altitude bias (0.000 m and at most 0.024 m) without learning, so the residual is not the best way to remove it; the thrust-offset disturbance model does not remove it, and the state-model MPC fails the capture after the hand-over. MPC on the full-state Koopman model (re-lifted at every step) is stable near the hover with steady errors close to the residual MPC's, fails capture earlier, and needs 53 to 316 ms per step.
 
 ---
 
@@ -145,7 +146,7 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 | E5 | First saturation-aware LMI certificate + conservatism | done (LTI) |
 | E6 | Failed-regime data, full-state vs residual EDMDc, multi-step prediction, data efficiency, held-out family (H1, H2, H4) | done |
 | E7 | Analytical MPC vs residual Koopman MPC in closed loop under mismatch (H3) | done (first version) |
-| E8 | Full-state Koopman MPC (PDF controller 2); offset-free MPC baseline; online residual adaptation | next |
+| E8 | Full-state Koopman MPC (PDF controller 2); offset-free MPC baseline; online residual adaptation | **[added]** E8a offset-free baselines and E8b full-state Koopman MPC done (2026-11-13); online adaptation (E8c) next |
 | E9 | r-robust capture certificate (H5); reachable sets; certified τ\* (H6) | next |
 | E10 | τ\* for each capture controller (LQR, analytical MPC, residual Koopman MPC); trade study; Monte Carlo tightness (H7) | later |
 

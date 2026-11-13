@@ -22,7 +22,7 @@ After a rotor fails, a quadrotor can no longer hover level. Its only steady stat
 |---|---|
 | Model validation | Reproduces the published two-rotor and three-rotor-loss equilibria of Mueller and D'Andrea (ICRA 2014) to every digit, and five hover solutions of their IJRR 2016 model within 4%. At the thrust used in flight, the spin-up time is within about 4% of the flight data. |
 | Prediction | On the training plant, the residual Koopman model has the lowest multi-step error from 100 ms to 1 s (normalized RMSE at 1 s: 0.64, against 0.91 for full-state EDMDc and 7.1 for the analytical model) and needs less data. It does not yet generalize to an unseen plant. |
-| Control | A residual-corrected MPC reduces a steady altitude error caused by model mismatch by one third (0.29 m to 0.19 m); the QP solver needs under 1 ms per step. |
+| Control | A residual-corrected MPC reduces a steady altitude error caused by model mismatch by one third (0.29 m to 0.19 m); the QP solver needs under 1 ms per step. An offset-free MPC (disturbance on all physical states) and an LQR with integrator remove the error without learning; an MPC on the full-state Koopman model is stable near the hover but fails the capture earlier. |
 | Detection delay | In simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about 12 ms, and below 0.5 beyond about 19 ms (40 random starts per delay). Fast detectors need 30 to 130 ms. |
 | Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; in simulation, every start up to 70% of the way recovers. |
 
@@ -38,7 +38,7 @@ cd quadrotor-rotor-loss-recovery
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-.venv/bin/python -m pytest -q                          # 46 tests, about 20 s
+.venv/bin/python -m pytest -q                          # 59 tests, about 60 s
 .venv/bin/python experiments/v0_validation_report.py   # model against published results
 .venv/bin/python experiments/e1_equilibrium.py         # relaxed-hover equilibrium
 ```
@@ -61,7 +61,7 @@ Each script writes a table to `results/tables/` and figures to `results/figures/
 ```
 rotorfail/     Python package: dynamics, trim solvers, linear models, controllers,
                LMI certificates, Koopman models, MPC, validation model
-experiments/   One script per experiment (V0, E1 to E7)
+experiments/   One script per experiment (V0, E1 to E8)
 tests/         Physics, published-result and unit tests
 results/       Generated tables and figures
 docs/          Documentation, detailed report (LaTeX) and slide deck

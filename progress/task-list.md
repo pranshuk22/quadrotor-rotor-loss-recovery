@@ -18,7 +18,7 @@ RQ1 = residual Koopman MPC (the presented proposal). RQ2 = certified detection-d
 - [x] ✅★ T1.4 Controllability, PBH, Gramians; observability for sensor sets (E2)
 - [x] ✅★ T1.5 Healthy LQR + failure LQR; poles and delay margins; nonlinear check (E3)
 - [x] ✅★ T1.6 Truth-plant families A / B / randomized (thrust loss at high body rate, inertia error, motor lag)
-- [x] ✅ T1.7 Test suite: 46 tests plus 1 expected failure, incl. physics invariants and published-number validation (`tests/`)
+- [x] ✅ T1.7 Test suite: 59 tests plus 1 expected failure, incl. physics invariants and published-number validation (`tests/`)
 - [x] ✅ T1.9 Model validation against 3 papers + their flight data (`results/tables/validation_report.md`)
 - [x] ✅★ T1.8 Progress report and slides (`docs/report/`, `docs/deck/`)
 
@@ -27,8 +27,8 @@ RQ1 = residual Koopman MPC (the presented proposal). RQ2 = certified detection-d
 - [x] ✅★ K2 Full-state EDMDc: spectrum + multi-step error (E6, H1)
 - [x] ✅★ K3 Residual EDMDc: multi-step error, data efficiency, held-out family, randomized training (E6, H2, H4)
 - [x] ✅★ K4 MPC: analytical vs residual Koopman (measured disturbance), regulation under mismatch + capture after delay (E7, H3)
-- [ ] 🔜 K5 MPC on the full-state Koopman model (PDF controller 2)
-- [ ] 🔜 K6 Offset-free MPC / integral action baseline (reviewers will ask why the bias isn't removed with integral action)
+- [x] ✅ K5 MPC on the full-state Koopman model (PDF controller 2) (E8b)
+- [x] ✅ K6 Offset-free MPC / integral action baseline (E8a)
 - [ ] 🔜 K7 Online residual adaptation (recursive least squares on W), to answer the generalization failure in E6
 - [ ] ⬜ K8 Residual trained on spin-up transients (capture far from the equilibrium)
 - [ ] ⬜ K9 Ablations: dictionary, regularization, sampling period, sensor noise

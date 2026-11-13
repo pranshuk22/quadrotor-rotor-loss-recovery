@@ -12,7 +12,8 @@
 | `metrics.py` | Success criterion constants; `Outcome`; `evaluate(log, eq)` |
 | `sim.py` | `simulate(x0, controller, p, T, dt, ctrl_period, alive_fn, ...)` → `SimLog(t, x, u, n)` |
 | `koopman.py` | `TS`; `NominalModel`; `Dictionary`; `ridge`; `Dataset`; `ExcitedLQR`; `initial_state`; `generate`; `FullEDMDc`; `ResidualEDMD`; `nominal_rollout`; `multistep_errors` |
-| `mpc.py` | `FailureMPC(p, eq, horizon, residual)` (CVXPY + OSQP, measured-disturbance residual) |
+| `mpc.py` | `FailureMPC(p, eq, horizon, residual)` (CVXPY + OSQP, measured-disturbance residual); `LiftedKoopmanMPC(p, eq, model, horizon)` (MPC on a `FullEDMDc` lifted model, re-lifted each step, DARE terminal cost with checks in `.dare`) |
+| `offset_free.py` | `OffsetFreeMPC(p, eq, horizon, residual, disturbance="thrust"/"state")` (Kalman filter, target calculation, MPC on the estimate); `FailureLQRIntegral` (failure LQR with integrator on altitude); `thrust_offset_matrix`, `detectability_rank` |
 | `validation.py` | `GeneralMulticopter` (independent implementation of the IJRR 2016 model); `ijrr_speeds`; `IJRR_CASES` |
 | `plotting.py` | Figure style (validated categorical palette, thin marks) |
 

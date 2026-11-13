@@ -51,6 +51,6 @@ The journal-style final report is due on **13 November 2026**. The full task lis
 | `rotorfail/` | Python package (simulator, models, controllers, certificates, Koopman, MPC) |
 | `experiments/` | One script per experiment (V0, E1–E7) |
 | `results/` | Generated tables and figures |
-| `tests/` | 46 automated tests (plus 1 expected failure documenting a published inconsistency) |
+| `tests/` | 59 automated tests (plus 1 expected failure documenting a published inconsistency) |
 | `literature/` | Literature review, search log, paper notes, links to the papers |
 | `history/` | Earlier proposal versions and changelog |

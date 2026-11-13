@@ -12,6 +12,8 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 | E5 | `e5_first_certificate.py` | First saturation-aware LMI certificate; conservatism vs simulation | `e5_first_certificate.md`, `e5_certificate_slice.png` | ~8 min |
 | E6 | `e6_koopman_prediction.py` | Analytical vs full-state vs residual EDMDc prediction | `e6_koopman_prediction.md`, `e6_multistep_error.png`, `e6_data_efficiency.png`, `e6_full_edmdc_eigs.png` | ~2.5 min |
 | E7 | `e7_mpc_closed_loop.py` | LQR vs analytical MPC vs residual-Koopman MPC in closed loop | `e7_mpc_closed_loop.md`, `e7_altitude.png` | ~3 min |
+| E8a | `e8_offset_free.py` | Offset-free MPC (two disturbance models, with and without residual) and LQR with integrator vs residual-Koopman MPC | `e8_offset_free.md`, `e8_altitude.png` | ~9 min |
+| E8b | `e8_full_koopman_mpc.py` | MPC on the full-state Koopman model vs analytical and residual-Koopman MPC | `e8_full_koopman_mpc.md`, `e8_full_koopman.png` | ~18 min |
 
 ## E1: Equilibrium
 - Set-up: nominal parameters, ρ = 0.5; sensitivity to ±0.05e-3 in the inertias; ρ sweep 0.02–1.6 with continuation.
@@ -40,6 +42,14 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 ## E7: MPC closed loop
 - Set-up: residual trained on the E6 family-A data; part 1: steady altitude error on six plants (A and B, each in full, without its thrust loss, and its thrust loss alone on the nominal plant), one start 1 m below the set-point, 8 s; part 2: capture after delay τ ∈ {0, 10, 20, 30, 40, 60} ms on family A, judged against each controller's own closed-loop steady state.
 - Result: residual-Koopman MPC reduces the steady altitude error on 5 of 6 plants (−32% on A) but increases it by 47% on B without thrust loss; as a capture controller, LQR is SAFE up to 10 ms and both MPCs only at 0 ms.
+
+## E8a: offset-free baselines
+- Set-up: settings fixed in the script docstring before the runs. Disturbance models: "thrust" (3 states, offset on the produced thrust of rotors 1 to 3) and "state" (7 states, one per physical state); steady-state Kalman filter; target calculation; E7 protocols (steady error on six plants, capture after delay on family A and the nominal plant).
+- Result: the state-model offset-free MPC and the LQR with integrator remove the steady altitude error (0.000 m and at most 0.024 m); the thrust model does not (-0.239 m on A, +0.165 m on B) because three disturbance states cannot absorb the mismatch of seven physical states. The state model fails capture after delay at every tested delay (including 0 ms); the others behave like the LQR or the other MPCs.
+
+## E8b: MPC on the full-state Koopman model
+- Set-up: `LiftedKoopmanMPC` (55 lifted states plus altitude, re-lifted at every step, DARE terminal cost without the constant coordinate); E7 protocols; divergence rule |w| > 100 rad/s or |z| > 100 m.
+- Result: stable near the hover with steady errors close to the residual MPC's; capture fails earlier than the other MPCs (runs stopped from 20 ms on family A); the lifting leaves the training range during capture (up to 350 standard deviations); 53 to 316 ms per step.
 
 ## Known comparability issues
 - E4 uses the nominal plant; E7 part 2 uses truth family A. Absolute delay numbers differ between them.

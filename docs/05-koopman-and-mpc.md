@@ -1,6 +1,6 @@
 # 5. Koopman Models and MPC
 
-Code: `rotorfail/koopman.py`, `rotorfail/mpc.py`. Experiments: E6 (prediction), E7 (closed loop).
+Code: `rotorfail/koopman.py`, `rotorfail/mpc.py`, `rotorfail/offset_free.py`. Experiments: E6 (prediction), E7 (closed loop), E8a (offset-free baselines), E8b (full-state Koopman MPC).
 
 ## 5.1 Data generation (`generate`)
 - Truth plant: family A, B or randomized (`params.truth_family`, `params.random_family`). Rotor 4 failed.
@@ -55,8 +55,21 @@ Steady altitude error near the relaxed hover, broken down by mismatch effect (on
 - Timing: median 0.73 ms per step inside OSQP, 4.4 ms wall clock through CVXPY. The sample period is 5 ms, so a real-time version would call the solver directly.
 - As capture controllers after a detection delay (truth A; spin-up at 2.95 N, then the controller; capture judged against each controller's own closed-loop steady state on A), LQR is SAFE up to τ = 10 ms and both MPCs only at τ = 0. The likely bottleneck is the validity of the linear prediction model far from the spin, not constraint handling.
 
-## 5.6 Not done yet
-- MPC on the full-state Koopman model (proposal controller 2), task K5.
-- Offset-free MPC / integral action as the classical baseline for bias removal, task K6.
+## 5.6 Offset-free baselines and full-state Koopman MPC (E8a, E8b)
+
+Offset-free MPC (`OffsetFreeMPC`): nominal 10-state model plus a constant disturbance, steady-state Kalman filter, target calculation, MPC on the filtered estimate. Two disturbance models: "thrust" (3 states) and "state" (7 states). Steady altitude error, same protocol as 5.5 (`results/tables/e8_offset_free.md`):
+
+| Plant | Residual MPC | OF thrust | OF state | LQR + integrator |
+|---|---|---|---|---|
+| A (full) | -0.193 m | -0.239 m | -0.000 m | +0.001 m |
+| B (full, held out) | +0.022 m | +0.165 m | -0.000 m | +0.016 m |
+| B without thrust loss | +0.164 m | +0.173 m | -0.000 m | +0.024 m |
+
+The state model and the integrator remove the bias without any learning; the thrust model does not, because the steady-state innovation need not vanish with three disturbance states for seven physical rows. The state model fails capture after delay at every tested delay (the estimator reads the capture transient as a constant disturbance), a negative result reported as is.
+
+Full-state Koopman MPC (`LiftedKoopmanMPC`, `results/tables/e8_full_koopman_mpc.md`): 55 lifted states plus altitude, re-lifted from the measurement at every step, DARE terminal cost without the constant coordinate (checks passed, spectral radius 0.9949). Steady error on A: -0.186 m (residual MPC -0.193 m). Capture: safe at 0 ms, unsafe from 10 ms on A, runs diverge from 20 ms on A; 53 to 316 ms per step.
+
+## 5.7 Not done yet
+- Online adaptation of the residual (K7), spin-up training data (K8), MPC tuning (K10), ablations (K9).
 - Online residual adaptation (recursive least squares on W), task K7.
 - Residual trained on spin-up transients; air-relative thrust in the truth plant, tasks K8, K11.
