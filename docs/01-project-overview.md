@@ -34,7 +34,7 @@ healthy flight ──(rotor 4 fails, t = 0)──► undetected phase ──(det
 | RQ2: P(safe) versus delay (Monte Carlo), first LTI certificate | Done | E4, E5 |
 | RQ2: certificate over the spin-up (LPV), reachable sets, certified τ\* | Not started | task list D3–D6 |
 
-Course milestones: final progress presentation on **31 October 2026**, journal-style final report due **13 November 2026**. The full task list is in `progress/task-list.md`, and the status and caveats are in `progress/status.md`.
+The journal-style final report is due on **13 November 2026**. The full task list is in `progress/task-list.md`, and the status and caveats are in `progress/status.md`.
 
 ## Headline results so far
 1. The simulator reproduces the published two-rotor and three-rotor-loss equilibria to every digit, five hover solutions of the IJRR model within 4% (body-rate vector), and, at the thrust used in flight, the flight spin-up time within about 4% (0.65 s vs 0.62 s).

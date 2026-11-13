@@ -26,7 +26,7 @@ After a rotor fails, a quadrotor can no longer hover level. Its only steady stat
 | Detection delay | In simulation, the published recovery strategy recovers safely with probability above 0.9 only for detection delays up to about 12 ms, and below 0.5 beyond about 19 ms (40 random starts per delay). Fast detectors need 30 to 130 ms. |
 | Certification | A first saturation-aware LMI certificate covers 22% of the way from the spinning equilibrium to the state just after a failure in hover; in simulation, every start up to 70% of the way recovers. |
 
-Full details are in the [progress report](docs/report/report.pdf) and the [documentation](docs/README.md).
+Full details are in the [detailed report](docs/report/report.pdf) and the [documentation](docs/README.md).
 
 ## Quick start
 
@@ -64,7 +64,7 @@ rotorfail/     Python package: dynamics, trim solvers, linear models, controller
 experiments/   One script per experiment (V0, E1 to E7)
 tests/         Physics, published-result and unit tests
 results/       Generated tables and figures
-docs/          Documentation, progress report (LaTeX) and slide deck
+docs/          Documentation, detailed report (LaTeX) and slide deck
 proposal/      Project proposal, novelty assessment and work plan
 progress/      Status, task list and review reports
 literature/    Literature review, search log and paper notes
@@ -73,7 +73,7 @@ history/       Earlier versions of the proposal
 
 ## Documentation
 
-- [Progress report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
+- [Detailed report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
 - [Slide deck](docs/deck/progress-review.pdf) ([PPTX](docs/deck/progress-review.pptx))
 - [Technical documentation](docs/README.md): model and equations, validation, methods, experiments, code reference and reproducibility
 - [Project proposal](proposal/proposal.md)
