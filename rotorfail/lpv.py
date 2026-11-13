@@ -194,8 +194,8 @@ def check_against_linearisation(lpv: QuasiLPV):
     return float(np.max(np.abs(lpv.A(lpv.r_bar, lpv.nz_bar) - m.A)))
 
 
-def remainder_sup(lpv: QuasiLPV, half, scale=None, n=20000, seed=0, local=15):
-    """Numerical bound on the remainder over the box |e_i| <= half_i (box limited to |n_xy| < 1).
+def remainder_sup(lpv: QuasiLPV, half, scale=None, n=20000, seed=0, local=15, nz_min=0.0):
+    """Numerical bound on the remainder over the box |e_i| <= half_i, restricted to n_z >= nz_min.
 
     Returns (sup |R_i| per component, sup |R_i| / ||S^-1 e|| per component) where S = diag(scale)
     (default: half). Dense random sampling plus a bounded local optimiser started from the worst
@@ -207,7 +207,8 @@ def remainder_sup(lpv: QuasiLPV, half, scale=None, n=20000, seed=0, local=15):
     rng = np.random.default_rng(seed)
     E = rng.uniform(-1, 1, (n, 10)) * half
     E = np.vstack((E, np.sign(rng.uniform(-1, 1, (n // 2, 10))) * half))          # vertices of the box
-    ok = (lpv.xbar[3] + E[:, 3]) ** 2 + (lpv.xbar[4] + E[:, 4]) ** 2 < 0.999
+    lim = min(0.999, 1.0 - nz_min ** 2)
+    ok = (lpv.xbar[3] + E[:, 3]) ** 2 + (lpv.xbar[4] + E[:, 4]) ** 2 < lim
     E = E[ok]
     Rs = np.array([lpv.remainder(e) for e in E])
     ratio = np.abs(Rs) / np.maximum(np.linalg.norm(E / S, axis=1), 1e-12)[:, None]
@@ -222,7 +223,7 @@ def remainder_sup(lpv: QuasiLPV, half, scale=None, n=20000, seed=0, local=15):
                     return -(v if key == "abs" else v / max(np.linalg.norm(x / S), 1e-12))
                 res = minimize(obj, E[k], bounds=list(zip(-half, half)), method="L-BFGS-B")
                 x = res.x
-                if (lpv.xbar[3] + x[3]) ** 2 + (lpv.xbar[4] + x[4]) ** 2 >= 0.999:
+                if (lpv.xbar[3] + x[3]) ** 2 + (lpv.xbar[4] + x[4]) ** 2 >= lim:
                     continue
                 if key == "abs":
                     sup_abs[i] = max(sup_abs[i], -res.fun)
