@@ -40,6 +40,8 @@ def test_thrust_offset_matrix_is_zoh_of_the_seven_state_input_matrix(mpc):
 def test_detectability_and_target_matrix_have_full_rank(mpc):
     rank, smin = detectability_rank(mpc.A, mpc.Bd)
     assert rank == 13 and smin > 1e-3
+    rank_s, _ = detectability_rank(mpc.A, np.vstack((np.eye(7), np.zeros((3, 7)))))
+    assert rank_s == 17
     M = np.linalg.inv(mpc.Minv)
     assert M.shape == (13, 13) and np.linalg.matrix_rank(M) == 13
 
@@ -135,3 +137,37 @@ def test_integral_lqr_removes_the_offset_on_the_linear_model():
         u = c(k * 0.005, x)[:3] - EQ.f[:3]
         s = nom.Ad @ s + nom.Bd @ u + Bd @ d_true
     assert abs(s[5]) < 5e-3
+
+
+@pytest.mark.parametrize("disturbance", ["thrust", "state"])
+def test_offset_free_with_unmodelled_input_gain_error(disturbance):
+    """Plant outside the model class (10 % input-gain error, perturbed A, plus an offset)."""
+    c = OffsetFreeMPC(P, EQ, horizon=20, disturbance=disturbance)
+    rng = np.random.default_rng(3)
+    dA = np.zeros_like(c.A)
+    dA[:7, :7] = 2e-3 * rng.standard_normal((7, 7))
+    dA[:, 5] = 0.0
+    A_true, B_true = c.A + dA, 1.1 * c.B
+    d_true = np.array([0.06, -0.04, 0.05])
+    s = np.zeros(10)
+    for _ in range(3000):                                # 15 s
+        u = c.act(s[:7])
+        s = A_true @ s + B_true @ u + thrust_offset_matrix(P, EQ) @ d_true
+    assert abs(s[5]) < 1e-3 and np.abs(s[3:5]).max() < 1e-3
+
+
+def test_state_disturbance_model_removes_altitude_bias_on_the_nonlinear_family_a_plant():
+    """Regression test for the finding that the 3-state thrust-offset model leaves a steady error
+    on the nonlinear mismatched plant while the 7-state disturbance model removes it."""
+    from rotorfail.koopman import TS, initial_state
+    from rotorfail.params import truth_family
+    from rotorfail.sim import simulate
+    plant = truth_family("A")
+    x0 = initial_state(EQ, np.random.default_rng(0))
+    x0[2] = -1.0
+    c = OffsetFreeMPC(P, EQ, disturbance="state")
+    c.reset(x0[13:16])
+    log = simulate(x0, c, plant, 8.0, dt=1e-3, ctrl_period=TS,
+                   alive_fn=lambda t: np.array([True, True, True, False]), log_every=5)
+    assert abs(np.mean(log.z[log.t >= 6.0])) < 5e-3
+    assert c.bad_status == 0

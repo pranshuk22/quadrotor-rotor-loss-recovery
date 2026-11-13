@@ -1,24 +1,36 @@
 """Offset-free control of the failed vehicle (baselines for RQ1, task K6).
 
 OffsetFreeMPC
-    Linear MPC with an input-disturbance model, a steady-state Kalman filter and a
+    Linear MPC with a constant-disturbance model, a steady-state Kalman filter and a
     target calculation (Pannocchia and Rawlings style). The prediction model is the
     nominal discrete 10-state model of `NominalModel` (7 physical states + 3 command
-    filter states), augmented with a constant disturbance d on the *produced* thrust of
-    rotors 1 to 3:
+    filter states), augmented with a constant disturbance d:
 
         s+ = A s + B u + Bd d + d_res,        d+ = d
 
-    Bd = [B7d; 0] is the ZOH discretisation of the 7-state thrust input matrix; d does not
-    enter the command-filter states, because those are computed from the commands and are
-    known exactly. The measured output is the whole 10-state vector. d_res is the optional
-    one-step residual-Koopman correction (zero for the plain offset-free MPC).
+    The disturbance enters only the 7 physical states (the command-filter states are
+    computed from the commands and are known exactly). Two disturbance models:
+      "thrust": d (3) is an offset on the *produced* thrust of rotors 1 to 3;
+                Bd = [B7d; 0], B7d the ZOH discretisation of the 7-state thrust input matrix.
+      "state" : d (7) is an offset on each physical state per step; Bd = [I7; 0].
+    The measured output is the whole 10-state vector. d_res is the optional one-step
+    residual-Koopman correction (zero for the plain offset-free MPC).
+
+    With fewer disturbance states than unknown mismatch rows ("thrust": 3 against 7), the
+    steady-state Kalman innovation need not vanish (it may lie in the null space of the
+    disturbance block of the gain), and the closed loop can settle with a tracking error
+    although the estimator is at rest. With "state" the innovation of the 7 physical outputs
+    is forced to zero in steady state, which gives zero offset in (n_x, n_y, z).
 
     Each step: (1) Kalman correction of the augmented state, giving d_hat; (2) target
     (s_s, u_s) with s_s = A s_s + B u_s + D, D = d_res + Bd d_hat, tracked outputs
     (n_x, n_y, z) at their set-points, input box as the only hard constraint (a small QP
-    when the exact target violates the box); (3) MPC on the deviations from the target with
-    the same Q, R, horizon, DARE terminal cost and input box as `FailureMPC`.
+    when the exact target violates the box); (3) MPC on the deviations of the *filtered state
+    estimate* from the target, with the same Q, R, horizon, DARE terminal cost and input box
+    as `FailureMPC`. Regulating the estimate rather than the raw measurement is what makes the
+    scheme offset-free when the plant is not exactly in the model class: at a closed-loop
+    steady state the estimator equations then force a zero innovation (L has full column
+    rank), so the measured tracked outputs equal their targets (Pannocchia and Rawlings 2003).
 
 FailureLQRIntegral
     Classical reference: the failure LQR with an integrator on the altitude error.
@@ -46,9 +58,11 @@ class NoiseSpec:
     """Kalman filter covariances, fixed a priori (see experiments/e8_offset_free.py)."""
     q_phys: float = 1e-4     # process noise variance on the 7 physical states
     q_filt: float = 1e-8     # on the 3 command-filter states
-    q_dist: float = 1e-3     # on the 3 disturbance states (random walk)
+    q_dist: float = 1e-3     # "thrust" model: variance of each of the 3 disturbance states (random walk)
+    q_dist_state: float = 1e-6   # "state" model: variance of each of the 7 disturbance states
     r_meas: float = 1e-6     # measurement noise variance, all 10 outputs
-    d_clip: float = 1.0      # N, bound on |d_hat| used by target and MPC (anti-windup safeguard)
+    d_clip: float = 1.0      # "thrust" model: N, bound on |d_hat| (anti-windup safeguard)
+    d_clip_state: float = 0.5    # "state" model: bound on |d_hat| per step, in state units
 
 
 def thrust_offset_matrix(p: QuadParams, eq: RelaxedHover, ts: float = TS):
@@ -62,18 +76,19 @@ def thrust_offset_matrix(p: QuadParams, eq: RelaxedHover, ts: float = TS):
 
 
 def augmented_model(A, B, Bd):
-    """(A_aug, B_aug, C_aug) of the 13-state model [s; d] with y = s."""
+    """(A_aug, B_aug, C_aug) of the model [s; d] with y = s."""
     n, m = B.shape
-    Aa = np.block([[A, Bd], [np.zeros((3, n)), np.eye(3)]])
-    Ba = np.vstack((B, np.zeros((3, m))))
-    Ca = np.hstack((np.eye(n), np.zeros((n, 3))))
+    nd = Bd.shape[1]
+    Aa = np.block([[A, Bd], [np.zeros((nd, n)), np.eye(nd)]])
+    Ba = np.vstack((B, np.zeros((nd, m))))
+    Ca = np.hstack((np.eye(n), np.zeros((n, nd))))
     return Aa, Ba, Ca
 
 
 def detectability_rank(A, Bd, tol=1e-9):
-    """Rank (relative tolerance tol) and smallest singular value of [[I - A, -Bd], [C, 0]]."""
-    n = A.shape[0]
-    M = np.block([[np.eye(n) - A, -Bd], [np.eye(n), np.zeros((n, 3))]])
+    """Rank (relative tolerance tol) and smallest singular value of [[I - A, -Bd], [C, 0]] (C = I)."""
+    n, nd = A.shape[0], Bd.shape[1]
+    M = np.block([[np.eye(n) - A, -Bd], [np.eye(n), np.zeros((n, nd))]])
     sv = np.linalg.svd(M, compute_uv=False)
     return int(np.sum(sv > tol * sv[0])), float(sv[-1])
 
@@ -81,13 +96,21 @@ def detectability_rank(A, Bd, tol=1e-9):
 class OffsetFreeMPC:
     def __init__(self, p: QuadParams, eq: RelaxedHover, horizon: int = 20,
                  residual: ResidualEDMD | None = None, z_ref: float = 0.0, ts: float = TS,
-                 noise: NoiseSpec = NoiseSpec()):
+                 noise: NoiseSpec = NoiseSpec(), disturbance: str = "thrust"):
+        assert disturbance in ("thrust", "state")
+        self.disturbance = disturbance
         self.p, self.eq, self.N, self.ts = p, eq, horizon, ts
         self.residual, self.z_ref, self.noise = residual, z_ref, noise
         self.nom = NominalModel.build(p, eq, ts)
         self.A, self.B = self.nom.Ad, self.nom.Bd
-        self.Bd = thrust_offset_matrix(p, eq, ts)
+        if disturbance == "thrust":
+            self.Bd = thrust_offset_matrix(p, eq, ts)
+            q_d, self.d_clip = noise.q_dist, noise.d_clip
+        else:
+            self.Bd = np.vstack((np.eye(7), np.zeros((3, 7))))
+            q_d, self.d_clip = noise.q_dist_state, noise.d_clip_state
         n, m = self.B.shape
+        self.nd = self.Bd.shape[1]
         self.n, self.m = n, m
         Q, R = failure_weights()
         PN = solve_discrete_are(self.A, self.B, Q, R)
@@ -95,7 +118,7 @@ class OffsetFreeMPC:
         # --- Kalman filter on the augmented model (current-estimator form)
         Aa, Ba, Ca = augmented_model(self.A, self.B, self.Bd)
         self.Aa, self.Ba, self.Ca = Aa, Ba, Ca
-        Qw = np.diag([noise.q_phys] * 7 + [noise.q_filt] * 3 + [noise.q_dist] * 3)
+        Qw = np.diag([noise.q_phys] * 7 + [noise.q_filt] * 3 + [q_d] * self.nd)
         Rv = noise.r_meas * np.eye(n)
         Pp = solve_discrete_are(Aa.T, Ca.T, Qw, Rv)            # prior covariance
         self.L = Pp @ Ca.T @ np.linalg.inv(Ca @ Pp @ Ca.T + Rv)
@@ -152,14 +175,14 @@ class OffsetFreeMPC:
 
     # ------------------------------------------------------------------ pieces
     def estimate(self, y):
-        """Kalman correction; returns d_hat (3,)."""
+        """Kalman correction; returns d_hat."""
         if self.xhat is None:
-            self.xhat = np.concatenate((y, np.zeros(3)))
+            self.xhat = np.concatenate((y, np.zeros(self.nd)))
         else:
             xp = self.Aa @ self.xhat + self.Ba @ self.u_prev
             xp[:self.n] += self.D_res_prev
             self.xhat = xp + self.L @ (y - self.Ca @ xp)
-        self.xhat[self.n:] = np.clip(self.xhat[self.n:], -self.noise.d_clip, self.noise.d_clip)
+        self.xhat[self.n:] = np.clip(self.xhat[self.n:], -self.d_clip, self.d_clip)
         return self.xhat[self.n:].copy()
 
     def target(self, D):
@@ -186,7 +209,7 @@ class OffsetFreeMPC:
             D_res[:7] = self.residual.residual(x7, self.fe, self.u_prev)
         D = D_res + self.Bd @ d_hat
         ss, us, exact = self.target(D)
-        self.e0.value = y - ss
+        self.e0.value = self.xhat[:self.n] - ss
         self.w.value = D + self.A @ ss + self.B @ us - ss
         self.v_lo.value = self.u_lo - us
         self.v_hi.value = self.u_hi - us
@@ -205,7 +228,7 @@ class OffsetFreeMPC:
         self.D_res_prev = D_res
         self.d_hat_log.append(d_hat)
         self.target_exact.append(exact)
-        self.clip_active.append(bool(np.any(np.abs(self.xhat[self.n:]) >= self.noise.d_clip - 1e-12)))
+        self.clip_active.append(bool(np.any(np.abs(self.xhat[self.n:]) >= self.d_clip - 1e-12)))
         return u
 
     def __call__(self, t, x):
