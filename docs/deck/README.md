@@ -3,12 +3,13 @@
 **Final presentation (residual Koopman MPC)**
 - [`final-presentation.pptx`](final-presentation.pptx): PowerPoint, 20 slides (19 + 1 backup) with speaker notes; plain white academic template
 - [`final-presentation.pdf`](final-presentation.pdf): PDF export of the same deck
-- [`build_pptx.js`](build_pptx.js): generates the .pptx with [pptxgenjs](https://gitbrent.github.io/PptxGenJS/). Figures are read from `results/figures/`.
+- [`build_pptx.js`](build_pptx.js): generates the .pptx with [pptxgenjs](https://gitbrent.github.io/PptxGenJS/). Figures are read from `docs/deck/figures/`, which `prepare_figures.py` produces from `results/figures/` by cropping the title rows.
 - [`speaker-notes.md`](speaker-notes.md): the speaker notes, one section per slide id.
 
 To rebuild (Node.js with pptxgenjs installed in some folder, and LibreOffice for the PDF):
 
 ```bash
+.venv/bin/python docs/deck/prepare_figures.py
 NODE_PATH=<folder>/node_modules node docs/deck/build_pptx.js
 soffice --headless --convert-to pdf --outdir docs/deck docs/deck/final-presentation.pptx
 ```
