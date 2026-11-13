@@ -8,7 +8,7 @@ Rotor layout and sign conventions follow the same paper (Fig. 2, eqs. 8-14):
   tau_res = ( l (f2 - f4),  l (f3 - f1),  kappa_tau (f1 - f2 + f3 - f4) - gamma r )
   propellers 1 and 3 spin with negative speed, 2 and 4 with positive speed.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 

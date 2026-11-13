@@ -17,8 +17,8 @@ from rotorfail.dynamics import make_state, quat_to_rot  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
 from rotorfail.reach import (ChainSpec, UndetectedLTI, X0_SIGMA, capture_dev, centre_scaling,  # noqa: E402
-                             chain_jacobian, command_ranges, coverage, hand_over_set, max_beta, max_beta_exact,
-                             run_chain, sample_x0)
+                             chain_jacobian, command_ranges, coverage, max_beta, max_beta_exact,
+                             run_chain)
 
 EQ = relaxed_hover(P)
 

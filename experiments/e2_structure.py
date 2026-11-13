@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from rotorfail.analysis import (ctrb, gramian_summary, obsv, pbh_controllability,  # noqa: E402
-                                pbh_observability, scaled_rank)
+                                scaled_rank)
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.models import failed_linear, healthy_linear  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402

@@ -99,7 +99,6 @@ def main():
         L.append("")
 
     # per-state error at 0.5 s, family A
-    from rotorfail.koopman import MEAS
     idx = int(np.where(HORIZONS == 100)[0][0])
     L += ["Normalization: each state divided by its standard deviation in the training data.", ""]
 

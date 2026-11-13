@@ -11,11 +11,11 @@
 \midrule
 H1 & Full-state EDMDc on the failed drone is unstable and loses to ``no change'' at long horizons & Supported for prediction (4 of 55 eigenvalues slightly outside the unit circle); inside an MPC that re-lifts at every step it is stable near the hover (Section~\ref{sec:fullkoopmanmpc}) \\
 H2 & The residual model predicts best & Supported from 100\,ms to 1\,s, on the training plant only (beyond about 2\,s ``no change'' is better) \\
-H3 & Residual Koopman MPC removes the steady bias under mismatch & Partly: reduced by 32\% on the training plant, worse on one held-out variant; offset-free MPC removes the bias but fails the capture, and the integrator LQR reduces it to at most 0.024\,m with the LQR's capture (Section~\ref{sec:offsetfree}) \\
+H3 & Residual Koopman MPC removes the steady bias under mismatch & Partly: reduced by 32\% on the training plant, worse on one held-out variant; online adaptation repairs that variant ($+0.084$ against $+0.164$\,m, Section~\ref{sec:adaptive}); offset-free MPC removes the bias but fails the capture, and the integrator LQR reduces it to at most 0.024\,m with the LQR's capture (Section~\ref{sec:offsetfree}); the conclusion survives air-relative thrust and drag (Section~\ref{sec:realistic}) \\
 H4 & The residual model needs less data & Supported (10 episodes beat 40) \\
-H5 & The linear certificate does not contain the failure state; one over the spin-up does & First half supported ($\beta = 0.22$); second half not yet tested \\
-H6 & The certified $\tau^\star$ is finite and of the order of real detector delays & Not yet tested; the empirical limit (12 to 19\,ms) is shorter than detectors need \\
-H7 & The certified $\tau^\star$ is within 2 to 3 times the empirical value & Not yet tested \\
+H5 & The linear certificate does not contain the failure state; one over the spin-up does & First half supported ($\beta = 0.22$). Second half cannot hold as written (the onset has $r=0$, below the 4.8\,rad/s at which this LQR already fails); restated as ``a certificate contains the spin-up \emph{hand-over} state'': \textbf{not supported}, no certificate computed here contains it and no hover-centred ellipsoid can (Sections~\ref{sec:budget} and~\ref{sec:redesign}) \\
+H6 & The certified $\tau^\star$ is finite and of the order of real detector delays & \textbf{Not supported:} no certified $\tau^\star$ exists in any configuration tested (the centre of the hand-over set is outside every certificate); the empirical limit (about 9 to 12\,ms for the published strategy) is shorter than detectors need \\
+H7 & The certified $\tau^\star$ is within 2 to 3 times the empirical value & \textbf{Not testable}: no certified $\tau^\star$ exists (Section~\ref{sec:tightness}) \\
 \bottomrule
 \end{tabularx}
 \end{table}

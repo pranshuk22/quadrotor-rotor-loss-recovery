@@ -42,10 +42,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .dynamics import body_rate_derivative
 from .equilibrium import RelaxedHover
 from .models import add_motor_lag, failed_f, failed_linear
-from .params import G, QuadParams
+from .params import QuadParams
 
 STATES = ["p", "q", "r", "n_x", "n_y", "z", "v_z", "f1", "f2", "f3"]
 R_HALF = 11.0
@@ -67,7 +66,7 @@ class QuasiLPV:
         self.signs = np.array(p.prop_sign[:3])
         self.c = self.signs / (2.0 * np.sqrt(p.kappa_f * self.fbar))        # d w_sum / d f_i at the trim
         self.wsum_bar = float(np.sum(self.signs * np.sqrt(self.fbar / p.kappa_f)))
-        Ixx, Izz = p.Ixx_B, p.Izz_B
+        Ixx = p.Ixx_B
         self.kxz = (p.Izz_T - p.Ixx_T) / Ixx
         self.a = p.Izz_P / Ixx
         self._build_affine()

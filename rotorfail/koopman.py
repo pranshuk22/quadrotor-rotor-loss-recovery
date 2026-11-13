@@ -14,13 +14,13 @@ Models
              e_{k+1} = x_{k+1} - x_nom_{k+1} = W [psi(xi_k); u_k]  (EDMD regression on the
              same dictionary), clipped to |e| <= d_max (empirical percentile).
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 from scipy.signal import cont2discrete
 
 from .control import FailureLQR
-from .dynamics import IDX_F, IDX_Q, E3, make_state, quat_from_n, quat_to_rot
+from .dynamics import IDX_Q, E3, make_state, quat_from_n, quat_to_rot
 from .equilibrium import RelaxedHover
 from .models import add_motor_lag, failed_linear
 from .params import QuadParams

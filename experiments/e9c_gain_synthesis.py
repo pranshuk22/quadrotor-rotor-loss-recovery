@@ -71,7 +71,7 @@ warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt  # noqa: E402
 
-from e4_delay_sweep import crossing, wilson, x0_hover  # noqa: E402
+from e4_delay_sweep import crossing, x0_hover  # noqa: E402
 from e5_first_certificate import state_from_dev  # noqa: E402
 from e9b_robust_certificate import gamma_p, sample_points  # noqa: E402
 from rotorfail.certify import (robust_invariant_ellipsoid, slice_ellipse, synthesize_gain,  # noqa: E402
@@ -83,7 +83,7 @@ from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.lpv import QuasiLPV  # noqa: E402
 from rotorfail.metrics import evaluate  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
-from rotorfail.plotting import MUTED, REF, SERIES, apply_style, save  # noqa: E402
+from rotorfail.plotting import REF, SERIES, apply_style, save  # noqa: E402
 from rotorfail.sim import simulate  # noqa: E402
 
 F_SPIN = 2.95

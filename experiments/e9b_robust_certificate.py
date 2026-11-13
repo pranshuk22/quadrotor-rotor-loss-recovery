@@ -89,10 +89,10 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from e5_first_certificate import state_from_dev  # noqa: E402
 from rotorfail.certify import (invariant_ellipsoid, robust_invariant_ellipsoid, slice_ellipse,  # noqa: E402
-                               verify_robust, _lmi_blocks)
+                               verify_robust)
 from rotorfail.control import FailureLQR  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
-from rotorfail.lpv import QuasiLPV, remainder_sup  # noqa: E402
+from rotorfail.lpv import QuasiLPV  # noqa: E402
 from rotorfail.metrics import evaluate  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
 from rotorfail.plotting import MUTED, REF, SERIES, apply_style, save  # noqa: E402

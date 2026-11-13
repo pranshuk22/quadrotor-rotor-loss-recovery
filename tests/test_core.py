@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rotorfail.certify import invariant_ellipsoid  # noqa: E402
 from rotorfail.control import FailureLQR, HealthyLQR  # noqa: E402
-from rotorfail.dynamics import (IDX_Q, deriv, make_state, quat_from_n, quat_to_rot,  # noqa: E402
+from rotorfail.dynamics import (IDX_Q, make_state, quat_from_n, quat_to_rot,  # noqa: E402
                                 reduced_attitude)
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.models import failed_f, failed_linear, healthy_f, healthy_linear  # noqa: E402

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.linalg import solve_continuous_are
 
-from .dynamics import IDX_D, IDX_F, IDX_Q, IDX_V, IDX_W, quat_to_rot, rot_to_euler, E3
+from .dynamics import IDX_D, IDX_Q, IDX_V, IDX_W, quat_to_rot, rot_to_euler, E3
 from .equilibrium import RelaxedHover
 from .models import LinearModel, add_motor_lag, failed_linear, healthy_linear
 from .params import QuadParams

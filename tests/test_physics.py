@@ -16,7 +16,7 @@ from scipy.linalg import expm
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rotorfail.dynamics import (IDX_F, IDX_Q, IDX_W, body_rate_derivative, deriv,  # noqa: E402
-                                euler_to_quat, make_state, quat_to_rot, reduced_attitude, rk4_step,
+                                make_state, quat_to_rot, reduced_attitude, rk4_step,
                                 saturate)
 from rotorfail.params import DEFAULT as P  # noqa: E402
 from rotorfail.params import G  # noqa: E402
