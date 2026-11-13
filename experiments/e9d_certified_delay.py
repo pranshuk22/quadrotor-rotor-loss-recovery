@@ -11,7 +11,8 @@ Fixed before running (do not tune afterwards)
     distribution (v ~ 0.3 m/s, Euler angles ~ 3 deg, w ~ 0.3 rad/s, per axis), centred at the hover; the family
     gamma X0, gamma in {0 (exact hover), 0.1, 0.25, 0.5, 1}.
   - Nominal plant; healthy LQR alpha = 1; controller period 1 ms; switch at the first sample with t >= tau.
-  - tau in {0, 5, ..., 60, 80, 100, 130} ms; f_spin in {2.95, 2.45} N; w_sw in {10 (published), 12, 14, 16, 18} rad/s.
+  - tau in {0, 5, ..., 60, 80, 100, 130} ms; f_spin in {2.95, 2.45} N; w_sw in {10 (published), 12, 14, 16, 18} rad/s and, AMENDED after E9c (whose empirical protocol found the earlier
+    thresholds 6 and 8 to be the best ones, and whose LQR designs at 6 and 8 are the only accepted ones), also 6 and 8.
   - Hand-over set: variational method along the nonlinear nominal trajectory (the chain Jacobian of
     `rotorfail.reach.chain_jacobian`, central differences, step 1e-3 sigma, hand-over state interpolated to
     the exact crossing of |w| = w_sw). This single nonlinear-trajectory method covers plan steps 2(b), 4 and 5
@@ -23,19 +24,22 @@ Fixed before running (do not tune afterwards)
     with support functions for every tau and gamma (unsat / sat / ambiguous). Configurations with a saturated or
     ambiguous rotor are marked: the variational set is then a local linearisation around the nominal modes.
   - Coverage of the hand-over sets: 1000 nonlinear samples (seed 7100) for gamma = 1, f_spin = 2.95, tau in
-    {0, 20, 60} ms and w_sw in {10, 18}; 100 samples (seed 7200) for gamma = 1, f_spin = 2.95, every other
+    {0, 20, 60} ms and w_sw in {10, 18} (6 is added to the 1000-sample set as well); 100 samples (seed 7200) for gamma = 1, f_spin = 2.95, every other
     (tau, w_sw). Reported: fraction inside the linearised set, worst normalised excess (min t with the sample
     inside c + t L-ball), worst orthogonal residual (the set is rank 9 in 10 dimensions), hand-over time window
     in samples, and the largest gap between the first-sample state and the interpolated state ("jitter").
     A configuration is called "linearised set verified" only if every sample is inside after the set is
     inflated by max(1, worst excess) and a margin column of the size of the worst orthogonal residual is added;
     inflated results are labelled "sampling-based".
-  - Certificates C (read from results/certificates/e9c_designs.npz, produced by E9c, nominal plant):
+  - Certificates C (read from results/certificates/e9c_designs.npz and the verification flags of
+    results/tables/e9c_gain_synthesis.md, produced by E9c, nominal plant):
       published LQR gain on the box designed for the same w_sw ("LQR"),
-      the accepted synthesised gain of E9c for that w_sw with the largest beta_final ("redesigned"),
-    each in two tiers: "rigorous" = kappa Q (remainder-inclusive, g_P <= 0.05) and "LPV" = Q (remainder-free
-    LPV certificate). Only the tier named "rigorous" is called certified; "LPV" is certified for the quasi-LPV
-    model only.
+      the synthesised gain of E9c for that w_sw with the largest beta_LPV among the VERIFIED designs ("redesigned";
+      AMENDED after E9c: E9c rejected every synthesised gain by the fast-pole rule, so none is "accepted"; they are kept
+      here only to show what the containment would give, and are labelled "rejected gain, not implementable"),
+    each in two tiers: "rigorous" = kappa Q (remainder-inclusive, g_P <= 0.05; only designs accepted in E9c) and
+    "LPV" = Q (remainder-free LPV certificate; only designs verified in E9c). Only the tier named "rigorous" is called
+    certified; "LPV" is certified for the quasi-LPV model only.
   - Containment: the S-procedure LMI (`max_beta`), cross-checked against the trust-region evaluation
     (`max_beta_exact`); the largest disagreement is reported.
   - tau* = first grid tau with beta < 1 (or with the centre outside), reported as "does not exist" if
@@ -75,22 +79,37 @@ from rotorfail.reach import (X0_RADIUS, X0_SIGMA, ChainSpec, UndetectedLTI, cent
 
 TAUS = [round(t, 3) for t in list(np.arange(0.0, 0.0601, 0.005)) + [0.08, 0.10, 0.13]]
 F_SPINS = (2.95, 2.45)
-W_SWS = (10, 12, 14, 16, 18)
+W_SWS = (6, 8, 10, 12, 14, 16, 18)
 GAMMAS = (0.0, 0.1, 0.25, 0.5, 1.0)
 GAIN_BOUNDS = (2, 4, 8, 16)
 DES = np.load(ROOT / "results/certificates/e9c_designs.npz")
 
 
+def verified_flags():
+    """(w_sw, gain label) -> verified, parsed from the E9c table (rows '| w | label | status | verified | ...')."""
+    out = {}
+    path = ROOT / "results/tables/e9c_gain_synthesis.md"
+    for line in path.read_text().splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) >= 12 and cells[0].isdigit() and (cells[1].startswith("published") or cells[1].startswith("synthesised")):
+            g = "lqr" if cells[1].startswith("published") else cells[1].split("=")[1].strip()
+            out[(int(cells[0]), g)] = cells[3] == "yes"
+    return out
+
+
+VERIFIED = verified_flags()
+
+
 def design_keys(w):
-    """Keys of the LQR design and of the accepted synthesised design with the largest beta_final for threshold w."""
+    """Keys of the LQR design and of the verified synthesised design with the largest beta_LPV for threshold w."""
     out = {"LQR": f"w{w}_glqr"}
     best, bk = -1.0, None
     for g in GAIN_BOUNDS:
         k = f"w{w}_g{g}"
-        if k + "_Q" not in DES.files or DES[k + "_ok"][0] < 0.5:
+        if k + "_Q" not in DES.files or not VERIFIED.get((w, str(g)), False):
             continue
-        Q, kap, d = DES[k + "_Q"], DES[k + "_kappa"][0], DES[k + "_d"]
-        beta = np.sqrt(kap) / np.sqrt(d @ np.linalg.solve(Q, d))
+        Q, d = DES[k + "_Q"], DES[k + "_d"]
+        beta = 1.0 / np.sqrt(d @ np.linalg.solve(Q, d))
         if beta > best:
             best, bk = beta, k
     if bk is not None:
@@ -99,10 +118,11 @@ def design_keys(w):
 
 
 def certificates(w):
-    """{(controller, tier): Q2} for threshold w (only accepted designs; tier 'rigorous' needs a kappa)."""
+    """{(controller, tier): Q2} for threshold w; 'LPV' needs a verified design, 'rigorous' an accepted one with a kappa."""
     out = {}
     for ctrl, k in design_keys(w).items():
-        if k + "_Q" not in DES.files:
+        g = k.split("_g")[1]
+        if k + "_Q" not in DES.files or not VERIFIED.get((w, g), False):
             continue
         Q, kap = DES[k + "_Q"], DES[k + "_kappa"][0]
         out[(ctrl, "LPV")] = Q
@@ -203,8 +223,8 @@ def main():
         HO = dict(ex.map(hand_over_job, jobs, chunksize=2))
 
     # --- coverage
-    cj = [(2.95, w, t, 1000, 7100) for w in (10, 18) for t in (0.0, 0.02, 0.06)]
-    cj += [(2.95, w, t, 100, 7200) for w in W_SWS for t in TAUS if not (w in (10, 18) and t in (0.0, 0.02, 0.06))]
+    cj = [(2.95, w, t, 1000, 7100) for w in (6, 10, 18) for t in (0.0, 0.02, 0.06)]
+    cj += [(2.95, w, t, 100, 7200) for w in W_SWS for t in TAUS if not (w in (6, 10, 18) and t in (0.0, 0.02, 0.06))]
     with ProcessPoolExecutor(max_workers=8) as ex:
         CV = dict(ex.map(coverage_job, cj, chunksize=1))
     infl = {}
