@@ -194,3 +194,19 @@ class DelaySupervisor:
             self.failure.reset(f0)
             self.switched = True
         return self.failure(t, x)
+
+
+# ---------------------------------------------------------------- redesigned capture controller
+@dataclass
+class CertifiedCaptureController(FailureLQR):
+    """Failure-mode state feedback with a gain K synthesised by the certificate framework (D5).
+
+    Same interface and motor-state filter as FailureLQR; only the gain differs (u = f_bar - K e).
+    Labelled 'redesigned capture' in all results; the published strategy uses FailureLQR.
+    """
+    gain: np.ndarray = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.gain is not None:
+            self.K = np.asarray(self.gain, float).copy()

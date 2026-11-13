@@ -77,3 +77,32 @@ def test_remainder_term_shrinks_the_certified_set():
     rem = _scalar([1.0], gamma=0.3)
     assert rem["status"] in ("optimal", "optimal_inaccurate")
     assert rem["Q"][0, 0] < base["Q"][0, 0]
+
+
+def test_gain_synthesis_reaches_the_scalar_region_of_attraction_and_respects_the_gain_bound():
+    from rotorfail.certify import synthesize_gain, verify_design
+    A = [np.array([[1.0]])]
+    B = np.array([[1.0]])
+    r = synthesize_gain(A, B, np.array([1.0]), np.array([10.0]), gain_bound=5.0, decay=0.0, eps=1e-7)
+    assert r["status"] in ("optimal", "optimal_inaccurate")
+    assert abs(np.sqrt(r["Q"][0, 0]) - 1.0) < 0.02
+    v = verify_design(r, A, B, np.array([1.0]), np.array([10.0]), decay=0.0, gain_bound=5.0)
+    assert v["worst_dynamics"] < 0 and v["worst_linear_region"] > -1e-8 and v["worst_gain_bound"] > -1e-8
+    assert abs(r["F"][0, 0]) * np.sqrt(r["Q"][0, 0]) <= 5.0 + 1e-6
+    # a gain bound below the plant's instability rate leaves no feasible set (needs |F x| > |a x|)
+    r2 = synthesize_gain(A, B, np.array([1.0]), np.array([10.0]), gain_bound=0.5, decay=0.0, eps=1e-7)
+    assert r2["Q"] is None or np.sqrt(r2["Q"][0, 0]) < 0.6
+
+
+def test_certified_capture_controller_with_the_lqr_gain_equals_the_failure_lqr():
+    from rotorfail.control import CertifiedCaptureController, FailureLQR
+    from rotorfail.dynamics import make_state
+    from rotorfail.equilibrium import relaxed_hover
+    from rotorfail.params import DEFAULT as P
+    eq = relaxed_hover(P)
+    a = FailureLQR(P, eq)
+    b = CertifiedCaptureController(P, eq, gain=a.K)
+    x = make_state(w=eq.w + np.array([0.3, -0.2, 0.5]))
+    a.reset(x[13:16])
+    b.reset(x[13:16])
+    assert np.allclose(a(0.0, x), b(0.0, x))

@@ -239,3 +239,95 @@ def verify_robust(res, A_func, B, K, ubar, scale, r_grid, nz_grid, decay=0.1, ga
         M = np.block([[np.array([[1.0]]), row], [row.T, Qs]])
         lin = min(lin, float(np.min(np.linalg.eigvalsh(0.5 * (M + M.T)))))
     return {"worst_dynamics": worst, "worst_linear_region": lin, "min_eig_Q": float(np.min(np.linalg.eigvalsh(Qs)))}
+
+
+def synthesize_gain(A_list, B, ubar, scale, direction=None, gain_bound=8.0, decay=0.1, eps=1e-5,
+                    disc=None, polygon=64, solver="CLARABEL"):
+    """Hu-Lin design LMIs (task D5): choose the feedback gain F (u = F e, K = -F) together with the
+    ellipsoid, for an LPV model with vertex matrices A_list.
+
+    Variables (scaled coordinates): Q, Yf = F~ Q, Z = H~ Q. For every vertex and saturation pattern D
+        A~ Q + Q A~' + B~ (D Yf + (I - D) Z) + (.)' + 2 decay Q  <  -eps I,
+    linear region [[1, Z_j], [Z_j', Q]] >= 0, box Q_ii <= 1, optional disc condition, and the gain-size
+    bound [[g^2 I, Yf], [Yf', Q]] >= 0, i.e. ||F~ x~|| <= g on the ellipsoid (g = gain_bound, scaled
+    input units, fixed a priori). Objective: beta along `direction` (maximise) or log det.
+    Returns dict(status, Q, Qs, F (unscaled), beta, value).
+    """
+    n, m = B.shape
+    Sx = np.asarray(scale, float)
+    Su = np.asarray(ubar, float)
+    Sinv = np.diag(1.0 / Sx)
+    Bt = Sinv @ B @ np.diag(Su)
+    Q = cp.Variable((n, n), symmetric=True)
+    Yf = cp.Variable((m, n))
+    Z = cp.Variable((m, n))
+    cons = [Q >> eps * np.eye(n)]
+    for k in range(n):
+        cons.append(Q[k, k] <= 1.0)
+    for A in A_list:
+        At = Sinv @ A @ np.diag(Sx)
+        for D in _patterns(m):
+            Dm = np.eye(m) - D
+            M = D @ Yf + Dm @ Z
+            L = At @ Q + Q @ At.T + Bt @ M + (Bt @ M).T + 2 * decay * Q
+            cons.append(0.5 * (L + L.T) << -eps * np.eye(n))
+    for j in range(m):
+        row = cp.reshape(Z[j, :], (1, n), order="C")
+        cons.append(cp.bmat([[np.array([[1.0]]), row], [row.T, Q]]) >> 0)
+    cons.append(cp.bmat([[gain_bound ** 2 * np.eye(m), Yf], [Yf.T, Q]]) >> 0)
+    if disc is not None:
+        (i, j), c, R = disc
+        b = R * np.cos(np.pi / polygon)
+        for k in range(polygon):
+            u = np.array([np.cos(2 * np.pi * k / polygon), np.sin(2 * np.pi * k / polygon)])
+            v = np.array([Sx[i] * u[0], Sx[j] * u[1]])
+            rhs = b - float(c @ u)
+            assert rhs > 0
+            cons.append(v @ Q[np.ix_([i, j], [i, j])] @ v <= rhs ** 2)
+    if direction is None:
+        prob = cp.Problem(cp.Maximize(cp.log_det(Q)), cons)
+    else:
+        d = (Sinv @ np.asarray(direction, float)).reshape(n, 1)
+        t = cp.Variable()
+        cons.append(cp.bmat([[cp.reshape(t, (1, 1), order="C"), d.T], [d, Q]]) >> 0)
+        prob = cp.Problem(cp.Minimize(t), cons)
+    _solve_robust(prob, solver)
+    if Q.value is None:
+        return {"status": prob.status, "Q": None, "Qs": None, "F": None, "Yf": None, "Z": None, "beta": None,
+                "value": None}
+    Qs = 0.5 * (Q.value + Q.value.T)
+    Ft = Yf.value @ np.linalg.inv(Qs)
+    F = np.diag(Su) @ Ft @ np.diag(1.0 / Sx)                     # unscaled: u = F e
+    beta = None
+    if direction is not None and t.value is not None and t.value > 0:
+        beta = 1.0 / np.sqrt(t.value)
+    return {"status": prob.status, "Q": np.diag(Sx) @ Qs @ np.diag(Sx), "Qs": Qs, "F": F, "Yf": Yf.value,
+            "Z": Z.value, "beta": beta, "value": prob.value}
+
+
+def verify_design(res, A_list, B, ubar, scale, decay=0.1, gain_bound=None):
+    """Solver-independent check of a synthesised (Q, Yf, Z): eigenvalues of every design block."""
+    Sx = np.asarray(scale, float)
+    Su = np.asarray(ubar, float)
+    Sinv = np.diag(1.0 / Sx)
+    Bt = Sinv @ B @ np.diag(Su)
+    Q, Yf, Z = res["Qs"], res["Yf"], res["Z"]
+    m = B.shape[1]
+    worst = -np.inf
+    for A in A_list:
+        At = Sinv @ A @ np.diag(Sx)
+        for D in _patterns(m):
+            Dm = np.eye(m) - D
+            M = D @ Yf + Dm @ Z
+            L = At @ Q + Q @ At.T + Bt @ M + (Bt @ M).T + 2 * decay * Q
+            worst = max(worst, float(np.max(np.linalg.eigvalsh(0.5 * (L + L.T)))))
+    lin = np.inf
+    for j in range(m):
+        row = Z[j:j + 1, :]
+        Mx = np.block([[np.array([[1.0]]), row], [row.T, Q]])
+        lin = min(lin, float(np.min(np.linalg.eigvalsh(0.5 * (Mx + Mx.T)))))
+    out = {"worst_dynamics": worst, "worst_linear_region": lin, "min_eig_Q": float(np.min(np.linalg.eigvalsh(Q)))}
+    if gain_bound is not None:
+        Mg = np.block([[gain_bound ** 2 * np.eye(m), Yf], [Yf.T, Q]])
+        out["worst_gain_bound"] = float(np.min(np.linalg.eigvalsh(0.5 * (Mg + Mg.T))))
+    return out
