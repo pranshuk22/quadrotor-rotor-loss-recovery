@@ -265,3 +265,92 @@ def multistep_errors(model_rollouts: dict, data: Dataset, horizons_steps, scale,
         with np.errstate(over="ignore", invalid="ignore"):
             out[name] = np.sqrt(np.nanmean(np.minimum(E ** 2, 1e12), axis=(0, 2)))
     return out
+
+
+# ------------------------------------------------------------------ online adaptation (task K7)
+class RLS:
+    """Recursive least squares with exponential forgetting and ONE covariance shared by all outputs.
+
+    W (n_feat x n_out) minimises sum_k lam^(N-k) |e_k - W' phi_k|^2. P is bounded: when trace(P) exceeds
+    `trace_max_factor` times its initial trace it is rescaled (covariance wind-up guard, fixed a priori).
+    """
+
+    def __init__(self, W0, p0=1.0, lam=0.995, trace_max_factor=10.0):
+        self.W = np.array(W0, float).copy()
+        n = self.W.shape[0]
+        self.P = p0 * np.eye(n)
+        self.lam = lam
+        self.tr0 = float(np.trace(self.P))
+        self.tmax = trace_max_factor * self.tr0
+        self.n_updates = 0
+        self.n_rescaled = 0
+        self.min_eig_violations = 0
+        self.trace_log = []
+
+    def update(self, phi, e):
+        phi = np.asarray(phi, float).ravel()
+        Pphi = self.P @ phi
+        k = Pphi / (self.lam + phi @ Pphi)
+        self.W = self.W + np.outer(k, e - phi @ self.W)
+        self.P = (self.P - np.outer(k, Pphi)) / self.lam
+        self.P = 0.5 * (self.P + self.P.T)
+        tr = float(np.trace(self.P))
+        if tr > self.tmax:
+            self.P *= self.tmax / tr
+            self.n_rescaled += 1
+        self.n_updates += 1
+        if self.n_updates % 50 == 0:
+            if np.linalg.eigvalsh(self.P)[0] <= 0.0:
+                self.min_eig_violations += 1
+        self.trace_log.append(float(np.trace(self.P)))
+
+
+class AdaptiveResidual:
+    """Online-adapted residual EDMDc (K7): same 91-function dictionary and standardisation as the offline
+    `ResidualEDMD`, weights adapted by RLS (one shared covariance).
+
+    Causality: at call k the model receives (x_k, fe_k, u_{k-1}) as `residual(x7, fe, u)` does in `FailureMPC`.
+    The pair (features at k-1, e_k = x_k - nominal prediction from k-1) is used to update W; only then the residual
+    for step k is evaluated. x_k is never used to predict x_k. `u` of the current call is the command that was
+    applied after the previous call, i.e. the regressor input u_{k-1}.
+    """
+
+    def __init__(self, base: ResidualEDMD, p0=1.0, lam=0.995, clip_scale=1.0, trace_max_factor=10.0):
+        self.base = base
+        self.nom, self.dic, self.d_max = base.nom, base.dic, base.d_max * clip_scale
+        self.rls = RLS(base.W, p0=p0, lam=lam, trace_max_factor=trace_max_factor)
+        self.prev = None
+        self.n_clipped = 0
+        self.n_calls = 0
+
+    def reset(self):
+        self.prev = None
+
+    @property
+    def W(self):
+        return self.rls.W
+
+    def residual(self, x7, fe, u):
+        if self.prev is not None:
+            x_prev, fe_prev = self.prev
+            x1n, _ = self.nom.step(x_prev, fe_prev, u)
+            e = x7 - x1n
+            phi = self.dic(np.concatenate((x_prev[XI_IDX], fe_prev, u)))[0]
+            self.rls.update(phi, e)
+        self.prev = (np.array(x7, float), np.array(fe, float))
+        d = (self.dic(np.concatenate((x7[XI_IDX], fe, u))) @ self.rls.W)[0]
+        dc = np.clip(d, -self.d_max, self.d_max)
+        self.n_calls += 1
+        self.n_clipped += int(np.any(dc != d))
+        return dc
+
+    def rollout(self, x0, fe0, U):
+        """Multi-step prediction with the CURRENT weights (frozen during the rollout)."""
+        x, fe = x0.copy(), fe0.copy()
+        out = [x.copy()]
+        for u in U:
+            d = np.clip((self.dic(np.concatenate((x[XI_IDX], fe, u))) @ self.rls.W)[0], -self.d_max, self.d_max)
+            x, fe = self.nom.step(x, fe, u)
+            x = x + d
+            out.append(x.copy())
+        return np.array(out)
