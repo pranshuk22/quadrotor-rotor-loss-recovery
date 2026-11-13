@@ -1,0 +1,77 @@
+%=====================================================================
+\section{From the first certificate towards a delay budget (RQ2, stage 2)}\label{sec:budget}
+%=====================================================================
+Section~\ref{sec:certificate} ended with a plan: certify the capture controller over the whole spin-up, compute the set of states the drone can be in when the capture controller takes over, and find the largest detection delay for which that set fits inside the certificate. This section carries out the plan step by step and reports what it found. All numbers come from the tables in \texttt{results/tables/} named in each paragraph; every experiment was pre-registered (its fixed choices are written into the script before the first run), and the places where a first attempt had to be changed are listed in Section~\ref{sec:budget-dev}.
+
+\subsection{The chain and the quantities}
+The failure unfolds in four phases: the drone starts in some pre-failure set $X_0$; during the \emph{undetected phase} (length $\tau$) the healthy controller keeps flying with rotor 4 at 0\,N; then the published strategy runs the \emph{spin-up} (rotors 1 and 3 at the spin-up thrust, rotor 2 stopped, no feedback) until the body rate exceeds the switch value $w_{\mathrm{sw}}$ (10\,rad/s in the paper); at that moment the failure controller takes over. The states at that moment form the \emph{hand-over set} $S(\tau)$. If a certified capture set $\mathcal C$ contains $S(\tau)$, every start in $X_0$ is guaranteed to be captured. Two numbers summarize the comparison: $\beta(\tau)$, the largest factor by which the shape of $S(\tau)$ can be scaled around its centre and still fit inside $\mathcal C$ ($\beta\ge1$: certified), and $\tau^\star$, the largest delay with $\beta\ge1$. When the centre of $S(\tau)$ is itself outside $\mathcal C$ we report $s_c<1$, the factor by which the centre must be shrunk to reach the boundary of $\mathcal C$. For $X_0$ we use the 99\% ellipsoid of the Gaussian pre-failure distribution of E4 (velocity 0.3\,m/s, attitude 3$^\circ$, body rates 0.3\,rad/s per axis), scaled by a factor $\chi\in\{0, 0.1, 0.25, 0.5, 1\}$; $\chi=0$ is the exact hover. (The scripts and tables call this factor ``gamma''.)
+
+\subsection{Where the hand-over state is (E9a)}
+We simulated the published chain for both spin-up thrusts (2.95 and 2.45\,N), $\tau$ from 0 to 130\,ms, and the exact hover plus the 40 pre-failure states of E4 (1312 runs), and recorded the state at the hand-over in the capture coordinates (deviations from the relaxed hover), together with the scaling $s$ of this deviation onto the boundary of the E5 ellipsoid (\texttt{e9a\_handover.md}). The six hover-start rows of Section~\ref{sec:delay} (hand-over time, rates, attitude) were reproduced to two decimals.
+
+\begin{table}[h]
+\centering\small
+\caption{Hand-over state of the published strategy from the exact hover start (nominal plant) and its position relative to the E5 certificate. $s\ge1$ would mean inside.}\label{tab:e9a}
+\begin{tabular}{rrrrrrc}
+\toprule
+$f_{\text{spin}}$ (N) & $\tau$ (ms) & hand-over (s) & $\Delta r$ (rad/s) & $\|\vect n-\bar{\vect n}\|$ & $s$ & SAFE \\
+\midrule
+2.95 & 0  & 0.647 & $-8.85$ & 0.75 & 0.232 & yes \\
+2.95 & 10 & 0.649 & $-8.93$ & 1.03 & 0.202 & yes \\
+2.95 & 20 & 0.649 & $-9.03$ & 1.26 & 0.176 & yes \\
+2.95 & 30 & 0.649 & $-9.13$ & 1.43 & 0.157 & no \\
+2.45 & 0  & 0.806 & $-8.85$ & 0.66 & 0.271 & yes \\
+2.45 & 20 & 0.803 & $-9.02$ & 1.15 & 0.153 & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The hand-over state is far from the hover, even without delay.} At the hand-over the yaw rate is still 9 to 10\,rad/s below its equilibrium value (18.8\,rad/s) and the attitude has tilted by about 0.75 in $\|\vect n-\bar{\vect n}\|$ (Table~\ref{tab:e9a}); with a 20\,ms delay the tilt reaches 1.26, and from $\tau = 45$\,ms (2.95\,N) or 50\,ms (2.45\,N) the drone is upside down at the hand-over ($n_z<0$). The deviation builds up during the open-loop spin-up, not during the delay: with $\tau=0$ the attitude deviation grows from 0.18 to 0.76 between 0.2 and 0.6\,s while the yaw rate climbs (\texttt{e9a\_handover.md}, last table; Figure~\ref{fig:e9a}). The true motor thrusts at the hand-over agree with the failure controller's reset estimate to the printed precision (error 0.00\,N), so the difference between the controller's initial motor estimate and the true thrusts can be neglected for the published chain.
+
+\paragraph{No hand-over state is inside the E5 certificate.} Over all 1312 runs, not one hand-over state lies inside the E5 ellipsoid (neither with all ten states nor with the altitude excluded); the largest $s$ is 0.353 and the smallest 0.062. For the exact hover with $\tau=0$ and 2.95\,N, $s=0.232$. In particular all 374 runs that ended SAFE started their capture \emph{outside} the E5 ellipsoid: the controller recovers from far beyond the certified set, as the nonlinear grid of Section~\ref{sec:certificate} had already shown. This fixes the target of the next steps: the published hand-over state is far outside the first certificate, and so the certificate must be enlarged or the hand-over changed.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/e9a_handover.png}
+\caption{E9a. Left and middle: hand-over states (projected onto $(\Delta r,\Delta n_y)$ and $(\Delta n_x,\Delta n_y)$) of 1312 runs against the slice of the E5 ellipsoid; circles and squares for the two spin-up thrusts, green for SAFE; rings for the exact-hover starts. Right: the attitude deviation during the spin-up for four delays.}\label{fig:e9a}
+\end{figure}
+
+\subsection{A certificate that holds over a range of yaw rates (E9b)}
+\paragraph{The model.} We replaced the single linearization by a \emph{quasi-linear parameter-varying} (quasi-LPV) model: the closed loop is written as $\dot{\vect e} = A(\vect\vartheta)\vect e + B\operatorname{sat}(-K\vect e) + R(\vect e)$ where the matrix $A$ depends \emph{affinely} on the two scheduling parameters $\vect\vartheta = (r, n_z)$ (the yaw rate and the vertical component of the attitude, both states) and $R$ is a remainder that contains only two small nonlinear effects (the square-root dependence of the propeller speed on thrust, and the dependence of $n_z$ on $n_x,n_y$). The model is implemented in \texttt{rotorfail/lpv.py} and verified against the simulator (the rotational equations to $10^{-10}$, the decomposition to $10^{-10}$, the Jacobian at the trim). The state includes altitude and vertical speed: one might expect that altitude and vertical speed can be left out, but the LQR gain feeds them back into the attitude loop (gain entries of about 1 to 1.5), so the closed loop is not block-triangular. The scheduling box is a family indexed by $\nu$: $r\in[\bar r\pm11\nu]$ and $n_z\in[1-0.8\nu,1]$, with $\nu=1$ covering the hand-over states of E9a with a margin; the failure LQR is stable at every frozen parameter value in the largest box.
+
+\paragraph{The certificate.} For each vertex of the scheduling box and each of the 8 saturation patterns we imposed the Hu--Lin conditions of Section~\ref{sec:certificate} with a common $Q$ (a parameter-dependent matrix was not attempted), in scaled coordinates, with a decay rate of 0.1\,s$^{-1}$, and added two ``self-consistency'' conditions so that the ellipsoid itself implies the parameter range: its projection on $r$ lies inside the box, and its $(n_x,n_y)$ projection lies inside a disc that guarantees $n_z\ge n_{z,\mathrm{lo}}$ (a condition on a box around the hover cannot hold for any ellipsoid that contains the hand-over state, because the hover is off-centre in $n_y$, so the disc form is used). The remainder $R$ was checked after the solve: with $g_P=\max\sqrt{R^\top P R}$ over the boundary of the ellipsoid, the set is invariant with decay at least $2(0.1-g_P)$, so the ellipsoid was shrunk by a factor $\varsigma$ until $g_P\le0.05$ (a numerical estimate by sampling and local optimization, not a proof). Putting the numerical remainder bound into the SDP instead made the certified yaw-rate semi-axis 0.04 to 0.24\,rad/s, so this route was not used.
+
+\begin{table}[h]
+\centering\small
+\caption{E9b. Largest-volume robust certificates (published LQR, nominal plant) for the scheduling boxes $\nu$. ``Ceiling'' is the largest $\beta$ any hover-centred ellipsoid can reach toward the exact-hover hand-over state because of the disc condition. Final values are after the remainder shrink $\varsigma$; semi-axis in $r$ in rad/s.}\label{tab:e9b}
+\begin{tabular}{ccccccc}
+\toprule
+$\nu$ & $r$ range (rad/s) & verified & ceiling & $\varsigma$ & $r$ semi-axis & $\beta$ to hand-over \\
+\midrule
+1.0  & 7.81 to 29.81 & no & 0.948 & --- & --- & --- \\
+0.8  & 10.01 to 27.61 & yes & 0.885 & 0.0002 & 0.05 & 0.0022 \\
+0.6  & 12.21 to 25.41 & yes & 0.780 & 0.0005 & 0.08 & 0.0029 \\
+0.4  & 14.41 to 23.21 & yes & 0.618 & 0.001 & 0.08 & 0.0029 \\
+0.25 & 16.06 to 21.56 & yes & 0.439 & 0.002 & 0.08 & 0.0027 \\
+0.15 & 17.16 to 20.46 & yes & 0.271 & 0.007 & 0.09 & 0.0032 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Results.} The certificates for $\nu\le0.8$ pass the independent check required of every LMI result: the worst eigenvalue over all vertices, saturation patterns and a $15\times15$ grid of parameters is $-1.0\times10^{-5}$ in scaled units (the margin $\epsilon$ we asked for), the linear-region blocks are positive semidefinite, and two solvers agree (Clarabel and SCS, objective differing by $1.1\times10^{-3}$ relatively). The solution for $\nu=1$ failed the check (worst eigenvalue $+1.2\times10^{-2}$) and is not used. We then simulated the nonlinear drone from 500 points on the boundary and 500 inside for two of the shrunk certificates ($\nu = 0.15$ and 0.6): none of the 2000 runs left its ellipsoid or failed to be captured. The certified sets are tiny, however: after the remainder shrink the yaw-rate semi-axis is 0.05 to 0.09\,rad/s and the scaling toward the hand-over state is at most 0.0032, against 0.232 for the E5 ellipsoid; and the ceiling column shows that even without the remainder no hover-centred ellipsoid that implies $n_z\ge n_{z,\mathrm{lo}}$ reaches the hand-over state (at most 0.948). The reason is geometric: an ellipsoid centred at the relaxed hover that contains the point $\vect x$ also contains $-\vect x$; the mirror image of the hand-over tilt has $\|(n_x,n_y)\|=1.02>1$, which does not exist. This argument does not depend on the controller, so it also limits the redesign of the next section.
+
+\paragraph{Hypothesis H5 restated.} H5 said that the LTI certificate does not contain the failure state (hover onset) and that a certificate over the spin-up does. The first half was supported (Section~\ref{sec:certificate}); the second half cannot hold as written, because the onset has $r=0$ while this LQR already fails in simulation for $r\le4.8$\,rad/s, so no certificate for this controller can contain it. We therefore restate it as ``a certificate contains the spin-up \emph{hand-over} state'' and keep the original wording above; the outcome of the restated hypothesis is \emph{not supported} for the published LQR: no certificate computed here contains the hand-over state of the published strategy (Table~\ref{tab:e9b}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/e9b_robust_certificate.png}
+\caption{E9b. Slices of the E5 ellipsoid and of the robust ellipsoids (after the remainder shrink) together with the hand-over states at $\tau=0$ (grey dots) and the exact-hover hand-over state (star).}\label{fig:e9b}
+\end{figure}
+
+\subsection{Changes made after first attempts}\label{sec:budget-dev}
+For transparency, the places where a first, pre-registered attempt had to be changed (each first run is kept as a separate table in \texttt{results/tables/}; the change was written into the script before the next run):
+\begin{itemize}
+  \item \textbf{Remainder check of E9b.} The first check bounded the remainder in the Euclidean norm; it failed for every box size and shrink factor because that norm is badly matched to thin ellipsoids (\texttt{e9b\_run1\_euclidean\_check.md}). It was replaced by the bound $g_P$ in the $P$-norm. The shrink-factor grid then ended too early (\texttt{e9b\_run2\_kappa\_grid\_too\_short.md}: $g_P$ scales as $\sqrt{\varsigma}$, so $\varsigma$ of about 0.007 is needed even for the smallest box) and was extended to $10^{-4}$.
+  \item \textbf{Discard rule of E8d.} The first rule removed 32 of 40 training episodes because genuine hand-over states already have a tilt deviation of about 0.87 (\texttt{e8d\_run1\_discard\_rule.md}); it was replaced by a divergence rule (non-finite, or body rate above 60\,rad/s).
+  \item \textbf{Hand-over search of E9c.} The first launch stopped with an exception before producing any result because the simulation window was too short for thresholds of 14\,rad/s and above; no number was affected.
+\end{itemize}

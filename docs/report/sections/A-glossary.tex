@@ -13,6 +13,7 @@ Actuator & A device that acts on the system; here the four motor--propeller unit
 Affine & Linear plus a constant term, $A\vect x + \vect d$. \\
 Air-relative thrust & Propeller thrust computed from the propeller's speed relative to the air ($\Omega_i + r$) rather than relative to the body; matters when the body spins fast (\ref{sec:val-ijrr}). \\
 Algebraic Riccati equation & The matrix equation whose solution $P$ gives the optimal LQR gain; ``discrete'' version (DARE) for sampled systems (\ref{sec:background}, \ref{sec:mpc}). \\
+Analytic ceiling & The largest scaling any ellipsoid centred at the hover can reach toward a given state under the stated constraints, computed from geometry alone (\ref{sec:budget}). \\
 Attainable moment set & The set of torques the remaining rotors can produce within their thrust limits. \\
 Body frame & Coordinate frame fixed to the drone (\ref{sec:model}). \\
 Body rates $(p,q,r)$ & Rotation rates about the body $x$, $y$, $z$ axes: roll rate, pitch rate, yaw rate. \\
@@ -21,10 +22,13 @@ Bryson's rule & Choosing LQR weights as $1/(\text{largest acceptable value})^2$ 
 Capture & Bringing the drone into the relaxed hover after a failure; a ``capture controller'' does this (\ref{sec:delay}). \\
 Capture set & A set of states from which the capture controller is proven to recover (\ref{sec:certificate}). \\
 Central differences & Numerical derivative $(f(x+\epsilon) - f(x-\epsilon))/2\epsilon$ (\ref{sec:background}). \\
+Centre scaling $s_c$ & The factor by which the centre of the hand-over set must be shrunk to lie on the boundary of a capture set; below 1 means the centre is outside (\ref{sec:budget}). \\
 Certificate & A computer-checked mathematical proof that a property (here, recovery) holds for a whole set of states (\ref{sec:certificate}). \\
 Closed loop & The system together with its feedback controller. \\
+Closed-loop identification bias & Error in a model fitted to data recorded under feedback, because the regressors are correlated with the disturbance the model should explain (\ref{sec:depth}). \\
 Controllability & Whether the inputs can steer the state anywhere; tested by the rank of $[B, AB, \dots]$ or the PBH test (\ref{sec:linear}). \\
 Convex problem & An optimization problem in which every local minimum is a global one, so solvers find the best solution reliably; QPs with positive semidefinite cost and LMI problems are convex. With a strictly convex cost the solution is unique. \\
+Covariance wind-up & Unbounded growth of the covariance in recursive least squares when the data do not excite some directions (\ref{sec:depth}). \\
 CVXPY & A Python library for writing convex optimization problems; it passes them to solvers such as OSQP or Clarabel. \\
 Damping ratio $\zeta$ & How quickly an oscillation dies out; 0 means never, 1 means no overshoot. \\
 Delay margin & The largest pure input delay a feedback loop tolerates before becoming unstable (\ref{sec:linear}). \\
@@ -38,11 +42,14 @@ Excitation & Random changes added to the inputs during data collection so that t
 FDI / FDD & Fault detection and isolation / diagnosis: algorithms that notice and locate a failure. \\
 Feedback linearization & A nonlinear control method that cancels the nonlinear terms by the control input so the remaining loop is linear. \\
 Floquet theory & Stability theory for linear systems whose coefficients repeat periodically in time (\ref{sec:model}). \\
+Forgetting factor & Weight below 1 that makes recursive least squares discount old data; memory about $1/(1-\lambda)$ samples (\ref{sec:depth}). \\
 FTC & Fault-tolerant control: control that keeps working after a failure. Active FTC switches controller after detection; passive FTC does not need detection. \\
 Gramian & A matrix measuring how strongly each direction of the state can be reached (controllability) or seen (observability) in a given time (\ref{sec:linear}). \\
 Gyroscopic effect & The torque needed to change the direction of an angular momentum; makes spinning bodies precess (\ref{sec:model}). \\
-$H_\infty$ loop shaping & A robust linear control design that shapes the loop's frequency response and maximizes a robustness margin. \\
+Hand-over & The moment the failure controller takes over from the open-loop spin-up, when the body rate exceeds the switch value (\ref{sec:budget}). \\
+Hand-over set $S(\tau)$ & The set of states at the hand-over over all pre-failure starts (\ref{sec:budget}). \\
 Healthy controller & The normal controller used with four working rotors. \\
+$H_\infty$ loop shaping & A robust linear control design that shapes the loop's frequency response and maximizes a robustness margin. \\
 Horizon & How far ahead MPC predicts (here 20 steps, 100\,ms). \\
 INDI & Incremental nonlinear dynamic inversion: a nonlinear control method that uses measured accelerations. \\
 Inertia matrix & How hard it is to change the rotation of a body about each axis. \\
@@ -76,24 +83,31 @@ PBH test & Popov--Belevitch--Hautus test: checks controllability (or observabili
 Plant & The system being controlled (here the drone, or a truth plant in simulation). \\
 Positive definite & A symmetric matrix $P$ with $\vect x^\top P\vect x>0$ for all $\vect x\ne0$, written $P\succ0$; $\succeq$ allows equality (\ref{sec:background}). \\
 QP & Quadratic program: minimize a quadratic cost subject to linear constraints; convex. \\
+Quasi-LPV & An LPV model whose scheduling parameters are themselves states of the system; here the yaw rate $r$ and $n_z$ (\ref{sec:budget}). \\
 Quaternion & Four numbers that describe an orientation without gimbal lock (\ref{sec:model}). \\
 Randomized plants & Training on many plants with randomly drawn parameters, also called domain randomization (\ref{sec:koopman}). \\
 Re-lifting & Computing the lifted state again from the current measurement at every control step instead of carrying it over from the previous step (\ref{sec:fullkoopmanmpc}). \\
 Reaction torque & Twisting torque on the body from a spinning propeller (\ref{sec:intro}). \\
+Recursive least squares (RLS) & Least squares updated sample by sample, with a covariance matrix that says how certain each weight is (\ref{sec:depth}). \\
+Redesigned capture & A capture gain synthesised with the certificate framework and, optionally, a different hand-over threshold; always reported next to the published strategy, never mixed with it (\ref{sec:budget}). \\
 Reduced attitude $\vect n$ & The inertial ``up'' direction seen in body axes, $R^\top\vect e_3$; all that is controlled after the failure (\ref{sec:model}). \\
 Relaxed hover & The spinning equilibrium of a multicopter that has lost rotors (\ref{sec:model}). \\
+Remainder $R(\vect e)$ & The part of the nonlinear dynamics that the quasi-LPV form does not represent exactly; bounded numerically (\ref{sec:budget}). \\
 Residual & The difference between the truth and the physics model's prediction (\ref{sec:koopman}). \\
 Ridge regression & Least squares with a penalty on the size of the coefficients (\ref{sec:background}). \\
 RK4 & The classical fourth-order Runge--Kutta integration method (\ref{sec:background}). \\
 Rotation matrix $R$ & Matrix turning body-frame vectors into inertial-frame vectors. \\
+S-procedure & A standard technique that turns ``one quadratic inequality implies another'' into an LMI (\ref{sec:certificate}). \\
 Saturation & Clipping of an input at its physical limits (\ref{sec:background}). \\
+Scheduling parameter & A measured quantity on which an LPV model depends (\ref{sec:budget}). \\
 Schur complement & A rule that turns certain nonlinear matrix inequalities into LMIs (\ref{sec:certificate}). \\
 SE(3) & The set of all positions and orientations of a rigid body. \\
+Self-consistency & The requirement that a certified ellipsoid implies the parameter range for which its LMIs were solved (\ref{sec:budget}). \\
+Sensor noise & Random error added to the measured state; here Gaussian on rates, tilt, altitude and vertical speed (\ref{sec:depth}). \\
 Singular values & Numbers that measure how much a matrix stretches vectors in each direction; a value near zero means a direction the matrix almost loses. \\
 Sliding-mode control & A robust nonlinear control method that forces the state onto a chosen surface by switching control. \\
 Spectral radius & The largest eigenvalue magnitude of a discrete-time matrix; above 1 means growth. \\
 Spin-up & Flying on two opposing rotors with no attitude feedback until the drone spins fast enough for the failure LQR (\ref{sec:delay}). \\
-S-procedure & A standard technique that turns ``one quadratic inequality implies another'' into an LMI (\ref{sec:certificate}). \\
 Standardize & Subtract the mean and divide by the standard deviation. \\
 State & The smallest set of numbers that determines the future of a system given its inputs (\ref{sec:background}). \\
 Sum-of-squares (SOS) programming & An extension of LMI methods that certifies polynomial inequalities, used for nonlinear stability regions. \\
