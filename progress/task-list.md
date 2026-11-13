@@ -49,13 +49,14 @@ RQ1 = residual Koopman MPC (the presented proposal). RQ2 = certified detection-d
 ## Phase 5: Write-up
 - [ ] ⬜ W1 Journal-style final report (due 13 Nov) · W2 final progress presentation (31 Oct) · W3 code clean-up
 
-## Schedule to the end of the course
+## Stages of the remaining work
 
-Course milestones: final progress presentation on **31 October 2026**; journal-style final report due **13 November 2026**.
+The journal-style final report is due on **13 November 2026**. Work proceeds stage by stage; each stage is reviewed before the next starts.
 
-| Dates | RQ1 | RQ2 | Deliverable |
-|---|---|---|---|
-| 12–18 Oct | K5, K6 | T0.1, T0.2, D3, D4 | Full-state Koopman MPC + offset-free baseline; r-robust capture certificate (gate) |
-| 19–25 Oct | K7 | D6 | Online residual adaptation; reachable set of the undetected phase; first certified τ\* compared with the empirical P(safe) curve |
-| 26–31 Oct | K11 | D7 | τ\* sensitivity; air-relative thrust in the truth plant; **final progress presentation (31 Oct)** |
-| 1–13 Nov | K8 or D8 if time allows | D9 | Final simulations; **journal-style final report (13 Nov)** |
+- **A. Clean baseline:** R0 (report text reflects the present).
+- **B. RQ1 proposal deliverables:** K6 (offset-free MPC baseline), K5 (MPC on the full-state Koopman model).
+- **C. RQ2 foundations:** X1 (hand-over diagnostic), D3 (quasi-LPV attitude model), D4 (r-robust capture certificate), D5 (capture-gain synthesis).
+- **D. RQ2 main result:** D6 (reachable sets, beta(tau), certified tau\*), D9 (tightness), D7 (trade study).
+- **E. RQ1 generalization and depth:** K7 (online adaptation), K8 (spin-up training data), K10 (MPC tuning study), K9 (ablations), K11 (air-relative thrust and drag in the truth plant).
+- **F. Learned-controller certificate:** D8 (certificate for the residual Koopman MPC loop).
+- **G. Literature and write-up:** L1 (literature closure), R3 (journal-style paper), R5 (deck), W3 (reproducibility and clean-up).
