@@ -10,7 +10,6 @@ Term & Meaning \\
 \midrule
 \endhead
 Actuator & A device that acts on the system; here the four motor--propeller units. \\
-Affine & Linear plus a constant term, $A\vect x + \vect d$. \\
 Air-relative thrust & Propeller thrust computed from the propeller's speed relative to the air ($\Omega_i + r$) rather than relative to the body; matters when the body spins fast (\ref{sec:val-ijrr}). \\
 Algebraic Riccati equation & The matrix equation whose solution $P$ gives the optimal LQR gain; ``discrete'' version (DARE) for sampled systems (\ref{sec:background}, \ref{sec:mpc}). \\
 Attainable moment set & The set of torques the remaining rotors can produce within their thrust limits. \\
@@ -23,7 +22,7 @@ Central differences & Numerical derivative $(f(x+\epsilon) - f(x-\epsilon))/2\ep
 Closed loop & The system together with its feedback controller. \\
 Closed-loop identification bias & Error in a model fitted to data recorded under feedback, because the regressors are correlated with the disturbance the model should explain (\ref{sec:depth}). \\
 Controllability & Whether the inputs can steer the state anywhere; tested by the rank of $[B, AB, \dots]$ or the PBH test (\ref{sec:linear}). \\
-Convex problem & An optimization problem in which every local minimum is a global one, so solvers find the best solution reliably; QPs with positive semidefinite cost and LMI problems are convex. With a strictly convex cost the solution is unique. \\
+Convex problem & An optimization problem in which every local minimum is a global one, so solvers find the best solution reliably; QPs with positive semidefinite cost are convex. With a strictly convex cost the solution is unique. \\
 Covariance wind-up & Unbounded growth of the covariance in recursive least squares when the data do not excite some directions (\ref{sec:depth}). \\
 CVXPY & A Python library for writing convex optimization problems; it passes them to solvers such as OSQP or Clarabel. \\
 Damping ratio $\zeta$ & How quickly an oscillation dies out; 0 means never, 1 means no overshoot. \\
@@ -35,7 +34,6 @@ Eigenvalue & A number $\lambda$ with $A\vect v = \lambda\vect v$; describes one 
 Equilibrium (trim) & A state and input at which nothing changes (\ref{sec:background}). \\
 Euler angles & Roll $\phi$, pitch $\theta$, yaw $\psi$: three angles that describe orientation; break down at some orientations (gimbal lock). \\
 Excitation & Random changes added to the inputs during data collection so that the data show how the system responds (\ref{sec:koopman}). \\
-FDI / FDD & Fault detection and isolation / diagnosis: algorithms that notice and locate a failure. \\
 Feedback linearization & A nonlinear control method that cancels the nonlinear terms by the control input so the remaining loop is linear. \\
 Floquet theory & Stability theory for linear systems whose coefficients repeat periodically in time (\ref{sec:model}). \\
 Forgetting factor & Weight below 1 that makes recursive least squares discount old data; memory about $1/(1-\lambda)$ samples (\ref{sec:depth}). \\
@@ -50,7 +48,6 @@ INDI & Incremental nonlinear dynamic inversion: a nonlinear control method that 
 Inertia matrix & How hard it is to change the rotation of a body about each axis. \\
 Innovation & The difference between a measurement and the model's prediction of it; a filter uses it to correct its estimate (\ref{sec:offsetfree}). \\
 Integral action & Adding the accumulated error to the controller state so that a constant error is driven to zero; used by the LQR with an integrator (\ref{sec:offsetfree}). \\
-Interior-point method & A family of algorithms for convex optimization that moves through the inside of the feasible set; Clarabel is one. \\
 Jacobian & Matrix of partial derivatives; the linearization of a nonlinear function (\ref{sec:background}). \\
 Kalman filter & An estimator that combines a model and measurements using assumed noise levels; here a steady-state version estimates the constant disturbance of the offset-free MPC (\ref{sec:offsetfree}). \\
 Koopman operator & A linear operator that advances functions of the state in time; lets nonlinear systems be described linearly in a lifted space (\ref{sec:background}). \\
@@ -58,7 +55,7 @@ Lifted state & The vector of dictionary functions $\vect z = \psi(\vect x)$. \\
 LQR & Linear-quadratic regulator: the state-feedback gain minimizing a quadratic cost (\ref{sec:background}). \\
 LTI & Linear time-invariant: a model $\dot{\vect x} = A\vect x + B\vect u$ with constant matrices. \\
 Measured disturbance & A known, additive term in an MPC prediction model; used here for the learned residual (\ref{sec:mpc}). \\
-Monte Carlo & Repeating a simulation from many random starts to estimate probabilities (\ref{sec:delay}). \\
+Monte Carlo & Repeating a simulation from many random starts to estimate probabilities (\ref{sec:background}). \\
 Motor lag & Delay of the motor thrust behind its command, modelled as a first-order lag with time constant $\sigma$ (\ref{sec:model}). \\
 MPC & Model predictive control: repeatedly optimize the inputs over a short future horizon and apply the first one (\ref{sec:background}, \ref{sec:mpc}). \\
 NMPC & Nonlinear MPC: MPC with a nonlinear prediction model (no longer a QP). \\
@@ -94,7 +91,6 @@ Spin-up & Flying on two opposing rotors with no attitude feedback until the dron
 Standardize & Subtract the mean and divide by the standard deviation. \\
 State & The smallest set of numbers that determines the future of a system given its inputs (\ref{sec:background}). \\
 Supervisor & The logic that switches from the healthy to the failure controller after detection (\ref{sec:delay}). \\
-Switched system & A system that jumps between several models, for example healthy and faulty; ``dwell time'' is the minimum average time between switches for which stability is guaranteed. \\
 Thrust & The upward force of a propeller, $f = \kappa_f\Omega^2$. \\
 Truth plant & A simulated plant with effects the nominal model lacks, used to generate data and to test controllers (\ref{sec:truth}). \\
 Zero-order hold (ZOH) & Holding a digital command constant until the next sample (\ref{sec:background}). \\

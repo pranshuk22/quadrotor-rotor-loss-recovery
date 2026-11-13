@@ -1,8 +1,8 @@
 # Detailed project report (LaTeX)
 
-- `report.pdf`: compiled report (about 53 pages), written for readers without a control background: every term is explained and listed in a glossary
+- `report.pdf`: compiled report (54 pages), written for readers without a control background: every term is explained and listed in a glossary
 - `report.tex`: main file; the sections are in `sections/` (one file per section, plus appendices for the glossary, symbols and reproducibility)
-- `references.bib`: bibliography (30 entries; all papers cited in the proposal and the work so far)
+- `references.bib`: bibliography (52 entries, of which 38 are cited in the report; the others belong to the proposal and the exploratory work)
 - `figures/`: copies of `results/figures/*.png` used by the report
 
 ## Build

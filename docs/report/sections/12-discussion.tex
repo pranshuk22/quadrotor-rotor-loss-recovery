@@ -31,7 +31,7 @@ H4 & The residual model needs less data & Supported (10 episodes beat 40) \\
   \item \textbf{Spin-up thrust.} The capture experiments use the spin-up thrust of 2.95\,N, which was read from a plot of the flight data and carries some uncertainty.
   \item \textbf{Nominal plant for the capture tests.} The capture tests of the first experiments use the nominal plant or family A; the published models over-predict the steady spin rate in flight by about 20 to 27\%.
   \item \textbf{Generalization.} The residual model helps reliably only on the plant family it was trained on.
-  \item \textbf{Truth-plant realism.} Families A and B add thrust loss, inertia error and motor lag; families A$^+$ and B$^+$ also add air-relative thrust and quadratic drag (Section~\ref{sec:realistic}). There is no translational drag, and sensor noise was studied only for the residual and the MPC (Section~\ref{sec:ablations}), not for the certificates.
+  \item \textbf{Truth-plant realism.} Families A and B add thrust loss, inertia error and motor lag; families A$^+$ and B$^+$ also add air-relative thrust and quadratic drag (Section~\ref{sec:realistic}). There is no translational drag, and sensor noise was studied only for the residual and the MPC (Section~\ref{sec:ablations}).
   \item \textbf{Simulation only.} No result has been tested on hardware.
   \item \textbf{Full-state measurement.} All controllers are given the exact state. A real spinning drone needs an estimator for the tilt, height and vertical speed, and sensor noise will affect both the learned residual and the MPC.
   \item \textbf{Closed-loop data.} The learning data are recorded under LQR feedback with added excitation, which correlates states and inputs; possible bias from this is not analysed.
