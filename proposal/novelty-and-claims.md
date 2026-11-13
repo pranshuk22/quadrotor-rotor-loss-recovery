@@ -35,6 +35,8 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 | Detection-delay tolerance | Heli-quad (180 ms, empirical, different vehicle) | Only empirical numbers exist |
 | Measured detector delays | Multiple-model L1 FDD (IEEE 2025): 30–130 ms | Realistic τ range |
 | Set-theoretic FTC | Stoican & Olaru 2013; Shin & Belcastro 2006 | General method known; credit it |
+| **LMI maximisation of the tolerated FDI delay for LPV systems with saturating actuators** | Rotondo, Ponsart, Nejjari, Theilliol & Puig, SYSTOL 2016 (abstract level; found 2026-11-13) | **The idea of an LMI delay budget with saturation is not ours.** Our C1/C2 are narrowed to the complete-rotor-loss instantiation (open-loop spin-up hand-over, relaxed-hover capture set) and to the measured outcome |
+| Offset-free MPC on Koopman surrogate models | Schimperna, Bold & Worthmann, arXiv 2504.10954 (abstract level; found 2026-11-13) | Offset-free action on learned Koopman models exists for other systems; not found for quadrotors or rotor loss |
 
 ## 4. Claims and estimated certainty (judgment from the searches, not measurements)
 
@@ -55,8 +57,8 @@ Date of searches: 2026-10-09/10. The full query list is in `../literature/search
 
 ## 6. Must-do checks before the final report
 
-1. Read **Stephan, Schmitt & Fichter (JGCD 2018)** and **Lanzon, Freddi & Longhi (JGCD 2014)**.
+1. Read **Stephan, Schmitt & Fichter (JGCD 2018)** and **Lanzon, Freddi & Longhi (JGCD 2014)**. *Status 2026-11-13: not obtained in an open version in this session (see `../literature/search-log.md`); the report keeps the hedged wording that statements about them rely on abstracts and citing works. The same holds for Rotondo et al. (SYSTOL 2016) and the SOS recoverable-set paper.*
 2. Done: "Lee et al. 2024" is correct (Lee, Kim, Kim & Bang, ICCAS 2024), and the RK-MPC "unstable within seconds" statement is verified (about 5 s).
-3. Re-run the searches in `../literature/search-log.md` before submission.
+3. Re-run the searches in `../literature/search-log.md` before submission. *Done in part on 2026-11-13 (queries 16 to 20); the remaining queries are listed at the end of the log.*
 4. Done: the 30 to 130 ms detector range is from Strack van Schijndel, Sun & de Visser (arXiv:2102.06439); the multiple-model L1 paper (Yang et al., RA-L 2026) reports about 45 ms. Independent novelty check: `../progress/novelty-check.md`.
 5. Wording rule: "not found in our search", never "first ever" without the qualifier.

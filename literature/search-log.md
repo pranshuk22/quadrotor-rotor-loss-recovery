@@ -32,3 +32,17 @@ Purpose: record what was searched, so novelty claims can be re-checked and defen
 ## To re-run before submission
 - Queries 1, 2, 5, 10 and 12, plus: "dwell time" rotor failure quadrotor; "switching delay" fault-tolerant quadrotor LMI; "maximum allowable detection time" multirotor.
 - Google Scholar: forward citations of Stephan 2018 and Sun 2020 (upset recovery).
+
+## 2026-11-13 (completion session)
+
+Web searches with the generic queries below; results are summaries of search-engine descriptions and abstracts. **Primary texts were not read** (the open versions could not be retrieved: certificate error on the UPC repository, HTTP 403 on core.ac.uk, access denied on HAL, connection refused on the Manchester author page; the Lanzon et al. JGCD 2014 file on the author page is under a `restricted_pdf_files` path and was not used).
+
+| # | Query | Notable results | Takeaway |
+|---|---|---|---|
+| 16 | Stephan, Schmitt & Fichter, LPV control for quadrotors in case of complete actuator loss | Bibliographic record: JGCD 41(10), 2232-2246, doi 10.2514/1.G003441 (Stuttgart repository); cited by arXiv 2002.09425 as an LPV controller that improves stability under various yaw rates (link between the two not verified) | Unchanged: scheduling on r is not our contribution; full text still not read |
+| 17 | Lanzon, Freddi & Longhi, flight control of a quadrotor subsequent to a rotor failure | JGCD 37(2), 580-591, doi 10.2514/1.59869 (robust feedback linearisation); IFAC 2011 predecessor (open PDF on the author page, not retrievable here) | Unchanged: linear/feedback-linearisation baseline |
+| 18 | maximum allowable fault detection delay quadrotor rotor failure invariant set LMI saturation | **Rotondo, Ponsart, Nejjari, Theilliol, Puig, SYSTOL 2016** (LPV, saturating actuators, FDI delays, LMI maximisation of the tolerated delay); ACC 2009 LMI FTC with saturation; SOS recoverable set (HAL hal-01348150); detector delay 95 % bound [28, 132] ms (arXiv 2102.06439); arXiv 2510.22790 (LMI ellipsoidal invariant sets for attitude safety filters, delay not confirmed) | **New overlap:** general LMI delay budgets with saturation exist; claim C1/C2 narrowed to the rotor-loss instantiation and the measured negative result |
+| 19 | offset-free MPC versus Koopman learned residual MPC quadrotor | **Schimperna, Bold & Worthmann, arXiv 2504.10954** (offset-free Koopman MPC, other benchmarks); arXiv 2508.13795 (deep Koopman MPC quadrotor); arXiv 2102.05773 (GP residual MPC quadrotor) | No head-to-head of offset-free and learned-residual MPC on a quadrotor found |
+| 20 | "Recoverable set computation for post-fault/failure quadrotors based on sum of squares" | HAL hal-01348150 abstract: recoverable set under propeller faults and speed limits by SOS | Closest existing certified set; no detection delay in the abstract |
+
+Not yet re-run (to do in a later session): "dwell time" rotor failure quadrotor; "switching delay" fault-tolerant quadrotor LMI; Google Scholar forward citations of Stephan 2018.
