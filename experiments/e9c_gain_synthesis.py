@@ -121,7 +121,7 @@ class Probe(SpinUpThenLQR):
 def handover(w_sw, f_spin=F_SPIN):
     pr = Probe(P, FailureLQR(P, EQ), w_switch=w_sw, f_spin=f_spin)
     sup = DelaySupervisor(HealthyLQR(P), pr, t_fail=0.0, tau=0.0)
-    simulate(make_state(), sup, P, 1.0, dt=1e-3, ctrl_period=1e-3, log_every=50)
+    simulate(make_state(), sup, P, 4.0, dt=1e-3, ctrl_period=1e-3, log_every=500, stop_fn=lambda t, x: pr.ho is not None)
     t, x = pr.ho
     n = quat_to_rot(x[6:10]).T @ E3
     return t, np.concatenate((x[10:13] - EQ.w, n[:2] - EQ.n[:2], [x[2], x[5]], x[13:16] - EQ.f[:3]))
