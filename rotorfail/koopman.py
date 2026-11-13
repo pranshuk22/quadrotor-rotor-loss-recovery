@@ -1,4 +1,4 @@
-"""RQ1: Koopman/EDMDc models of the failed quadrotor (rotor 4 lost) around the relaxed hover.
+"""Koopman/EDMDc models of the failed quadrotor (rotor 4 lost) around the relaxed hover.
 
 Sampling period TS. Measured state (deviations from the relaxed hover):
     x = [p, q, r, n_x, n_y, z, v_z]                     (7)

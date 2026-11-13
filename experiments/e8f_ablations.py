@@ -41,7 +41,7 @@ warnings.filterwarnings("ignore")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from e7_mpc_closed_loop import plants  # noqa: E402
-from rq1_common import run_regulation  # noqa: E402
+from shared import run_regulation  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.koopman import (MeasurementNoise, NominalModel, ResidualEDMD, generate, multistep_errors,  # noqa: E402
                                nominal_rollout)

@@ -4,7 +4,7 @@ Question. In the strategy of Mueller and D'Andrea (2014) the vehicle spins up on
 no feedback and the failure LQR takes over when |w| > 10 rad/s. Where is the state at that hand-over
 (in capture coordinates), how does it depend on the detection delay tau and on the pre-failure state,
 and does the existing saturation-aware LTI certificate (E5, decay 0.1) contain it? The answer fixes
-the target of the RQ2 certificates (E9b to E9d).
+the target of the delay-budget certificates (E9b to E9d).
 
 Fixed before running (do not tune afterwards)
   - Plant: nominal (`DEFAULT`). Chain: healthy LQR for tau, then SpinUpThenLQR (w_switch = 10 rad/s)
@@ -22,7 +22,7 @@ Fixed before running (do not tune afterwards)
     box = ubar, decay 0.1, maximal log det), recomputed here with `invariant_ellipsoid`. For each
     hand-over state x the value x'Px on all 10 states and the scaling alpha = 1/sqrt(x'Px) such that
     alpha*x is on the boundary (alpha >= 1 means inside). Altitude is bounded separately in the
-    RQ2 chain, so the same two numbers are also computed on the 8 attitude/motor states (p, q, r, n_x,
+    delay-budget chain, so the same two numbers are also computed on the 8 attitude/motor states (p, q, r, n_x,
     n_y, three thrusts) with the projection of the ellipsoid (the Q sub-block).
   - Outcome: the fixed criterion of `rotorfail/metrics.py` (SAFE).
   - Acceptance: the six exact-hover rows of section 3.2 of the completion plan are reproduced to two

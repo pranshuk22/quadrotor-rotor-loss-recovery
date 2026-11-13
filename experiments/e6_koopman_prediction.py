@@ -1,4 +1,4 @@
-"""E6 (RQ1): failed-regime predictors: analytical M&D model, full-state EDMDc, residual EDMDc.
+"""E6: failed-regime predictors: analytical M&D model, full-state EDMDc, residual EDMDc.
 
 Truth plant: family A (thrust loss at high body rate, inertia error, slower motors);
 held-out family B for generalization. Nominal model: M&D LTI model on nominal parameters.
@@ -78,7 +78,7 @@ def main():
     EB_R = evaluate(models_R, test_B, scale)
 
     hz_ms = HORIZONS * TS * 1e3
-    L = ["# E6 (RQ1): Koopman predictors in the failed regime", "",
+    L = ["# E6: Koopman predictors in the failed regime", "",
          f"Training: {len(train.x)} episodes × {EP_LEN:.0f} s on truth family A "
          f"({sum(len(u) for u in train.u)} samples at {TS*1e3:.0f} ms). Test: 10 held-out episodes "
          "of family A and 10 of family B (unseen mismatch magnitudes).", "",

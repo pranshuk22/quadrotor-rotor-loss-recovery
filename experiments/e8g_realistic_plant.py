@@ -1,6 +1,6 @@
 """E8g (K11): truth plants with air-relative thrust and quadratic drag (families A+ and B+).
 
-Question. Do the RQ1 conclusions (E6 prediction, E7/E8a regulation) survive when the truth plant contains the two
+Question. Do the conclusions (E6 prediction, E7/E8a regulation) survive when the truth plant contains the two
 remaining IJRR 2016 effects: thrust from the propeller speed relative to the air and quadratic drag?
 
 Fixed before running (do not tune afterwards)
@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt  # noqa: E402
 
-from rq1_common import run_regulation  # noqa: E402
+from shared import run_regulation  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.koopman import (TS, FullEDMDc, NominalModel, ResidualEDMD, generate, multistep_errors,  # noqa: E402
                                nominal_rollout)
@@ -48,7 +48,7 @@ HORIZONS = np.array([1, 4, 10, 20, 40, 100, 200, 400, 600])
 
 
 def plants():
-    Ap, Bp, A, B = truth_family("A+"), truth_family("B+"), truth_family("A"), truth_family("B")
+    Ap, Bp = truth_family("A+"), truth_family("B+")
     return {"A+ (full)": Ap, "A+ without thrust loss": replace(Ap, thrust_loss=0.0),
             "nominal + effects only": replace(P, air_relative=True, quad_drag=Ap.quad_drag, gamma=0.0),
             "B+ (full, held out)": Bp, "B+ without thrust loss": replace(Bp, thrust_loss=0.0)}

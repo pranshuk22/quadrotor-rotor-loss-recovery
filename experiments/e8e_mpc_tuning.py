@@ -39,7 +39,7 @@ warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt  # noqa: E402
 
-from rq1_common import closed_loop_reference, run_delay  # noqa: E402
+from shared import closed_loop_reference, run_delay  # noqa: E402
 from rotorfail.dynamics import IDX_Q, make_state, quat_from_n  # noqa: E402
 from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.koopman import NominalModel, ResidualEDMD, generate  # noqa: E402

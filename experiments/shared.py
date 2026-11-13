@@ -1,4 +1,4 @@
-"""Shared helpers for the RQ1 experiments of stage E (E8c to E8g): controller factory from a picklable spec,
+"""Shared helpers for the experiments E8c to E8g: controller factory from a picklable spec,
 the E7 regulation protocol and the E7/E8a capture-after-delay protocol, generalised over the truth plant.
 
 A controller spec is (kind, kwargs) with kind in

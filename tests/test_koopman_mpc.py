@@ -1,4 +1,4 @@
-"""Checks for the RQ1 pipeline: data, nominal model, EDMDc fits, MPC.
+"""Checks for the Koopman and MPC pipeline: data, nominal model, EDMDc fits, MPC.
 
 Run:  .venv/bin/python -m pytest -q
 """

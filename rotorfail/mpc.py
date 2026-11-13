@@ -1,4 +1,4 @@
-"""Linear MPC for the failed vehicle (RQ1 controllers 1 and 3).
+"""Linear MPC for the failed vehicle (the analytical and the residual-Koopman MPC).
 
 Prediction model: nominal discrete model (10 states: 7 measured + 3 filtered-command states)
   s_{j+1} = Ad s_j + Bd u_j + d_hat

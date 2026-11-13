@@ -1,4 +1,4 @@
-"""Offset-free control of the failed vehicle (baselines for RQ1, task K6).
+"""Offset-free control of the failed vehicle (baselines for the residual Koopman MPC, task K6).
 
 OffsetFreeMPC
     Linear MPC with a constant-disturbance model, a steady-state Kalman filter and a

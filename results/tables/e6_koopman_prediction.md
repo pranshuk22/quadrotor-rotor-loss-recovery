@@ -1,4 +1,4 @@
-# E6 (RQ1): Koopman predictors in the failed regime
+# E6: Koopman predictors in the failed regime
 
 Training: 40 episodes × 4 s on truth family A (32000 samples at 5 ms). Test: 10 held-out episodes of family A and 10 of family B (unseen mismatch magnitudes).
 

@@ -1,7 +1,7 @@
 """E10c (D8): certificate for the residual Koopman MPC loop.
 
 Question. Can the residual-Koopman MPC loop (nominal MPC + clipped learned residual, horizon 20) be certified, and under which bound
-on the plant mismatch? The proposal (section 6, "Link to RQ1") says this needs a bound on the true plant mismatch and an argument
+on the plant mismatch? The proposal (section 6, "Link to the residual Koopman MPC") says this needs a bound on the true plant mismatch and an argument
 for the MPC constraints; both are delivered as far as they go.
 
 Fixed before running (do not tune afterwards)
