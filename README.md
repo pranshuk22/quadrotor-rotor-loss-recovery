@@ -74,7 +74,7 @@ history/       Earlier versions of the proposal
 ## Documentation
 
 - [Detailed report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
-- [Slide deck](docs/deck/progress-review.pdf) ([PPTX](docs/deck/progress-review.pptx))
+- [Slide deck](docs/deck/final-presentation.pdf) ([PPTX](docs/deck/final-presentation.pptx))
 - [Technical documentation](docs/README.md): model and equations, validation, methods, experiments, code reference and reproducibility
 - [Project proposal](proposal/proposal.md)
 
