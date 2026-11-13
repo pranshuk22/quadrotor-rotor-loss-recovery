@@ -34,6 +34,11 @@ class QuadParams:
     thrust_loss: float = 0.0     # s^2 / rad^2
     # +1 / -1: sign of propeller angular velocity for rotors 1..4
     prop_sign: tuple = (-1.0, 1.0, -1.0, 1.0)
+    # Optional truth-plant effects of Mueller & D'Andrea (IJRR 2016), off by default (the published ICRA 2014 model):
+    # air_relative: thrust from the propeller speed relative to the AIR (Omega + r), f = kappa_f (Omega + r)|Omega + r|;
+    # quad_drag: quadratic drag torque -|w| Kd w (diagonal Kd, N m s^2/rad^2) in place of the linear yaw drag gamma r.
+    air_relative: bool = False
+    quad_drag: tuple | None = None
 
     @property
     def Ixx_B(self) -> float:
@@ -63,9 +68,22 @@ class QuadParams:
     def thrust_efficiency(self, w: np.ndarray) -> float:
         return max(0.0, 1.0 - self.thrust_loss * float(np.dot(w, w)))
 
-    def body_torque(self, f: np.ndarray, r: float) -> np.ndarray:
-        """Resultant body torque from rotor thrusts and yaw drag, eq. (8),(9),(11)."""
+    def effective_thrust(self, f: np.ndarray, r: float) -> np.ndarray:
+        """Thrust produced when the propeller speed is taken relative to the air (IJRR 2016, eq. 4); a stopped rotor
+        produces nothing. Identity when `air_relative` is off."""
+        if not self.air_relative:
+            return f
+        f = np.asarray(f, dtype=float)
+        s = self.prop_speeds(f) + r
+        return np.where(f > 0.0, np.asarray(self.prop_sign) * self.kappa_f * s * np.abs(s), 0.0)
+
+    def body_torque(self, f: np.ndarray, r: float, w: np.ndarray | None = None) -> np.ndarray:
+        """Resultant body torque from rotor thrusts and yaw drag, eq. (8),(9),(11). With `quad_drag` set the drag
+        torque is -|w| Kd w on all axes (needs w) instead of the linear yaw drag."""
         f1, f2, f3, f4 = f
+        if self.quad_drag is not None:
+            drag = -np.linalg.norm(w) * np.asarray(self.quad_drag) * w
+            return np.array([self.l * (f2 - f4), self.l * (f3 - f1), self.kappa_tau * (f1 - f2 + f3 - f4)]) + drag
         return np.array([
             self.l * (f2 - f4),
             self.l * (f3 - f1),
@@ -80,8 +98,11 @@ def truth_family(name: str = "A", base: QuadParams = DEFAULT) -> QuadParams:
     """Truth plants with effects/parameter errors that the nominal model does not have.
 
     A: training family. B: held-out family (different magnitudes, for generalization tests).
+    "A+" / "B+": A / B plus the IJRR effects (air-relative thrust, quadratic drag; task K11).
     """
     from dataclasses import replace
+    if name in ("A+", "B+"):
+        return replace(truth_family(name[0], base), air_relative=True, quad_drag=(0.7e-4, 0.7e-4, 1.4e-4), gamma=0.0)
     if name == "A":
         return replace(base, thrust_loss=1.5e-4, Ixx_T=base.Ixx_T * 1.08, Izz_T=base.Izz_T * 0.95,
                        sigma_mot=0.020)

@@ -78,7 +78,10 @@ def saturate(f_cmd: np.ndarray, p: QuadParams, alive: np.ndarray) -> np.ndarray:
 def body_rate_derivative(w: np.ndarray, f: np.ndarray, p: QuadParams) -> np.ndarray:
     w_sigma = np.sum(p.prop_speeds(f))
     h = p.I_T @ w + p.Izz_P * w_sigma * E3
-    tau = p.body_torque(f * p.thrust_efficiency(w), w[2])
+    if p.air_relative or p.quad_drag is not None:
+        tau = p.body_torque(p.effective_thrust(f, w[2]) * p.thrust_efficiency(w), w[2], w)
+    else:
+        tau = p.body_torque(f * p.thrust_efficiency(w), w[2])
     return np.linalg.solve(p.I_B, tau - np.cross(w, h))
 
 
@@ -95,7 +98,8 @@ def deriv(x: np.ndarray, f_cmd: np.ndarray, p: QuadParams, alive: np.ndarray,
         f = f_sat
         f_dot = np.zeros(4)
     R = quat_to_rot(q)
-    acc = R @ E3 * np.sum(f) * p.thrust_efficiency(w) / p.m - G * E3
+    f_acc = p.effective_thrust(f, w[2]) if p.air_relative else f
+    acc = R @ E3 * np.sum(f_acc) * p.thrust_efficiency(w) / p.m - G * E3
     q_dot = 0.5 * quat_mult(q, np.concatenate(([0.0], w)))
     w_dot = body_rate_derivative(w, f, p)
     return np.concatenate((x[IDX_V], acc, q_dot, w_dot, f_dot))
