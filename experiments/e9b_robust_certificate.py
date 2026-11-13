@@ -40,6 +40,11 @@ Fixed before running (do not tune afterwards)
     g_P = max over the boundary of E_kappa of sqrt(R' P_kappa R) (e'P_kappa e = 1 on the boundary).
     A kappa passes when g_P <= 0.05 (guaranteed decay >= 0.05 1/s). g_P is estimated by 4000 boundary
     samples plus a local optimiser from the 5 worst; this is a numerical estimate, not a proof.
+    Amendment after run 2 (kept in results/tables/e9b_run2_kappa_grid_too_short.md): no kappa on the grid
+    reached g_P <= 0.05 (g_P scales as sqrt(kappa); at nu = 0.15 it is 0.58 sqrt(kappa)), so the kappa
+    grid is extended downward to 1e-4 (7 more values). The model, the 0.05 threshold and the solves are
+    unchanged. The falsification set is changed from "nu = 1.0 and 0.6" (nu = 1.0 has no verified
+    certificate) to "the largest-volume final certificate and, if different, the nu = 0.6 certificate".
     Second change: if the Clarabel solution fails the numerical verification (worst dynamics eigenvalue
     >= -1e-6, linear-region minimum < -1e-8), the problem is re-solved with SCS and that solution is
     verified; if it also fails, that nu has no certificate.
@@ -97,7 +102,8 @@ NUS = (1.0, 0.8, 0.6, 0.4, 0.25, 0.15)
 H0 = np.array([4, 8, 11, 0.5, 1.0, 3, 4, 1.76, 1.02, 1.76], float)
 DECAY = 0.1
 DECAY_REM = 0.05
-KAPPAS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.07, 0.05, 0.03, 0.02, 0.01)
+KAPPAS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.07, 0.05, 0.03, 0.02, 0.01,
+          0.007, 0.005, 0.003, 0.002, 0.001, 5e-4, 3e-4, 2e-4, 1e-4)
 MUS = np.logspace(-6, 3, 61)
 NAMES = ["p", "q", "r", "n_x", "n_y", "z", "v_z", "f1", "f2", "f3"]
 N_BOUNDARY = N_INTERIOR = 500
@@ -341,7 +347,16 @@ def main():
           "FailureLQR, 8 s. A failure is: not captured, V above 1.001 at some time, or n_z <= 0.", "",
           "| nu | kappa | set | samples | not captured | left the set (V > 1.001) | inverted | max V |", "|---|---|---|---|---|---|---|---|"]
     fals = {}
-    for nu in (1.0, 0.6):
+    vols = {nu: np.linalg.slogdet(R[(nu, "b")]["kappa"] * R[(nu, "b")]["Q"])[1] for nu in NUS
+            if R[(nu, "b")]["Q"] is not None and R[(nu, "b")]["ok"] and R[(nu, "b")]["kappa"] is not None}
+    fnus = []
+    if vols:
+        fnus.append(max(vols, key=vols.get))
+    if 0.6 in vols and 0.6 not in fnus:
+        fnus.append(0.6)
+    if not fnus:
+        L.append("| - | - | no certificate for any nu | | | | | |")
+    for nu in fnus:
         r = R[(nu, "b")]
         if r["Q"] is None or not r["ok"] or r["kappa"] is None:
             L.append(f"| {nu} | - | no certificate | | | | | |")
