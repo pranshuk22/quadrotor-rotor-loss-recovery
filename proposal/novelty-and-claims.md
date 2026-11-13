@@ -1,4 +1,6 @@
-# Novelty Assessment and Claim Boundaries (v5: both research questions)
+# Novelty Assessment and Claim Boundaries (v5)
+
+> Status: only the residual Koopman claims (RQ1 rows) are part of the final submission. The delay-budget claims (RQ2 rows) were explored; not part of the final submission; none of them is claimed. The text below is kept as written.
 
 Date of searches: 2026-10-09/10. The full query list is in `../literature/search-log.md`, and per-paper notes are in `../literature/notes/`. The v4-only version is in `../history/v4-novelty-and-claims.md`.
 

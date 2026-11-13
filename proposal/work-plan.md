@@ -1,4 +1,6 @@
-# Work Plan (v5): both research questions
+# Work Plan (v5)
+
+The submission covers the residual Koopman MPC only (Track 1). Track 2, the certified detection-delay budget, was explored; not part of the final submission: no certified delay budget was obtained (see `../README.md`). The plan below is kept as written.
 
 Companion to `proposal.md`. Status and schedule are tracked in `../progress/task-list.md`. The v4-only plan is in `../history/v4-work-plan.md`.
 
@@ -7,7 +9,7 @@ Companion to `proposal.md`. Status and schedule are tracked in `../progress/task
 - Relaxed-hover equilibrium validated (E1). Healthy and failed linear models, controllability/observability (E2). LQR designs (E3).
 - **Truth plants** for learning: family A (training) and family B (held out), plus randomized families. All of them add effects the nominal model lacks: thrust loss at high body rate, inertia error, different motor time constant (`rotorfail/params.py`).
 
-## Track 1: RQ1, residual Koopman MPC (from the proposal PDF)
+## Track 1: residual Koopman MPC (from the proposal PDF)
 
 | Step | Content | Status |
 |---|---|---|
@@ -23,7 +25,7 @@ Companion to `proposal.md`. Status and schedule are tracked in `../progress/task
 | 1.10 | Residual trained on spin-up transients (to help capture far from the equilibrium) | later |
 | 1.11 | Dictionary/regularization ablations; sensor noise | later |
 
-## Track 2: RQ2, certified detection-delay budget
+## Track 2: certified detection-delay budget (explored; not part of the final submission)
 
 | Step | Content | Status |
 |---|---|---|
@@ -43,7 +45,7 @@ Companion to `proposal.md`. Status and schedule are tracked in `../progress/task
 | Full-state Koopman MPC unusable (unstable predictor) | Report it as the expected failure mode (PDF §5); use a stabilized fit only as a sensitivity check |
 | Common-P LMI over r infeasible | Parameter-dependent P(r), or a staged funnel of nested ellipsoids |
 | Certificates too conservative | Report the ratio; parameter-dependent Lyapunov functions; SOS on a polynomial model (stretch) |
-| Stephan 2018 overlaps C2 | Keep C1, C3 and the RQ1–RQ2 link as the headline |
+| Stephan 2018 overlaps C2 | Keep C1, C3 and the link between the two tracks as the headline |
 
 ## Code layout
 See `../README.md`.

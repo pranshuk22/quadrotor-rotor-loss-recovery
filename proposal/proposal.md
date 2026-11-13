@@ -20,7 +20,7 @@ The revised proposal below identifies a narrower, more specific gap and states o
 
 > **RQ1.** Can a Koopman/EDMDc residual model, built around the analytically known spinning-equilibrium dynamics of a completely failed quadrotor, provide a better long-horizon predictive model for MPC than either the analytical failure model alone or a generic full-state Koopman model?
 
-> **RQ2 [added].** For a quadrotor that loses one rotor completely, what is the largest fault-detection delay τ\* for which recovery into the spinning equilibrium is *guaranteed*, given the healthy controller, the failure-mode (capture) controller, thrust saturation, motor lag and sampling? How do the capture controllers of RQ1 change τ\*?
+> **RQ2 [added]. (explored; not part of the final submission)** For a quadrotor that loses one rotor completely, what is the largest fault-detection delay τ\* for which recovery into the spinning equilibrium is *guaranteed*, given the healthy controller, the failure-mode (capture) controller, thrust saturation, motor lag and sampling? How do the capture controllers of RQ1 change τ\*?
 
 **What is genuinely different from existing work, and why we believe it is defensible:**
 
@@ -30,7 +30,7 @@ The revised proposal below identifies a narrower, more specific gap and states o
 
 We could not find residual Koopman modeling applied specifically to this complete-loss, spinning-equilibrium regime, across searches spanning direct term combinations, citation trails from the Mueller & D'Andrea paper, and adjacent "reduced attitude" terminology. We state this as the result of our search, not as a claim that it does not exist anywhere.
 
-**[added] For RQ2:** most recovery methods with a guarantee assume the failure-mode controller starts at the instant of failure (Simha et al. 2017; Al Lawati & Akhtar 2026 state "a reliable FDI module and an instantaneous transition"). Başak & Prempain (ECC 2015) prove stability for a switched linear model with a fixed detection delay, without thrust saturation and without computing the largest tolerable delay. Reported tolerances are empirical (180 ms for the heli-quad; recovery with 0.1 to 0.18 s of delay for nonlinear controllers, Chen et al. 2025, Zhou et al. 2025). Fast detectors report 30 to 130 ms (Strack van Schijndel et al. 2021). We did not find a certified *maximum* tolerable delay under thrust saturation. Mueller & D'Andrea list "a fault detection scheme ... and switching strategies for transitioning from four propellers to three" as future work. Details: `novelty-and-claims.md`.
+**[added] For RQ2: (explored; not part of the final submission)** most recovery methods with a guarantee assume the failure-mode controller starts at the instant of failure (Simha et al. 2017; Al Lawati & Akhtar 2026 state "a reliable FDI module and an instantaneous transition"). Başak & Prempain (ECC 2015) prove stability for a switched linear model with a fixed detection delay, without thrust saturation and without computing the largest tolerable delay. Reported tolerances are empirical (180 ms for the heli-quad; recovery with 0.1 to 0.18 s of delay for nonlinear controllers, Chen et al. 2025, Zhou et al. 2025). Fast detectors report 30 to 130 ms (Strack van Schijndel et al. 2021). We did not find a certified *maximum* tolerable delay under thrust saturation. Mueller & D'Andrea list "a fault detection scheme ... and switching strategies for transitioning from four propellers to three" as future work. Details: `novelty-and-claims.md`.
 
 ---
 
@@ -54,7 +54,7 @@ We then build three controllers on the same simulator and compare them directly:
 2. **MPC on a full-state Koopman model** (our original approach, retained as a baseline precisely because we found it to be unstable, which motivates the residual formulation)
 3. **MPC on the residual Koopman model** (proposed approach)
 
-**[added] Where the architecture sits in the failure timeline (RQ2):**
+**[added] Where the architecture sits in the failure timeline (RQ2): (explored; not part of the final submission)**
 
 ```
  healthy flight ──(rotor fails, t=0)──► undetected phase ──(detected, t=τ)──► capture controller ──► relaxed hover
@@ -99,6 +99,8 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 
 ## 6. [added] Certified Fault-Detection-Delay Budget (RQ2)
 
+**Status: explored; not part of the final submission.** No certified delay budget was obtained; the hand-over state cannot be contained in any hover-centred ellipsoid. The text below is kept as written.
+
 **Problem.** A fault detector needs τ ≈ 30–130 ms. During that time the healthy controller flies a three-rotor vehicle. It cannot cancel the roll torque of the opposite rotor, because that rotor's thrust cannot go below idle, so roll acceleration is at least l·f_min/I_xx. After τ, the capture controller must recover the vehicle from wherever it is.
 
 **Approach: three sets and one containment test.**
@@ -131,9 +133,9 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 | H2 | The residual model has lower multi-step open-loop error than the analytical and full-state models | RQ1 |
 | H3 | Residual Koopman MPC removes the steady bias of the analytical MPC under model mismatch (thrust loss at high spin, inertia error, motor lag) and enlarges the recovery region | RQ1 |
 | H4 | The residual reaches a given prediction error with less data than full-state EDMDc | RQ1 (data scarcity: failed flights end in crashes) |
-| H5 | The LTI capture certificate does not contain hover onset; the r-robust certificate does | RQ2 |
-| H6 | τ\* is finite and of the same order as real detector delays | RQ2 |
-| H7 | Certified τ\* is within about 2–3× of the empirical τ\* | RQ2 |
+| H5 | The LTI capture certificate does not contain hover onset; the r-robust certificate does | RQ2; explored; not part of the final submission |
+| H6 | τ\* is finite and of the same order as real detector delays | RQ2; explored; not part of the final submission |
+| H7 | Certified τ\* is within about 2–3× of the empirical τ\* | RQ2; explored; not part of the final submission |
 
 ### Experiments
 
@@ -142,13 +144,13 @@ Before arriving at this formulation, we built a proof-of-concept fitting a full-
 | E1 | Equilibrium and validation vs Mueller & D'Andrea | done |
 | E2 | Controllability / observability | done |
 | E3 | LQR designs, margins, nonlinear check | done |
-| E4 | Empirical detection-delay sweep + Monte Carlo | done |
-| E5 | First saturation-aware LMI certificate + conservatism | done (LTI) |
+| E4 | Empirical detection-delay sweep + Monte Carlo | done; explored; not part of the final submission |
+| E5 | First saturation-aware LMI certificate + conservatism | done (LTI); explored; not part of the final submission |
 | E6 | Failed-regime data, full-state vs residual EDMDc, multi-step prediction, data efficiency, held-out family (H1, H2, H4) | done |
 | E7 | Analytical MPC vs residual Koopman MPC in closed loop under mismatch (H3) | done (first version) |
-| E8 | Full-state Koopman MPC (PDF controller 2); offset-free MPC baseline; online residual adaptation | **[added]** E8a offset-free baselines and E8b full-state Koopman MPC done (2026-11-13); online adaptation (E8c) next |
-| E9 | r-robust capture certificate (H5); reachable sets; certified τ\* (H6) | next |
-| E10 | τ\* for each capture controller (LQR, analytical MPC, residual Koopman MPC); trade study; Monte Carlo tightness (H7) | later |
+| E8 | Full-state Koopman MPC (PDF controller 2); offset-free MPC baseline; online residual adaptation | **[added]** E8a offset-free baselines and E8b full-state Koopman MPC done (2026-11-13); online adaptation (E8c) to E8g done (2026-11-14) |
+| E9 | r-robust capture certificate (H5); reachable sets; certified τ\* (H6) | E9a to E9d run, explored; not part of the final submission; E9e not run |
+| E10 | τ\* for each capture controller (LQR, analytical MPC, residual Koopman MPC); trade study; Monte Carlo tightness (H7) | E10c run, E10a and E10b not run; explored; not part of the final submission |
 
 ### Simulation protocol (avoiding circularity)
 The truth simulator is the full nonlinear model **plus effects absent from the nominal model**: thrust loss at high body rate (observed by Mueller & D'Andrea as a 2.4 m height offset), inertia error and a different motor time constant. Mismatch families are split into training and held-out sets. Seeds and thresholds are fixed before runs. All claims are scoped to simulation.
@@ -166,7 +168,7 @@ The truth simulator is the full nonlinear model **plus effects absent from the n
 7. Bruder, D., Bombara, D., & Wood, R.J. (2025). *A Koopman-based residual modeling approach for the control of a soft robot arm.* IJRR.
 8. Fu et al. (2025). *Residual Koopman Model Predictive Control for Enhanced Vehicle Dynamics with Small On-Track Data Input.*
 
-**[added] References for RQ2 and the extended analysis**
+**[added] References for RQ2 and the extended analysis (explored; not part of the final submission)**
 
 9. Mueller, M.W. & D'Andrea, R. (2016). *Relaxed hover solutions for multicopters.* IJRR.
 10. Stephan, J., Schmitt, L., & Fichter, W. (2018). *Linear parameter-varying control for quadrotors in case of complete actuator loss.* JGCD 41(10). **(to read: novelty gate for C2)**
