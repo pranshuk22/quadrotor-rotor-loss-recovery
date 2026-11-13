@@ -155,7 +155,7 @@ orbit radius & 7.3\,mm & centre of mass nearly still \\
 \end{center}
 For comparison, healthy hover needs $mg/4 = 1.23$\,N per rotor.
 
-\paragraph{Other failure cases.} With rotors 2 and 4 lost and $f_1 = f_3 = mg/2$, the drone spins about its own $z$ axis without tilt, at $r = 2\kappa_\tau f_1/\gamma = 30.1$\,rad/s. With only rotor 1 left, the thrust and all three rates must be solved together numerically; the result is $f_1 = 5.37$\,N, $\vect\omega = (14.68, 0, 32.99)$\,rad/s, $\vect n = (0.407, 0, 0.914)$. We use both cases for validation (Section~\ref{sec:validation}).
+\paragraph{Other failure cases.} With rotors 2 and 4 lost and $f_1 = f_3 = mg/2$, the drone spins about its own $z$ axis without tilt, at $r = 2\kappa_\tau f_1/\gamma = 30.1$\,rad/s. With only rotor 1 left, the thrust and all three rates must be solved together numerically; the result is a thrust $f_1 = 5.37$\,N, a rate vector $\vect\omega = (14.68, 0, 32.99)$\,rad/s and a tilt vector $\vect n = (0.407, 0, 0.914)$. We use both cases for validation (Section~\ref{sec:validation}).
 
 \subsection{Linear models}\label{sec:linmodels}
 Control design uses linear models obtained by linearizing the nonlinear equations at an equilibrium. We build two.

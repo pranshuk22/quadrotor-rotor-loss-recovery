@@ -1,8 +1,8 @@
-# Project Status (2026-10-10)
+# Project Status (2026-11-13)
 
 ## Summary
 
-The first phase is complete: simulator, validation, linear analysis, LQR baselines, first Koopman predictors and MPC, the empirical detection-delay study and a first LMI certificate. The progress report (`docs/report/`) and slides (`docs/deck/`) are up to date. The main contributions are still ahead (`task-list.md`). Remaining course milestones: final progress presentation on **31 October 2026**, journal-style final report due **13 November 2026**.
+The first phase is complete: simulator, validation, linear analysis, LQR baselines, first Koopman predictors and MPC, the empirical detection-delay study and a first LMI certificate. The detailed report (`docs/report/`) describes this state without schedule language; slides are in `docs/deck/`. The main contributions are still ahead (`task-list.md`): the completion work proceeds stage by stage, starting with the RQ1 proposal deliverables (K6, K5) and then the RQ2 certificates (X1, D3 to D6). Course milestones: final presentation 31 October 2026, journal-style final report due **13 November 2026**.
 
 | Item | Status |
 |---|---|

@@ -66,9 +66,12 @@ def __call__(self, t, x):
   \item \textbf{safe} if it is captured, \emph{and} the height loss (starting height minus lowest height) is below 2\,m, \emph{and} the drone never turns upside down ($n_z > 0$ throughout).
 \end{itemize}
 
-\paragraph{Monte Carlo.} A real failure does not happen at a perfect hover. For each delay $\tau = 0, 5, 10, \dots, 60$\,ms and each spin-up thrust we ran 40 simulations from random pre-failure states (velocity with standard deviation 0.3\,m/s, Euler angles 3$^\circ$, body rates 0.3\,rad/s; the same 40 seeds for every delay). The estimated probability of a safe recovery is $\hat p = k/n$ ($k$ safe runs out of $n=40$). Its 95\% \emph{Wilson} confidence interval is
+\paragraph{Monte Carlo.} A real failure does not happen at a perfect hover. For each delay $\tau = 0$, $5$, $10$, \dots, $60$\,ms and each spin-up thrust we ran 40 simulations from random pre-failure states (velocity with standard deviation 0.3\,m/s, Euler angles 3$^\circ$, body rates 0.3\,rad/s; the same 40 seeds for every delay). The estimated probability of a safe recovery is $\hat p = k/n$ ($k$ safe runs out of $n=40$). Its 95\% \emph{Wilson} confidence interval is
 \begin{equation}
-  c \pm h, \qquad c = \frac{\hat p + z^2/(2n)}{1+z^2/n}, \qquad h = \frac{z}{1+z^2/n}\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}}, \qquad z = 1.96 .
+  \begin{aligned}
+  &c \pm h, \qquad z = 1.96, \\
+  &c = \frac{\hat p + z^2/(2n)}{1+z^2/n}, \qquad h = \frac{z}{1+z^2/n}\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}} .
+  \end{aligned}
 \end{equation}
 Unlike the textbook interval $\hat p \pm z\sqrt{\hat p(1-\hat p)/n}$, it does not collapse to zero width when $\hat p$ is 0 or 1. We summarize each curve by $\tau_{90}$ and $\tau_{50}$, the delays at which $\hat p$ first falls below 0.9 and 0.5 (linear interpolation between grid points). We also swept $\tau$ from 0 to 300\,ms in 10\,ms steps from the exact hover, for all three strategies, and for three healthy-controller tunings with the 2.95\,N spin-up.
 

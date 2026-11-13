@@ -1,5 +1,5 @@
 %=====================================================================
-\section{Discussion, limitations and next steps}\label{sec:discussion}
+\section{Discussion, limitations and future work}\label{sec:discussion}
 %=====================================================================
 \subsection{Status of the hypotheses}
 \begin{table}[H]
@@ -42,21 +42,16 @@ H7 & The certified $\tau^\star$ is within 2 to 3 times the empirical value & Not
   \item \textbf{Literature access.} Several closely related papers~\cite{stephan2018lpv,lanzon2014flight,qi2016recoverable,basak2015switching} have not yet been read in full; our statements about them rely on abstracts, a thesis and citing papers.
 \end{enumerate}
 
-\subsection{Plan for the remaining weeks}
-The course has a final progress presentation on 31 October 2026, and the journal-style final report is due on 13 November 2026.
-\begin{table}[h]
-\centering\small
-\begin{tabularx}{\linewidth}{l L}
-\toprule
-Dates & Work \\
-\midrule
-Until 18 Oct & LPV model in the yaw rate and a saturation-aware certificate over the spin-up. MPC on the full-state Koopman model (the second controller of our proposal) and an integral-action MPC baseline. Read the remaining key papers in full. \\
-19 to 25 Oct & Reachable set of the undetected phase and the containment test, giving a first certified $\tau^\star$; comparison with the empirical curve. Online adaptation of the residual by recursive least squares. \\
-26 to 31 Oct & Sensitivity of $\tau^\star$ to the spin-up thrust, idle thrust and motor lag; air-relative thrust in the truth plant. Final progress presentation on 31 Oct. \\
-1 to 13 Nov & Bound on the true model mismatch and a certificate for the residual Koopman loop if time allows; final simulations and the journal-style report, due 13 Nov. \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\subsection{Future work}
+The following items are not part of the results above.
+\begin{enumerate}
+  \item \textbf{A certificate over the whole spin-up} and the certified delay budget $\tau^\star$ (Section~\ref{sec:certificate}), including the sensitivity of $\tau^\star$ to the spin-up thrust, the idle thrust and the motor time constant.
+  \item \textbf{MPC on the full-state Koopman model}, the second controller of our proposal, and an integral-action (offset-free) MPC as the classical baseline for removing a steady error.
+  \item \textbf{Online adaptation} of the residual by recursive least squares, to address the poor transfer to a plant with different parameters.
+  \item \textbf{Certificate for the residual Koopman loop:} a bound on the true model mismatch and an argument for the MPC constraints.
+  \item \textbf{Truth-plant realism:} air-relative thrust, drag and sensor noise.
+  \item \textbf{Literature:} reading the closely related papers listed under limitations in full.
+\end{enumerate}
 
 \subsection{Conclusion}
-We built a simulator of a quadrotor with complete rotor loss and showed that it reproduces three published papers and the spin-up time of a real flight. On the plant it was trained on, a Koopman model that learns only the error of the physics model is the most accurate predictor from 100\,ms to 1\,s, needs less data than a Koopman model of the full dynamics, and reduces a steady altitude error by one third inside a convex MPC; it does not yet carry over to a plant with different parameters. In our simulation, the published recovery strategy recovers safely with high probability only for detection delays of about 10 to 20\,ms, shorter than most published detectors need (about 20 to 130\,ms), because nothing can stop the roll while the failure is undetected. A first LMI certificate covers 22\% of the way to the failure state, and the controller fails only at low spin rates, which points to a certificate over the spin-up as the next step. The remaining weeks build that certificate and the certified delay budget, and evaluate each capture controller, including the residual Koopman MPC, by the delay it tolerates.
+We built a simulator of a quadrotor with complete rotor loss and showed that it reproduces three published papers and the spin-up time of a real flight. On the plant it was trained on, a Koopman model that learns only the error of the physics model is the most accurate predictor from 100\,ms to 1\,s, needs less data than a Koopman model of the full dynamics, and reduces a steady altitude error by one third inside a convex MPC; it does not yet carry over to a plant with different parameters. In our simulation, the published recovery strategy recovers safely with high probability only for detection delays of about 10 to 20\,ms, shorter than most published detectors need (about 20 to 130\,ms), because nothing can stop the roll while the failure is undetected. A first LMI certificate covers 22\% of the way to the failure state, and the controller fails only at low spin rates, which points to a certificate over the spin-up as the next step. Building that certificate and the certified delay budget, and evaluating each capture controller, including the residual Koopman MPC, by the delay it tolerates, is the main future work.

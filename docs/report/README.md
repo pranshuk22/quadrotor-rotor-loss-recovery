@@ -16,4 +16,4 @@ tectonic -X compile report.tex          # installed at /opt/homebrew/bin/tectoni
 If the experiments are re-run, copy the new figures first: `cp ../../results/figures/*.png figures/`.
 
 ## Notes on references
-Entries with `note = {... to be verified}` carry details not yet checked against the primary source. These are the two attributions the proposal itself flagged ("Lee et al. 2024") and two papers whose author lists were not available to us. BibTeX warns "empty author" for the two author-less entries; this is expected.
+Bibliographic metadata (authors, title, venue, year, DOI) of every entry has been completed and checked; no entry carries a "to be verified" note and none lacks authors. Statements about papers that were only read in abstract form are marked as such in `sections/03-literature.tex` and in the limitations.

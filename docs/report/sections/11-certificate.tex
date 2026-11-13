@@ -89,8 +89,8 @@ $\mu$ (1/s) & $\Delta p, \Delta q, \Delta r$ (rad/s) & $\Delta n_x, \Delta n_y$ 
 \caption{Slice $(\Delta r, \Delta n_y)$ of the certified ellipsoid ($\mu = 0.1$\,s$^{-1}$) against a grid of nonlinear simulations. Dots: recovered; crosses: turned over or not captured; star: projection of the failure state (labelled ``hover onset'' in the plot). ``LTI at $\bar r$'' means the certificate uses the linear model at the equilibrium yaw rate.}\label{fig:cert}
 \end{figure}
 
-\subsection{From here to a certified delay budget (planned)}
-The results point to the next steps, which are not implemented yet:
+\subsection{Towards a certified delay budget (future work)}
+The results point to the following steps, which are not implemented in this version:
 \begin{enumerate}
   \item \textbf{A certificate over the whole spin-up.} If the other operating-point values are held fixed, the linearized matrix depends affinely on the yaw rate $r$ (otherwise they become additional scheduling parameters, and linearizing away from an equilibrium adds a drift term). Treating $r$ as a parameter in an interval $[r_{\text{onset}}, \bar r + \delta]$ and requiring the LMIs~\eqref{eq:lmi1} at the two ends with a common $Q$ (a linear parameter-varying, LPV, certificate) would certify the whole interval. LPV synthesis on the yaw rate~\cite{stephan2018lpv} and recoverable sets at the relaxed hover~\cite{qi2016recoverable} exist; our aim is to use such a set as the capture target of a delay budget.
   \item \textbf{The reachable set of the undetected phase.} During the delay the drone obeys an \emph{affine} linear model (linear plus a constant term) $\dot{\vect x} = A_f\vect x + \vect d$ (healthy controller, rotor 4 missing; $\vect d$ is the constant push from the missing thrust). Starting from an ellipsoid $\mathcal X_0$ of pre-failure states, the states reachable at time $\tau$ form the shifted ellipsoid $\mathcal R(\tau) = e^{A_f\tau}\mathcal X_0 \oplus \{\int_0^\tau e^{A_f s}\vect d\,ds\}$, where $\oplus$ (the Minkowski sum) adds the fixed shift to every point of the set.
