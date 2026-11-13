@@ -6,6 +6,7 @@ Controllers: analytical MPC, MPC on the full-state Koopman model (`LiftedKoopman
 
 - Lifted states: 55 (+1 altitude state in the MPC); eigenvalues outside the unit circle: 4 of 55, largest modulus 1.0070.
 - Terminal cost: `dare`. Riccati residual (relative) 2.1e-15, asymmetry 0.0e+00, smallest/largest eigenvalue 2.3e-09, spectral radius of the lifted closed loop 0.9949, condition number 4.4e+08; all checks passed: True.
+- Same Riccati equation with the constant coordinate included (not used): relative residual 1.8e-15, smallest/largest eigenvalue 1.2e-15, spectral radius 0.9999999999, condition number 8.2e+14.
 - Command issued at the exact trim (should be zero; a bias of the learned model): (+0.066, -0.450, +0.124) N from the relaxed-hover thrusts.
 
 ## Part 1: steady altitude bias by mismatch effect
@@ -23,12 +24,12 @@ Protocol of E7/E8a. A run that diverged is shown with its stop time.
 
 | Plant | Controller | RMS z (m) | max standardised xi | non-optimal QPs | median wall time per step (ms) |
 |---|---|---|---|---|---|
-| A (full) | MPC, full-state Koopman | 0.337 | 8.8 | 0 | 62.5 |
-| A without thrust loss | MPC, full-state Koopman | 0.279 | 8.9 | 0 | 75.9 |
-| nominal + A's thrust loss only | MPC, full-state Koopman | 0.270 | 8.0 | 0 | 53.3 |
-| B (full, held out) | MPC, full-state Koopman | 0.263 | 9.1 | 0 | 52.7 |
-| B without thrust loss | MPC, full-state Koopman | 0.287 | 8.5 | 0 | 53.0 |
-| nominal + B's thrust loss only | MPC, full-state Koopman | 0.295 | 8.0 | 0 | 53.5 |
+| A (full) | MPC, full-state Koopman | 0.337 | 8.8 | 0 | 64.8 |
+| A without thrust loss | MPC, full-state Koopman | 0.279 | 8.9 | 0 | 89.1 |
+| nominal + A's thrust loss only | MPC, full-state Koopman | 0.270 | 8.0 | 0 | 58.7 |
+| B (full, held out) | MPC, full-state Koopman | 0.263 | 9.1 | 0 | 54.9 |
+| B without thrust loss | MPC, full-state Koopman | 0.287 | 8.5 | 0 | 66.8 |
+| nominal + B's thrust loss only | MPC, full-state Koopman | 0.295 | 8.0 | 0 | 58.1 |
 
 ## Part 2: capture after a detection delay (exact hover start)
 
@@ -60,17 +61,17 @@ Hover, rotor 4 fails, healthy LQR for τ, spin-up on rotors 1 and 3 at 2.95 N, t
 
 | Plant | τ (ms) | max standardised xi | non-optimal QPs | median wall time per step (ms) |
 |---|---|---|---|---|
-| A (full) | 0 | 37.5 | 0 | 64.9 |
-| A (full) | 10 | 44.9 | 0 | 72.9 |
-| A (full) | 20 | 192.6 | 0 | 260.7 |
-| A (full) | 30 | 283.5 | 0 | 267.4 |
-| A (full) | 40 | 314.5 | 0 | 316.1 |
-| A (full) | 60 | 350.0 | 0 | 288.9 |
-| nominal | 0 | 34.5 | 0 | 92.7 |
-| nominal | 10 | 40.9 | 0 | 87.9 |
-| nominal | 20 | 47.4 | 0 | 73.5 |
-| nominal | 30 | 194.6 | 0 | 190.1 |
-| nominal | 40 | 243.7 | 0 | 241.7 |
-| nominal | 60 | 336.4 | 0 | 269.4 |
+| A (full) | 0 | 37.5 | 0 | 73.7 |
+| A (full) | 10 | 44.9 | 0 | 69.7 |
+| A (full) | 20 | 192.6 | 0 | 258.4 |
+| A (full) | 30 | 283.5 | 0 | 266.2 |
+| A (full) | 40 | 314.5 | 0 | 319.0 |
+| A (full) | 60 | 350.0 | 0 | 292.1 |
+| nominal | 0 | 34.5 | 0 | 101.0 |
+| nominal | 10 | 40.9 | 0 | 85.5 |
+| nominal | 20 | 47.4 | 0 | 61.2 |
+| nominal | 30 | 194.6 | 0 | 171.3 |
+| nominal | 40 | 243.7 | 0 | 196.3 |
+| nominal | 60 | 336.4 | 0 | 221.7 |
 
-Total run time: 1097 s on 8 processes.
+Total run time: 1126 s on 8 processes.
