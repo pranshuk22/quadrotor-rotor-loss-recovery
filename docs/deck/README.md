@@ -1,6 +1,6 @@
 # Slide deck
 
-**Final presentation (RQ1, residual Koopman MPC)**
+**Final presentation (residual Koopman MPC)**
 - [`final-presentation.pptx`](final-presentation.pptx): PowerPoint, 20 slides (19 + 1 backup) with speaker notes; plain white academic template
 - [`final-presentation.pdf`](final-presentation.pdf): PDF export of the same deck
 - [`build_pptx.js`](build_pptx.js): generates the .pptx with [pptxgenjs](https://gitbrent.github.io/PptxGenJS/). Figures are read from `results/figures/`.
