@@ -68,6 +68,35 @@ $\nu$ & $r$ range (rad/s) & verified & ceiling & $\varsigma$ & $r$ semi-axis & $
 \caption{E9b. Slices of the E5 ellipsoid and of the robust ellipsoids (after the remainder shrink) together with the hand-over states at $\tau=0$ (grey dots) and the exact-hover hand-over state (star).}\label{fig:e9b}
 \end{figure}
 
+\subsection{Redesigned capture: a synthesised gain and a different hand-over threshold (E9c)}\label{sec:redesign}
+Because no certificate contains the published hand-over state, the framework was used constructively: choose the capture gain \emph{together with} the ellipsoid, by the design form of the Hu--Lin LMIs (variables $Q$, $Y=FQ$ and the auxiliary $Z=HQ$ over all vertices and saturation patterns, plus a bound on the size of the gain over the ellipsoid, $\|F\vect x\|\le g$ for fixed $g\in\{2,4,8,16\}$ in scaled input units), maximizing the extent towards the hand-over state. The hand-over threshold $w_{\mathrm{sw}}$ was varied as well (3, 4, 6, 8, 10, 12, 14, 16, 18\,rad/s), because the spin-up is open loop and its hand-over state does not depend on the gain. Everything produced here is labelled \emph{redesigned capture}; the published strategy (published LQR, $w_{\mathrm{sw}}=10$\,rad/s) is run next to it in every table, unchanged, and the two are never mixed. A synthesised gain is rejected when its closed-loop eigenvalues exceed 100\,rad/s (1.5 times the motor bandwidth; the published LQR has 69\,rad/s) or when the sampled loop is unstable at 1 or 5\,ms. The settings and the rejection rule were fixed before the run (\texttt{results/tables/e9c\_gain\_synthesis.md}).
+
+\paragraph{The hand-over state depends strongly on the threshold.} With a later threshold the yaw rate at the hand-over is close to its equilibrium value but the attitude has tilted for longer; with an earlier one the opposite. The hand-over deviation of the tilt is smallest at 3 and 4\,rad/s (0.17 and 0.21), largest at 10 (0.75; the published value) and 8 (0.66), and the yaw rate deviation runs from $-16.0$ to $-0.8$\,rad/s as the threshold goes from 3 to 18\,rad/s. At every threshold the rotor-2 thrust deviation is $-1.02$\,N and those of rotors 1 and 3 are $+0.91$\,N. The analytic ceiling of the previous section (disc form) is below 1 at 10, 8 and 16\,rad/s (0.80, 0.93, 0.98) and above 1 at the others, so a hover-centred ellipsoid is not excluded there by geometry alone.
+
+\paragraph{Result of the synthesis: no usable gain.} All 36 synthesised designs are feasible and pass the numerical verification (worst eigenvalue $-1.0\times10^{-5}$ in scaled units, the margin requested; the two-solver cross-check on one design differs by 3.0\% and both solves are of reduced accuracy), and the certified extent towards the hand-over state grows over the published LQR gain on the same box: for example 0.46 against 0.31 at 16\,rad/s and 0.20 against 0.15 at 10\,rad/s (remainder-free quasi-LPV certificates). But no design reaches 1, the best being 0.46, and, more importantly, every synthesised gain is unusable: its closed-loop eigenvalues are between 216 and 47\,700\,rad/s (against 69 for the LQR) and the sampled loop is unstable at 5\,ms for 23 of the 36 designs; the other 13 are stable but have eigenvalues of 216 to 453\,rad/s and are rejected by the pole rule. The bound on the gain did not help: the result is the same for $g=2,4,8,16$, because the largest extent is reached by the same ellipsoid in every case. The published LQR gain is verified at all thresholds except 3 and 4\,rad/s (worst eigenvalue $+8\times10^{-2}$) and gives 0.10 to 0.32. After the remainder check only ten designs retain a certificate (certified extents at most 0.0034). So the certified capture of the hand-over state is \emph{infeasible in this framework} for every threshold, gain bound and gain tested: the infeasibility boundary is the interval of extents 0.10 to 0.46 against the required 1.
+
+\paragraph{An earlier hand-over helps in simulation.} Independently of the certificates, the published LQR was simulated with every threshold on 40 new random starts per delay (nominal plant, 2.95\,N; seeds 1000 to 1039, never used for a design) (Table~\ref{tab:thresholds}). The probability of a safe recovery at 20\,ms is 0.65 for the published threshold, 0.72 at 14, 0.80 at 12, 0.88 at 8, and 1.00 at 6\,rad/s, and at 6\,rad/s every start and the exact hover recovered safely up to a delay of 80\,ms (0.97 at 100 and 0.88 at 130\,ms). The effect is not monotone: 18 is slightly worse than 10, and 3\,rad/s fails at every delay including 0\,ms (the hand-over then occurs before the spin has built up), and 4\,rad/s is worse than 6. The best threshold was picked by looking at these seeds, so the statement is confirmed on new seeds and other plants in Section~\ref{sec:earlyhandover}.
+
+\begin{table}[h]
+\centering\small
+\caption{E9c. Empirical delay budget of the published LQR with different hand-over thresholds (nominal plant, 2.95\,N, 40 starts per delay, seeds 1000 to 1039). $\tau_{90}$, $\tau_{50}$: first delay with $P(\text{SAFE})$ below 0.9 and 0.5. Source: \texttt{results/tables/e9c\_gain\_synthesis.md}.}\label{tab:thresholds}
+\begin{tabular}{rrrrrr}
+\toprule
+$w_{\mathrm{sw}}$ (rad/s) & $\tau_{90}$ & $\tau_{50}$ & $P$(SAFE) at 20\,ms & at 60\,ms & at 130\,ms \\
+\midrule
+10 (published) & 9\,ms & 23\,ms & 0.65 & 0.10 & 0.00 \\
+18 & 9\,ms & 20\,ms & 0.50 & 0.03 & 0.00 \\
+16 & 9\,ms & 23\,ms & 0.62 & 0.10 & 0.00 \\
+14 & 12\,ms & 28\,ms & 0.72 & 0.12 & 0.00 \\
+12 & 15\,ms & 33\,ms & 0.80 & 0.20 & 0.00 \\
+8 & 15\,ms & 42\,ms & 0.88 & 0.30 & 0.03 \\
+6 & $>60$\,ms & $>60$\,ms & 1.00 & 1.00 & 0.88 \\
+4 & 17\,ms & 33\,ms & 0.85 & 0.33 & 0.17 \\
+3 & 0\,ms & 0\,ms & 0.00 & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Changes made after first attempts}\label{sec:budget-dev}
 For transparency, the places where a first, pre-registered attempt had to be changed (each first run is kept as a separate table in \texttt{results/tables/}; the change was written into the script before the next run):
 \begin{itemize}
