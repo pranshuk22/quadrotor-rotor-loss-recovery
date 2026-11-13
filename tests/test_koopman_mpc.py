@@ -102,7 +102,9 @@ class _EmbeddedNominal:
 
 def test_lifted_mpc_matches_failure_mpc_on_the_embedded_nominal_model():
     """With the exact nominal model embedded in lifted form, the first move equals FailureMPC's up to
-    the altitude integration rule (rectangle in the lifted model, ZOH in FailureMPC)."""
+    the altitude integration rule (rectangle in the lifted model, ZOH in FailureMPC) and the 1e-6 I
+    weight on the lifted state. Measured difference on this state: 1.3e-7 N (the same with z = 0),
+    so the tolerance is about three times that."""
     from rotorfail.dynamics import IDX_Q, make_state, quat_from_n
     from rotorfail.mpc import LiftedKoopmanMPC
     eq = relaxed_hover(P)
@@ -115,7 +117,7 @@ def test_lifted_mpc_matches_failure_mpc_on_the_embedded_nominal_model():
     lm.reset(x[13:16])
     u_ref, u_lm = ref(0.0, x), lm(0.0, x)
     assert lm.prob.status == "optimal"
-    assert np.allclose(u_ref, u_lm, atol=5e-3)
+    assert np.allclose(u_ref, u_lm, atol=4e-7)
 
 
 def test_lifted_mpc_qp_is_optimal_on_random_near_trim_states(setup):
