@@ -1,7 +1,7 @@
 %=====================================================================
-\section{Learning the model error: residual Koopman models (RQ1)}\label{sec:koopman}
+\section{Learning the model error: residual Koopman models}\label{sec:koopman}
 %=====================================================================
-This section answers the prediction half of RQ1: which model best predicts how the failed drone will move? We compare three predictors trained and tested on exactly the same data (experiment E6).
+This section answers the prediction half of our research question: which model best predicts how the failed drone will move? We compare three predictors trained and tested on exactly the same data (experiment E6).
 
 \subsection{Hypotheses}
 Before running the experiment we wrote down what we expected (from the proposal):
@@ -123,7 +123,7 @@ No change & 0.81 & 2.42 & 2.38 & 2.51 & 2.51 & 2.44 & 2.41 \\
 
 \paragraph{Generalization: not achieved.} On the held-out plant B, both models trained on plant A are \emph{worse} than the physics model (Table~\ref{tab:pred}, right). The learned correction is specific to the plant it saw: it ``corrects'' B as if it were A, which makes things worse. Training on randomized plants, one random plant per episode, does not solve this. It helps the residual model on B only up to about 100\,ms (error 3.68 against 4.31 for the physics model) and makes both learned models worse on A (the full-state model trained this way even diverges, spectral radius 1.028). The likely reason is that a single state sample does not reveal which plant the drone is: the motor time constant and the thrust loss show only in how the state changes over several steps. A static regression then learns an average correction that fits no plant well. This points to online adaptation: because the residual is linear in $W$, it can be updated during flight by recursive least squares. Online-adapted Koopman models exist for healthy quadrotors~\cite{jin2025dekc} and for loss-of-effectiveness faults~\cite{lee2024koopmanftmpc}.
 
-\subsection{What this means for RQ1}
+\subsection{What this means}
 \begin{plain}
 On the drone it was trained on, learning only the error of the physics model gives the best predictions from 0.1 to 1\,s, and with 10 training episodes it is more accurate than learning everything from 40 episodes. But the learned correction does not carry over to a drone with different parameters. In its current form it is a calibration for one vehicle, not a general model of rotor failure.
 \end{plain}

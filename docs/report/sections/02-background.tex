@@ -72,14 +72,8 @@ Imagine predicting the motion of a ball on a curved track. Its position alone ch
 
 \emph{Residual learning} keeps a trusted model and learns only what it gets wrong. If the physics model predicts $\vect x^{\text{nom}}_{k+1}$ and the truth is $\vect x_{k+1}$, the learned part predicts the \emph{residual} $\vect e_{k+1} = \vect x_{k+1} - \vect x^{\text{nom}}_{k+1}$. The hope is that the residual is small and simple, so it can be learned from little data.
 
-\subsection{Lyapunov functions and linear matrix inequalities}
-A \emph{Lyapunov function} $V(\vect x)$ is like an energy: it is zero at the equilibrium, positive elsewhere, and always decreases along the motion of the system. If such a function exists, the system returns to the equilibrium. A common choice is $V = \vect x^\top P\vect x$ with a \emph{positive definite} matrix $P$ (written $P\succ0$), which means $\vect x^\top P\vect x>0$ for every $\vect x\ne0$; $P\succeq0$ (positive semidefinite) allows equality, and $P\preceq0$ means $-P\succeq0$. The set where $V\le1$ is an \emph{ellipsoid}; if $V$ decreases everywhere on it, no trajectory can leave it, so it is an \emph{invariant set}, and every state inside it is guaranteed to recover.
-
-A \emph{linear matrix inequality} (LMI) is a condition of the form ``this symmetric matrix, which depends linearly on unknown matrices, is negative (or positive) semidefinite''. The conditions for a Lyapunov function can often be written as LMIs. LMIs are convex, so a computer can find the largest certified ellipsoid reliably~\cite{boyd1994lmi}. Section~\ref{sec:certificate} explains this in detail.
-
 \subsection{Statistics used}
 \begin{itemize}
   \item \textbf{Monte Carlo simulation}: run the same experiment many times from random starting conditions and count outcomes.
-  \item \textbf{Wilson interval}: a 95\% confidence interval for a success probability estimated from $k$ successes in $n$ trials; it behaves well even when $k$ is 0 or $n$ (Section~\ref{sec:delay}).
   \item \textbf{RMSE}: root mean square error, $\sqrt{\text{mean of squared errors}}$. We divide each state by its typical size before averaging, so that states with different units can be combined (\emph{normalized} RMSE).
 \end{itemize}

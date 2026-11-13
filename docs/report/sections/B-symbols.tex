@@ -32,7 +32,7 @@ $A, B$ & continuous-time linear model & \\
 $A_d, B_d$ & discrete-time (ZOH) model & \\
 $\Ts$ & sample period of learning and MPC & 5\,ms \\
 $K$, $F=-K$ & feedback gain & \\
-$Q, R$ & LQR / MPC weights (Section~\ref{sec:certificate}: $Q = P^{-1}$) & \\
+$Q, R$ & LQR / MPC weights & \\
 $P$, $P_N$ & Riccati solution / Lyapunov matrix; MPC terminal cost & \\
 $N$ & MPC horizon & 20 steps \\
 $\hat{\vect f}$ & filtered-command estimate of the motor thrusts & N \\
@@ -40,19 +40,10 @@ $\vect\xi$, $\psi$, $\vect\zeta$ & learning features, dictionary, lifted state &
 $W$, $\vect d_{\max}$ & residual regression matrix, clipping level & \\
 $\vect\delta$, $G$ & constant disturbance of the offset-free MPC and its input matrix (Section~\ref{sec:offsetfree}) & \\
 $\vect d_{\mathrm{res}}$ & one-step residual correction used in the prediction & \\
-$\tau$, $\tau^\star$ & detection delay, certified maximum delay & ms \\
-$\bar{\vect u}$ & symmetric saturation levels & (1.76, 0.82, 1.76)\,N \\
+$\tau$, $\bar{\vect u}$ & symmetric saturation levels & (1.76, 0.82, 1.76)\,N \\
 $\mu$ & required decay rate in the certificate & 1/s \\
 $\beta$ & certified fraction of the way to the failure state & \\
 $\alpha$ & aggressiveness factor of the healthy LQR & \\
-$w_{\mathrm{sw}}$ & hand-over threshold on the body-rate norm & 10\,rad/s (published) \\
-$S(\tau)$, $X_0$, $\mathcal C$ & hand-over set, pre-failure set, certified capture set & \\
-$\chi$ & scale of $X_0$ (``gamma'' in scripts) & 0 to 1 \\
-$\vect\vartheta = (r,n_z)$ & scheduling parameters of the quasi-LPV model & \\
-$\nu$, $\varsigma$ & size of the scheduling box; remainder shrink factor of the ellipsoid & \\
-$g_P$ & remainder measure $\max\sqrt{R^\top PR}$ on the ellipsoid boundary & \\
-$\beta$, $s$, $s_c$ & scaling of the hand-over shape into a set; scaling of a state, and of the centre, onto the boundary & \\
-$\tau^\star$ & certified detection-delay budget & ms \\
 $\lambda$ (Section~\ref{sec:depth}) & forgetting factor of RLS & 0.995, 0.999 \\
 \bottomrule
 \end{longtable}

@@ -136,7 +136,7 @@ Spin-up thrust & Simulator & Closed form & Flight \\
 \bottomrule
 \end{tabular}
 \end{center}
-At the flight thrust the model is within about 4\% of the flight. Because the thrust is read from a plot, the detection-delay study (Section~\ref{sec:delay}) is reported for both thrusts.
+At the flight thrust the model is within about 4\% of the flight. Because the thrust is read from a plot, the capture experiments (Section~\ref{sec:delay}) use the flight value of 2.95\,N.
 
 \paragraph{Steady spin rate and height.} The published models over-predict the spin of the real drone. In the ICRA one-rotor flight the measured body rates in hover were $(2.1, 3.7, 13.7)$\,rad/s (their eq.~55), about 14.3\,rad/s against about 19.7\,rad/s predicted by the same model that our simulator implements (ours: 19.6\,rad/s at $\rho = 0.5$), about 27\% less. In the IJRR flight the spin was 15.8\,rad/s against 19.9\,rad/s in simulation (their Sec.~5.4), about 20\% less; those authors suggest extra torques from the motion of the propeller centres as a possible cause. In the ICRA two-rotor flight the drone stayed about 2.4\,m below its set-point, which the authors attribute to the propellers producing less thrust at high body rates. None of these effects is in the nominal model. They are why our truth plants contain a thrust loss at high rotation rate: the learned residual of Section~\ref{sec:koopman} is meant to capture effects of this kind.
 

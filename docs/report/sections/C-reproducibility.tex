@@ -7,7 +7,7 @@ The simulator, analysis and experiments are written in Python with NumPy~\cite{h
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest -q        # 122 pass + 1 expected failure
 .venv/bin/python experiments/v0_validation_report.py
-.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e10c
+.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e8g
 bash experiments/run_all.sh    # tests and all experiments
 .venv/bin/python experiments/audit_numbers.py FILE.tex
 \end{verbatim}
@@ -22,8 +22,6 @@ V0 & \texttt{v0\_validation\_report.py} & Does the model match published numbers
 E1 & \texttt{e1\_equilibrium.py} & Relaxed hover against the paper; $\rho$ sweep & seconds \\
 E2 & \texttt{e2\_structure.py} & Eigenvalues, controllability, observability by sensor set & seconds \\
 E3 & \texttt{e3\_lqr.py} & LQR designs, delay margins, nonlinear checks & about 15\,s \\
-E4 & \texttt{e4\_delay\_sweep.py} & Effect of detection delay (Monte Carlo) & several minutes \\
-E5 & \texttt{e5\_first\_certificate.py} & LMI certificate and its conservatism & about 8\,min \\
 E6 & \texttt{e6\_koopman\_prediction.py} & Physics vs full-state vs residual EDMDc & about 2.5\,min \\
 E7 & \texttt{e7\_mpc\_closed\_loop.py} & LQR vs analytical MPC vs residual Koopman MPC & about 3\,min \\
 E8a & \texttt{e8\_offset\_free.py} & Offset-free MPC variants and LQR with integrator vs residual Koopman MPC & about 9\,min \\
@@ -33,15 +31,7 @@ E8d & \texttt{e8d\_spinup\_residual.py} & Residual trained on spin-up transients
 E8e & \texttt{e8e\_mpc\_tuning.py} & MPC horizon and weights for the capture & about 1\,h \\
 E8f & \texttt{e8f\_ablations.py} & Dictionary degree, ridge, sampling period, sensor noise & about 1.5\,h \\
 E8g & \texttt{e8g\_realistic\_plant.py} & Air-relative thrust and quadratic drag in the truth plant & about 12\,min \\
-E9a & \texttt{e9a\_handover.py} & Hand-over state of the published strategy against the E5 certificate & about 15\,min \\
-E9b & \texttt{e9b\_robust\_certificate.py} & Quasi-LPV saturation-aware certificate for the published LQR & about 1\,h \\
-E9c & \texttt{e9c\_gain\_synthesis.py} & Capture-gain synthesis and hand-over thresholds & about 3\,h \\
-E9d & \texttt{e9d\_certified\_delay.py} & Reachable hand-over sets, containment, certified delay budget & about 2\,h \\
-E9e & \texttt{e9e\_early\_handover.py} & Confirmation of the earlier hand-over threshold & hours \\
-E10a & \texttt{e10a\_tightness.py} & Certified against empirical delay budget & about 1\,h \\
-E10b & \texttt{e10b\_trade\_study.py} & Trade study over vehicle and design parameters & hours \\
-E10c & \texttt{e10c\_mpc\_certificate.py} & Certificate for the residual-MPC loop & about 40\,min \\
 \bottomrule
 \end{tabularx}
 \end{table}
-Each script writes a table to \texttt{results/tables/} and figures to \texttt{results/figures/}; all random seeds are fixed in the scripts (for example seeds 11, 12, 13 and 21 for the training, test and randomized data of E6). Runtimes are for an 8-core laptop without power throttling; E9c, E9d, E9e and E10b were slower or were run on cloud CPU kernels when time was short, which is stated with their results. Experiments E8c to E10c were pre-registered: the fixed choices are in the script docstring and the script was committed before its first run; the places where a first attempt was changed are listed in Section~\ref{sec:budget-dev}. The certificates of E9c are stored in \texttt{results/certificates/} and read by E9d.
+Each script writes a table to \texttt{results/tables/} and figures to \texttt{results/figures/}; all random seeds are fixed in the scripts (for example seeds 11, 12, 13 and 21 for the training, test and randomized data of E6). Runtimes are for an 8-core laptop without power throttling. Experiments E8a to E8g were pre-registered: the fixed choices are in the script docstring and the script was committed before its first run; the one place where a first attempt was changed is described at the end of Section~\ref{sec:depth}.

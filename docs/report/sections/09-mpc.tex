@@ -1,7 +1,7 @@
 %=====================================================================
-\section{Model predictive control with the learned residual (RQ1)}\label{sec:mpc}
+\section{Model predictive control with the learned residual}\label{sec:mpc}
 %=====================================================================
-This section answers the control half of RQ1 and tests hypothesis \textbf{H3}: a residual Koopman MPC removes the steady error that model mismatch causes in a controller designed on the physics model (experiment E7). It then adds the two controllers that were still missing: the classical offset-free baselines (E8a, Section~\ref{sec:offsetfree}) and the MPC on the full-state Koopman model, the second controller of our proposal (E8b, Section~\ref{sec:fullkoopmanmpc}).
+This section answers the control half of our research question and tests hypothesis \textbf{H3}: a residual Koopman MPC removes the steady error that model mismatch causes in a controller designed on the physics model (experiment E7). It then adds the two controllers that were still missing: the classical offset-free baselines (E8a, Section~\ref{sec:offsetfree}) and the MPC on the full-state Koopman model, the second controller of our proposal (E8b, Section~\ref{sec:fullkoopmanmpc}).
 
 \subsection{The MPC problem}
 At every sample (5\,ms) the controller measures the current state, builds $\vect s_0 = (\vect x, \hat{\vect f})$ and solves

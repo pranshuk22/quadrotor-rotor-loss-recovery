@@ -1,0 +1,54 @@
+%=====================================================================
+\section{How the capture is judged}\label{sec:delay}
+%=====================================================================
+The controllers of the following sections have two jobs: keep the failed drone at its set-point near the relaxed hover (regulation), and catch it after the failure (capture). This section describes the failure timeline and the success criterion that the capture experiments use.
+
+\subsection{The failure timeline}
+Figure~\ref{fig:timeline} shows what happens around a failure. At $t=0$ rotor 4 stops. The flight computer does not know this yet, so the healthy controller keeps flying. At $t=\tau$ (the \emph{detection delay}) a detector raises the alarm and a supervisor switches to the failure-mode strategy, which must \emph{capture} the drone into the relaxed hover from wherever it has drifted.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, box/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm, text width=2.35cm, font=\small}]
+  \node[box, fill=gray!8] (a) {Healthy flight\\ \scriptsize 4 rotors, healthy LQR};
+  \node[box, fill=gray!8, right=0.45cm of a] (b) {Rotor fails\\ \scriptsize $t = 0$};
+  \node[box, fill=orange!12, draw=orange!70!black, right=0.45cm of b] (c) {Undetected\\ \scriptsize healthy LQR flies a 3-rotor drone for $\tau$};
+  \node[box, fill=gray!8, right=0.45cm of c] (d) {Capture\\ \scriptsize spin-up, then failure controller};
+  \node[box, fill=blue!8, right=0.45cm of d] (e) {Relaxed hover\\ \scriptsize steady spin};
+  \foreach \u/\v in {a/b,b/c,c/d,d/e} \draw[->,thick] (\u) -- (\v);
+\end{tikzpicture}
+\caption{The failure timeline. The orange phase is the detection delay.}\label{fig:timeline}
+\end{figure}
+
+
+\subsection{Scenario and success criterion}
+\paragraph{Scenario.} The drone hovers at height 0. At $t=0$ rotor 4 fails. Until $t=\tau$ the healthy LQR flies (its command to rotor 4 has no effect). At $t=\tau$ a supervisor switches to one of these failure strategies:
+\begin{itemize}
+  \item \textbf{Direct LQR}: the failure LQR is switched on at once.
+  \item \textbf{Spin-up, then LQR} (the strategy of~\cite{mueller2014stability}, used in their flight; the details below are read from their Fig.~4): rotors 1 and 3 run at a fixed thrust $f_{\text{spin}}$, rotor 2 is stopped, with no attitude feedback, until the rotation rate exceeds 10\,rad/s; then the failure LQR takes over. We use $f_{\text{spin}} = 2.95$\,N (read from the flight data) and, as a sensitivity case, $mg/2 = 2.45$\,N.
+\end{itemize}
+At the switch, the failure controller's motor-thrust estimate is initialized from the supervisor's filter of the commands it sent before, never from the true thrust. Each run lasts 10\,s, with the controller at 1\,ms.
+
+\begin{codebox}{the detection-delay supervisor}
+\begin{lstlisting}
+def alive(self, t):                     # which rotors produce thrust
+    return np.array([True, True, True, t < self.t_fail])
+
+def __call__(self, t, x):
+    if t < self.t_fail + self.tau:      # failure not yet detected
+        u = self.healthy(t, x)          # (also updates a filter of the commands sent)
+        return u
+    if not self.switched:               # first call after detection
+        self.failure.reset(self.f_cmd_est)
+        self.switched = True
+    return self.failure(t, x)           # spin-up, then failure LQR
+\end{lstlisting}
+\end{codebox}
+
+\paragraph{Success criterion, fixed before the runs.} It is written in \texttt{metrics.py} and was not changed after seeing results. A run is
+\begin{itemize}
+  \item \textbf{captured} if, over the last 1\,s of a run that did not stop early, the reduced attitude is within 0.05 of $\bar{\vect n}$ and the body rates are within 2\,rad/s of $\bar{\vect\omega}$;
+  \item \textbf{safe} if it is captured, \emph{and} the height loss (starting height minus lowest height) is below 2\,m, \emph{and} the drone never turns upside down ($n_z > 0$ throughout).
+\end{itemize}
+
+
+\paragraph{How the experiments use it.} The capture experiments start from the exact hover, with a detection delay $\tau$ from 0 to 60\,ms in steps of 10\,ms (and, for the LQR, the failure strategy of the previous paragraph). A published detector needs about 20 to 130\,ms~\cite{strack2021fast,yang2026mml1,zhou2025rotorfailureaware}; with this setting the LQR recovers safely up to about 10\,ms in our simulation, which is the reference the MPC variants are compared with in Sections~\ref{sec:mpc} and~\ref{sec:depth}.
