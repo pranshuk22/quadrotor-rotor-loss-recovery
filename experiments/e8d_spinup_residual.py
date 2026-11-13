@@ -7,7 +7,10 @@ Fixed before running (do not tune afterwards)
   - Near-trim data: the E6/E7 set (40 episodes of 4 s on family A, seed 11).
   - Transient data: `generate_capture` on family A, 40 episodes (seed 31), tau ~ U[0, 20] ms, E4 pre-failure
     distribution, spin-up 2.95 N, excited failure LQR after the hand-over, 4 s from the hand-over, command filter
-    starting at (f_spin, 0, f_spin); diverged episodes discarded (rule: |n_xy deviation| > 0.9 or non-finite) and counted.
+    starting at (f_spin, 0, f_spin); diverged episodes discarded and counted. RULE AMENDED after run 1 (kept in
+    results/tables/e8d_run1_discard_rule.md): the first rule (|n_xy deviation| > 0.9) removed 32 of 40 training and 7 of 10 test
+    episodes because genuine hand-over states already have a median tilt deviation of 0.87. The rule is now: non-finite, or a
+    body-rate norm above 60 rad/s (max_n_dev = 2.0, max_rate = 60).
   - Models (all: 91-function dictionary, ridge 1e-3, 99.5 % clip, standardisation recomputed from the training set used):
       near-trim only (E6), transients only, near-trim + transients, near-trim + transients with row-normalised
       regression (each row divided by the norm of its dictionary row), analytical (no residual).
@@ -61,9 +64,9 @@ def main():
     PA = truth_family("A")
     nom = NominalModel.build(P, eq)
     near = generate(PA, P, eq, 40, 4.0, seed=11)
-    trans, bad_tr = generate_capture(PA, P, eq, 40, 4.0, seed=31)
+    trans, bad_tr = generate_capture(PA, P, eq, 40, 4.0, seed=31, max_n_dev=2.0, max_rate=60.0)
     test_near = generate(PA, P, eq, 10, 4.0, seed=12)
-    test_tr, bad_te = generate_capture(PA, P, eq, 10, 4.0, seed=32)
+    test_tr, bad_te = generate_capture(PA, P, eq, 10, 4.0, seed=32, max_n_dev=2.0, max_rate=60.0)
     scale = np.std(np.vstack(near.x), axis=0)
     models = {"Near-trim only (E6)": ResidualEDMD.fit(near, nom, P),
               "Transients only": ResidualEDMD.fit(trans, nom, P),

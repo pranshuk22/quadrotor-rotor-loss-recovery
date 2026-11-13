@@ -201,7 +201,8 @@ def generate(p_truth, p_nom, eq, n_episodes, T, seed, amp=0.35, ts=TS, noise: Me
     return Dataset(xs, fes, us)
 
 
-def generate_capture(p_truth, p_nom, eq, n_episodes, T, seed, tau_max=0.02, amp=0.35, ts=TS, f_spin=2.95):
+def generate_capture(p_truth, p_nom, eq, n_episodes, T, seed, tau_max=0.02, amp=0.35, ts=TS, f_spin=2.95,
+                     max_n_dev=0.9, max_rate=None):
     """Capture transients (task K8): E4-style failures on the truth plant with a random detection delay
     tau ~ U[0, tau_max] and a random pre-failure state (E4 distribution); the spin-up at f_spin hands over at
     |w| > 10 rad/s to the excited failure LQR; the episode records T seconds from the hand-over on.
@@ -230,7 +231,8 @@ def generate_capture(p_truth, p_nom, eq, n_episodes, T, seed, tau_max=0.02, amp=
         sel = np.arange(k0, min(len(log.t), k0 + int(round(T / 1e-3)) + 1), step)
         X = np.array([_measure(log.x[k], eq) for k in sel])
         U = log.u[sel][:, :3] - eq.f[:3]
-        if len(sel) < 10 or not np.all(np.isfinite(X)) or np.max(np.abs(X[:, 3:5])) > 0.9:
+        rate_bad = max_rate is not None and np.max(np.linalg.norm(log.w[sel], axis=1)) > max_rate
+        if len(sel) < 10 or not np.all(np.isfinite(X)) or np.max(np.abs(X[:, 3:5])) > max_n_dev or rate_bad:
             bad += 1
             continue
         fe = np.zeros((len(U), 3))
