@@ -14,6 +14,19 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 | E7 | `e7_mpc_closed_loop.py` | LQR vs analytical MPC vs residual-Koopman MPC in closed loop | `e7_mpc_closed_loop.md`, `e7_altitude.png` | ~3 min |
 | E8a | `e8_offset_free.py` | Offset-free MPC (two disturbance models, with and without residual) and LQR with integrator vs residual-Koopman MPC | `e8_offset_free.md`, `e8_altitude.png` | ~9 min |
 | E8b | `e8_full_koopman_mpc.py` | MPC on the full-state Koopman model vs analytical and residual-Koopman MPC | `e8_full_koopman_mpc.md`, `e8_full_koopman.png` | ~18 min |
+| E8c | `e8c_adaptive_residual.py` | Online RLS adaptation of the residual: prediction, closed loop, with offset-free MPC, capture | `e8c_adaptive_residual.md`, `e8c_adaptive.png` | ~25 min |
+| E8d | `e8d_spinup_residual.py` | Residual trained on spin-up/capture transients | `e8d_spinup_residual.md`, `e8d_spinup.png` (run 1: `e8d_run1_discard_rule.md`) | ~15 min |
+| E8e | `e8e_mpc_tuning.py` | MPC horizon (10 to 80) and weight study for capture | `e8e_mpc_tuning.md`, `e8e_horizon.png` | ~1 h |
+| E8f | `e8f_ablations.py` | Dictionary degree, ridge, sampling period, sensor noise | `e8f_ablations.md`, `e8f_ablations.png` | ~1.5 h |
+| E8g | `e8g_realistic_plant.py` | Truth plants with air-relative thrust and quadratic drag (A+, B+) | `e8g_realistic_plant.md`, `e8g_plants.png` | ~12 min |
+| E9a | `e9a_handover.py` | Where is the hand-over state of the published strategy; is it inside the E5 certificate? | `e9a_handover.md/.csv`, `e9a_handover.png` | ~15 min |
+| E9b | `e9b_robust_certificate.py` | r-robust saturation-aware certificate (quasi-LPV) for the published LQR | `e9b_robust_certificate.md`, `e9b_robust_certificate.png` (runs 1 and 2: `e9b_run1_*`, `e9b_run2_*`) | ~1 h |
+| E9c | `e9c_gain_synthesis.py` | Capture-gain synthesis and hand-over threshold study ("redesigned capture") | `e9c_gain_synthesis.md`, `results/certificates/e9c_designs.npz` | ~3 h |
+| E9d | `e9d_certified_delay.py` | Reachable hand-over sets, containment, beta(tau), certified tau* | `e9d_certified_delay.md/.csv`, `e9d_certified_delay.png` (run 1: `e9d_run1_coverage_pinv.*`) | ~2 h |
+| E9e | `e9e_early_handover.py` | Confirmation of the earlier hand-over threshold on new seeds and other plants | `e9e_early_handover.md`, `e9e_early_handover.png` | hours |
+| E10a | `e10a_tightness.py` | Certified versus empirical delay budget, soundness | `e10a_tightness.md` | ~1 h |
+| E10b | `e10b_trade_study.py` | Trade study over vehicle and design parameters | `e10b_trade_study.md`, `e10b_trade_study.png` | hours |
+| E10c | `e10c_mpc_certificate.py` | Certificate for the residual-MPC loop | `e10c_mpc_certificate.md`, `e10c_mpc_certificate.png` | ~40 min |
 
 ## E1: Equilibrium
 - Set-up: nominal parameters, ρ = 0.5; sensitivity to ±0.05e-3 in the inertias; ρ sweep 0.02–1.6 with continuation.
@@ -50,6 +63,20 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 ## E8b: MPC on the full-state Koopman model
 - Set-up: `LiftedKoopmanMPC` (55 lifted states plus altitude, re-lifted at every step, DARE terminal cost without the constant coordinate); E7 protocols; divergence rule |w| > 100 rad/s or |z| > 100 m.
 - Result: stable near the hover with steady errors close to the residual MPC's; capture fails earlier than the other MPCs (runs stopped from 20 ms on family A); the lifting leaves the training range during capture (up to 350 standard deviations); 55 to 319 ms per step.
+
+## E8c to E8g: depth of RQ1
+- E8c: RLS adaptation (lambda 0.995 and 0.999) of the 91 x 7 residual weights. Held-out family B prediction error halves, on A there is no gain; steady bias on the worst plant +0.164 to +0.084 m; the covariance guard is saturated.
+- E8d: transient-trained residual predicts transients ~14 times better (100 ms: 0.57 against 8.2) but is a worse capture controller (not SAFE at 0 ms). Run 1 is kept: the tilt-based discard rule removed most episodes.
+- E8e: horizon 10 to 80 does not change the number of SAFE delays; a heavier attitude weight adds one; MPC settings equal but do not exceed the LQR.
+- E8f: cubic features help long horizons on B; ridge and sampling period do not matter; noise-trained residual is harmful (+2.8 m closed-loop bias).
+- E8g: conclusions of E6 to E8a survive air-relative thrust and quadratic drag.
+
+## E9a to E10c: RQ2
+- E9a: hand-over state far from the hover (delta r about -9 rad/s, tilt 0.75 at tau 0); none of 1312 hand-over states inside the E5 ellipsoid (largest scaling 0.353).
+- E9b: quasi-LPV certificates verified for boxes up to nu 0.8; after the remainder check the sets are tiny (r semi-axis 0.05 to 0.09 rad/s, scaling toward the hand-over at most 0.0032); analytic ceiling below 1 for any hover-centred ellipsoid at the published threshold; 0 failures in 2000 nonlinear falsification runs.
+- E9c: all 36 synthesised gains rejected (closed-loop eigenvalues 216 to 47700 rad/s); best certified extent 0.46 against 1. Empirically the published LQR with the switch at 6 rad/s is SAFE to 80 ms on seeds 1000 to 1039 (published threshold: tau_90 9 ms); confirmed or not in E9e.
+- E9d, E9e, E10a, E10b: see the tables; every certified delay budget is "does not exist" (centre of the hand-over set outside every certificate).
+- E10c: the residual-MPC loop cannot be certified (learned term 1.71 against a contraction margin of 0.0025); all 1000 nonlinear runs left the ellipsoid.
 
 ## Known comparability issues
 - E4 uses the nominal plant; E7 part 2 uses truth family A. Absolute delay numbers differ between them.
