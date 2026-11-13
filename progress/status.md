@@ -1,43 +1,32 @@
-# Project Status (2026-11-13)
+# Project Status (2026-11-14)
 
 ## Summary
 
-The first phase is complete: simulator, validation, linear analysis, LQR baselines, first Koopman predictors and MPC, the empirical detection-delay study and a first LMI certificate. The detailed report (`docs/report/`) describes this state without schedule language; slides are in `docs/deck/`. The main contributions are still ahead (`task-list.md`): the completion work proceeds stage by stage, starting with the RQ1 proposal deliverables (K6, K5) and then the RQ2 certificates (X1, D3 to D6). Course milestones: final presentation 31 October 2026, journal-style final report due **13 November 2026**.
+The submission studies one question: can a Koopman (EDMDc) model of only the error of the physics model of the spinning drone, used inside MPC, predict and control the failed drone better than the physics model alone or a Koopman model of the full dynamics? The experiments (E6 to E8g) are finished and written up in the report (`docs/report/`), the short paper (`docs/paper/`) and the slide deck (`docs/deck/`). Work on certified fault-detection-delay budgets was explored and is not part of the submission (see "Exploratory work not in the submission" in the root README).
 
 | Item | Status |
 |---|---|
-| Proposal: all content of the presented proposal kept + RQ2 added (`proposal/`) | ✅ |
-| Simulator, equilibria, linear models, LQR | ✅ validated |
-| RQ1: data, full-state EDMDc, residual EDMDc, analytical + residual-Koopman MPC | ✅ first version |
-| RQ1: MPC on the full-state Koopman model (proposal controller 2) | ✅ done (K5, E8b); stable near hover, fails capture earlier |
-| RQ1: offset-free MPC baseline | ✅ done (K6, E8a); state-disturbance MPC removes the bias but fails capture; integral LQR reduces it to <= 0.024 m with unchanged capture (best trade-off); thrust-offset model does not |
-| RQ1: online residual adaptation | ❌ not started (K7) |
-| RQ2: P(safe) versus delay (Monte Carlo), first LTI LMI certificate | ✅ |
-| RQ2: r-robust (LPV) certificate, reachable sets, **certified τ\*** (the main contribution) | ❌ not started (D3–D6) |
-| Novelty gate: read Stephan et al. 2018 and Lanzon et al. 2014 | ❌ needs library access (T0.1, T0.2) |
-| Code and document review; all findings fixed | ✅ (`review-code-and-docs.md`) |
-| Progress report and slides | ✅ |
-
-## Setup
-
-- **Language/stack:** Python 3.12 in `.venv/` (NumPy, SciPy, CVXPY with Clarabel/SCS/OSQP, python-control, Matplotlib, pytest; versions pinned in `requirements.txt`).
-- **Simulator** (`rotorfail/dynamics.py`): 6-DOF rigid body with quaternion attitude; rotor gyroscopic terms; per-rotor thrust limits [0.2, 3.8] N (a command ≤ 0 stops a motor); first-order motor lag (15 ms); rotor failure masks; RK4 at 0.5–1 ms; zero-order-hold controller at 1–5 ms (`sim.py`).
-- **Vehicle:** the Mueller & D'Andrea vehicle (ICRA 2014 Sec. V-A), with every parameter from the paper (`params.py`).
-- **Truth plants for learning:** nominal model + thrust loss at high body rate, inertia error and a different motor time constant; families A (train), B (held out) and randomized.
-- **Controllers:** healthy LQR, failure-mode LQR (paper's weights), the paper's spin-up strategy (flight thrust 2.95 N), detection-delay supervisor, linear MPC (OSQP), and residual-Koopman MPC.
-- **Analysis:** numerical Jacobians, controllability/observability (rank, PBH, noise-normalized Gramians), delay margins, Hu–Lin saturation LMIs (CVXPY).
-- **Reproducibility:** every figure and table is produced by a script in `experiments/` with fixed seeds. Success criteria are fixed in code before the runs (`metrics.py`).
+| Proposal: all content of the presented proposal kept (`proposal/`); delay-budget additions marked "explored; not part of the final submission" | done |
+| Simulator, equilibria, linear models, LQR | done, validated |
+| Data, full-state EDMDc, residual EDMDc, analytical and residual-Koopman MPC | done (E6, E7) |
+| MPC on the full-state Koopman model (proposal controller 2) | done (E8b); stable near the hover, fails the capture earlier |
+| Offset-free MPC and integral-action baselines | done (E8a); the state-disturbance MPC removes the bias but fails the capture; the integrator LQR reduces it to at most 0.024 m with unchanged capture |
+| Online adaptation, transient training, MPC tuning, ablations, realistic truth plant | done (E8c to E8g) |
+| Delay-budget certificates (E4, E5, E9a to E9d, E10c) | explored; no certified budget exists; not in the submission |
+| E9e, E10a, E10b and the corrected E9d coverage re-run | pre-registered, not run |
+| Primary texts of Stephan 2018 and Lanzon 2014 | not obtained; the report relies on abstracts |
 
 ## Validation: what has been checked, and how
 
-**59 automated tests pass, plus 1 expected failure** (`.venv/bin/python -m pytest -q`, ~60 s):
+**122 automated tests pass, plus 1 expected failure** (`.venv/bin/python -m pytest -q`, ~60 s):
 
 | File | Tests | What it checks |
 |---|---|---|
 | `tests/test_physics.py` | 13 | Simulator against **hand-derived solutions and conservation laws**: free fall; thrust direction from a hand-built rotation matrix; torque-free precession (closed form); conservation of inertial angular momentum and kinetic energy (1e-8); reduced-attitude kinematics vs the matrix exponential; first-order yaw spin-up (closed form); motor-lag step response; RK4 convergence order (≈ 16× per halving); saturation rules; agreement with an independent transcription of the paper's eqs. (12)–(14); agreement with an independent implementation of the IJRR general model; relaxed-hover centre-of-mass acceleration = g·tan(tilt) |
 | `tests/test_paper_validation.py` | 20 | **Published numbers** from 3 papers (next table); the published one-rotor q̄ is an expected failure (`xfail`) because it is inconsistent with the paper's own eq. (12) |
 | `tests/test_core.py` | 10 | Equilibrium fixed points, Jacobians vs finite differences, LQR stability, nonlinear recovery, LMI certificate invariance (500 boundary samples), one controller call per period, supervisor switch from filtered commands |
-| `tests/test_koopman_mpc.py` | 4 | Nominal discrete model accuracy, residual reduces the one-step error on a held-out episode, EDMDc rollout, MPC status and first move vs discrete LQR |
+| `tests/test_koopman_mpc.py` | 7 | Nominal discrete model accuracy, residual reduces the one-step error on a held-out episode, EDMDc rollout, MPC status and first move vs discrete LQR, MPC options default to the published behaviour |
+| other test files | 80 | Offset-free MPC, online adaptation, truth-plant effects (bit-identical defaults), and the exploratory certificate code; see `tests/README.md` |
 
 **Against papers** (full tables: `results/tables/validation_report.md`, produced by `experiments/v0_validation_report.py`):
 
@@ -55,14 +44,13 @@ The first phase is complete: simulator, validation, linear analysis, LQR baselin
 ## Main results
 
 - **Prediction (E6).** From 100 ms on, the residual model is the most accurate predictor on family A (1 s: 0.64 vs 0.91 full-state vs 7.1 analytical). Data efficiency at 0.5 s: residual with 10 episodes 0.42, full-state with 40 0.48. No generalization to family B.
-- **MPC (E7).** Residual-Koopman MPC reduces the steady altitude error on 5 of 6 plants (−32% on A), but increases it by 47% on B without thrust loss. Solver 0.73 ms per step, 4.4 ms wall clock through CVXPY. As a capture controller after a delay, LQR is SAFE up to 10 ms, both MPCs only at 0 ms.
-- **Detection delay (E4).** With the flight spin-up thrust, P(SAFE) < 0.9 from 12 ms and < 0.5 from 19 ms (7 and 14 ms at mg/2); attitude capture alone: 50% at 52 ms. Fast detectors need 30–130 ms.
-- **Certificate (E5).** β = 0.22 certified vs 0.7 recovered in simulation; LQR failures only at r ≤ 4.8 rad/s.
+- **MPC (E7).** Residual-Koopman MPC reduces the steady altitude error on 5 of 6 plants (-32% on A), but increases it by 47% on B without thrust loss. Solver 0.73 ms per step, 4.4 ms wall clock through CVXPY. As a capture controller after a delay, LQR is SAFE up to 10 ms, both MPCs only at 0 ms.
+- **Baselines (E8a, E8b).** The integrator LQR reduces the bias to at most 0.024 m and keeps the capture; the state-model offset-free MPC removes it but fails the capture; the full-state Koopman MPC fails the capture earlier.
+- **Depth (E8c to E8g).** Adaptation halves the error on the unseen plant but not on the training plant; transient training improves the prediction of transients but not the capture; horizon and weights change nothing much; cubic features help long horizons; noisy training data are harmful; conclusions hold with air-relative thrust and drag.
 
 ## Caveats
 
-1. **Spin-up thrust.** The delay tolerance depends on the spin-up thrust; the flight value is read from a plot. Both values are reported.
-2. **RQ1 generalization.** The residual model helps only on the mismatch family it was trained on. This is a real limitation, not a bug.
-3. **Certificates are linear-model certificates.** E5 certifies the linearized saturated loop; the nonlinear gap is measured by simulation, not proven.
-4. **Novelty of RQ2-C2** depends on two papers not yet read in full (Stephan 2018, Lanzon 2014).
-5. **E4 used the nominal plant; E7 part 2 used truth family A.** Their absolute numbers are not directly comparable.
+1. **Spin-up thrust.** The capture experiments use the flight value 2.95 N, read from a plot.
+2. **Generalization.** The residual model helps only on the mismatch family it was trained on. This is a real limitation, not a bug.
+3. **Simulation only,** with exact state measurement and one vehicle.
+4. **Novelty statements** depend on a literature search; two key papers (Stephan 2018, Lanzon 2014) were available only as abstracts.

@@ -81,7 +81,7 @@ Both are central-difference Jacobians of exact nonlinear equations (tested again
 - ā matches the paper's eq. (28): ā = (I^T_xx − I^T_zz)/I^B_xx · r̄ − I^P_zz/I^B_xx · ω̄_Σ.
 - The exact coefficient of n_y in ṅ_x is r̄ + q̄ n̄_y/n̄_z = 20.3. The paper's simplified eq. (27) uses r̄ = 18.8.
 
-`add_motor_lag(model, σ)` appends three produced-thrust states (f_dot = (f_cmd − f)/σ), giving the 10-state model used by the failure LQR, the MPC and the certificate.
+`add_motor_lag(model, σ)` appends three produced-thrust states (f_dot = (f_cmd − f)/σ), giving the 10-state model used by the failure LQR and the MPC.
 
 ## 2.7 Known modelling limitations
 - No air-relative thrust (IJRR 2016 eq. 4) and no quadratic drag in the simulator; both are validated in `rotorfail/validation.py` but not yet in the truth plant (task K11).

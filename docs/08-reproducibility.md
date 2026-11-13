@@ -13,23 +13,19 @@ python3 -m venv .venv
 ## Run everything
 
 ```bash
-.venv/bin/python -m pytest -q                          # 59 tests + 1 expected failure, ~60 s
-.venv/bin/python experiments/v0_validation_report.py   # model vs papers
-.venv/bin/python experiments/e1_equilibrium.py
-.venv/bin/python experiments/e2_structure.py
-.venv/bin/python experiments/e3_lqr.py
-.venv/bin/python experiments/e4_delay_sweep.py         # several minutes, 8 processes
-.venv/bin/python experiments/e5_first_certificate.py   # ~8 min, 8 processes
-.venv/bin/python experiments/e6_koopman_prediction.py  # ~2.5 min
-.venv/bin/python experiments/e7_mpc_closed_loop.py     # ~3 min, 8 processes
+.venv/bin/python -m pytest -q          # 123 tests (122 pass, 1 expected failure), about 1 min
+bash experiments/run_all.sh --report   # v0, E1 to E3, E6, E7, E8a to E8g; per-step times in results/run_all_times.txt
+bash experiments/run_all.sh            # also the exploratory scripts (hours; E9e, E10a, E10b were never run)
 cp results/figures/*.png docs/report/figures/ && (cd docs/report && tectonic -X compile report.tex)
 ```
 
+Every script can also be run on its own, for example `.venv/bin/python experiments/e6_koopman_prediction.py`. What each script does is listed in `experiments/README.md`.
+
 ## Determinism
-- Every random draw uses `numpy.random.default_rng(seed)` with a seed written in the script (E4 Monte Carlo seeds 0–39; E5 none; E6 seeds 11, 12, 13, 21; E7 and E8 seed 0 and the E6 training seed).
+- Every random draw uses `numpy.random.default_rng(seed)` with a seed written in the script (E6 seeds 11, 12, 13, 21; E7 and E8 seed 0 and the E6 training seed; the seeds of E8c to E8g are in their script docstrings).
 - Success criteria and thresholds are constants in `rotorfail/metrics.py`, fixed before the sweeps were run.
 - Parallel runs (`ProcessPoolExecutor`) only distribute independent simulations; results do not depend on the number of workers.
-- Small numerical differences can come from the LMI and QP solvers (Clarabel, SCS, OSQP versions); certificate values are reported to 2–3 digits.
+- Small numerical differences can come from the QP solvers (OSQP and Clarabel versions); timing lines differ between machines.
 
 ## Where the numbers in documents come from
 Every number quoted in `proposal/`, `progress/`, `docs/` and the report should be traceable to a file in `results/tables/`. If an experiment is re-run, update the documents and the report from the regenerated tables.

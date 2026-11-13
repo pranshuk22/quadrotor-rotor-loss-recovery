@@ -51,7 +51,7 @@ Each test compares the simulator with a hand-derived result, never with another 
 | Spin rate about n, one rotor lost (IJRR Sec. 5.4) | 19.6 rad/s (ρ = 0.5) | 19.9 rad/s | 15.8 rad/s |
 | Height offset from thrust loss, two rotors (ICRA Sec. V-E) | not in nominal model | not in model | ≈ 2.4 m |
 
-At the thrust the flight actually used, the model spins up within about 4% of the flight. The spin-up time depends strongly on this thrust, so E4 reports the delay results for both thrusts. The papers' models over-predict the steady spin rate by about 20%, and the nominal model has no thrust loss while spinning; the truth plants used for learning add a thrust-loss effect for this reason.
+At the thrust the flight actually used, the model spins up within about 4% of the flight. The spin-up time depends strongly on this thrust, so the capture experiments use the flight value of 2.95 N. The papers' models over-predict the steady spin rate by about 20%, and the nominal model has no thrust loss while spinning; the truth plants used for learning add a thrust-loss effect for this reason.
 
 ## 3.5 Other tests
 - `tests/test_core.py` (10): equilibrium fixed points, Jacobians vs finite differences, LQR closed-loop stability, nonlinear recovery, LMI certificate invariance (V decreases at 500 points on the ellipsoid boundary with true saturation), one controller call per control period, and a supervisor switch that uses the filtered commands rather than the true thrust.

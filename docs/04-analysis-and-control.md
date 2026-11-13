@@ -1,6 +1,6 @@
 # 4. Analysis, Control and Certification Methods
 
-Code: `rotorfail/analysis.py`, `rotorfail/control.py`, `rotorfail/certify.py`, `rotorfail/metrics.py`.
+Code: `rotorfail/analysis.py`, `rotorfail/control.py`, `rotorfail/metrics.py` (and, exploratory, `rotorfail/certify.py`).
 
 ## 4.1 Structural analysis (`analysis.py`)
 - **Controllability matrix** `ctrb(A, B)` = [B, AB, …, Aⁿ⁻¹B]. `scaled_rank` normalizes the columns before the SVD, because the Krylov blocks differ by orders of magnitude.
@@ -39,22 +39,5 @@ Results (E3): failure LQR slowest poles −1.09, −2.01 ± 1.04j, −3.80 ± 19
 ## 4.4 Undetected-phase bound
 Near hover the body rates are small, so the gyroscopic terms vanish and I^B_xx ṗ = l(f₂ − f₄) = l f₂. A running motor cannot go below f_min, so ṗ ≥ l f_min / I^B_xx = 10.6 rad/s² for any healthy-controller tuning. A pure-acceleration lower bound on the tilt is therefore ½ (l f_min / I_xx) t².
 
-## 4.5 Saturation-aware certificate (`certify.py`)
-Closed loop ẋ = Ax + B sat(Fx), F = −K, symmetric levels ū_i = min(f̄_i − f_min, f_max − f̄_i). The ellipsoid E = {x : xᵀQ⁻¹x ≤ 1} is contractively invariant if there is Y = HQ with (Hu & Lin 2001):
-
-    AQ + QAᵀ + B(DFQ + D⁻Y) + (DFQ + D⁻Y)ᵀBᵀ + 2αQ ⪯ −εI   for every diagonal 0/1 matrix D (2^m vertices), D⁻ = I − D
-    [ ū_i²  Y_i ; Y_iᵀ  Q ] ⪰ 0                               for each input i  (E inside the linear region of H)
-    Q_ii ≤ b_i²                                              optional box (used: motor states within ū)
-
-Objectives: maximize log det Q, or maximize β such that β·d ∈ E for a direction d (via [[t, dᵀ],[d, Q]] ⪰ 0, β = 1/√t). Solver: CVXPY with Clarabel, falling back to SCS.
-
-Notes:
-- Without the motor-state box the LMI is ill-conditioned. The open-loop linear model is only marginally stable, so a near-zero contraction margin certifies an almost unbounded, physically meaningless set.
-- The certificate is for the **linear** saturated loop. The gap to the nonlinear system is measured by simulation (E5), not proven.
-
-Results (E5): certified |Δr| ≤ 6.1 rad/s, |Δn_x| ≤ 0.41; β to hover onset = 0.22 (decay 0.1 s⁻¹); nonlinear simulation recovers without inversion up to β = 0.7.
-
-## 4.6 Planned methods (not implemented yet)
-- **LPV in r:** treat the yaw rate as a parameter in [r_onset, r̄ + δ]. A(r) is affine in r, so a common P checked at the vertices certifies the interval. The moving trim enters as a bounded disturbance.
-- **Reachable set of the undetected phase:** affine LTI ẋ = A_f x + d from an ellipsoid X₀, giving R(τ) = e^{A_f τ}X₀ ⊕ {∫₀^τ e^{A_f s} d ds}.
-- **Certified delay budget:** τ\* = sup{τ : M R(τ) ⊆ C}, with ellipsoid containment as an LMI (S-procedure) and bisection on τ.
+## 4.5 Exploratory: saturation-aware certificates (`certify.py`, not in the submission)
+The first certificate (E5) closes the loop of the failure LQR with a thrust saturation and asks for the largest invariant ellipsoid of the linear loop (Hu & Lin 2001: LMIs over the 2^m saturation patterns, solved with CVXPY/Clarabel with an SCS fallback). It covers 22 % of the way from the equilibrium to the state right after a failure; nonlinear simulation recovers without inversion up to 70 %. Later extensions (quasi-LPV over a range of spin rates, gain synthesis, reachable sets, a certificate for the residual-MPC loop) did not give a certified delay budget; see "Exploratory work not in the submission" in the root README. They are not part of the report.
