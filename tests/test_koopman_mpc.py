@@ -131,3 +131,27 @@ def test_lifted_mpc_qp_is_optimal_on_random_near_trim_states(setup):
         u = lm.act(x7)
         assert np.all(np.isfinite(u))
     assert lm.n_bad == 0
+
+
+def test_mpc_weight_and_terminal_options_default_to_the_published_behaviour():
+    import numpy as np
+    from rotorfail.dynamics import make_state
+    from rotorfail.equilibrium import relaxed_hover
+    from rotorfail.mpc import FailureMPC
+    from rotorfail.offset_free import OffsetFreeMPC
+    from rotorfail.params import DEFAULT as P
+    eq = relaxed_hover(P)
+    x = make_state(w=eq.w + np.array([0.5, -0.4, 1.0]), f=np.concatenate((eq.f[:3], [0.0])))
+    a, b = FailureMPC(P, eq, horizon=10), FailureMPC(P, eq, horizon=10, weights={}, terminal="dare")
+    a.reset(x[13:16]), b.reset(x[13:16])
+    assert np.allclose(a(0.0, x), b(0.0, x), atol=1e-9)
+    heavy = FailureMPC(P, eq, horizon=10, weights=dict(w_att=60.0))
+    heavy.reset(x[13:16])
+    ua, uh = a(0.0, x), heavy(0.0, x)
+    assert np.all(np.isfinite(uh)) and not np.allclose(ua, uh, atol=1e-6)    # heavier attitude weight changes the move
+    none = FailureMPC(P, eq, horizon=10, terminal="none")
+    none.reset(x[13:16])
+    assert np.all(np.isfinite(none(0.0, x)))
+    o1, o2 = OffsetFreeMPC(P, eq, horizon=10), OffsetFreeMPC(P, eq, horizon=10, weights={})
+    o1.reset(x[13:16]), o2.reset(x[13:16])
+    assert np.allclose(o1(0.0, x), o2(0.0, x), atol=1e-9)

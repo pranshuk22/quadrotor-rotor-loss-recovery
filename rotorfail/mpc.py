@@ -24,14 +24,17 @@ from .params import QuadParams
 
 class FailureMPC:
     def __init__(self, p: QuadParams, eq: RelaxedHover, horizon: int = 20,
-                 residual: ResidualEDMD | None = None, z_ref: float = 0.0, ts: float = TS):
+                 residual: ResidualEDMD | None = None, z_ref: float = 0.0, ts: float = TS,
+                 weights: dict | None = None, terminal: str = "dare"):
+        """weights: keyword arguments of `failure_weights` (None = the published defaults); terminal: "dare"
+        (default, DARE terminal cost) or "none" (plain finite-horizon problem, used to check long horizons)."""
         self.p, self.eq, self.N, self.ts = p, eq, horizon, ts
         self.nom = NominalModel.build(p, eq, ts)
         self.residual = residual
         self.z_ref = z_ref
-        Q, R = failure_weights()
+        Q, R = failure_weights(**(weights or {}))
         Ad, Bd = self.nom.Ad, self.nom.Bd
-        PN = solve_discrete_are(Ad, Bd, Q, R)
+        PN = solve_discrete_are(Ad, Bd, Q, R) if terminal == "dare" else np.zeros_like(Q)
         n, m = Bd.shape
         self.x0 = cp.Parameter(n)
         self.d = cp.Parameter(n)

@@ -96,7 +96,7 @@ def detectability_rank(A, Bd, tol=1e-9):
 class OffsetFreeMPC:
     def __init__(self, p: QuadParams, eq: RelaxedHover, horizon: int = 20,
                  residual: ResidualEDMD | None = None, z_ref: float = 0.0, ts: float = TS,
-                 noise: NoiseSpec = NoiseSpec(), disturbance: str = "thrust"):
+                 noise: NoiseSpec = NoiseSpec(), disturbance: str = "thrust", weights: dict | None = None):
         assert disturbance in ("thrust", "state")
         self.disturbance = disturbance
         self.p, self.eq, self.N, self.ts = p, eq, horizon, ts
@@ -112,7 +112,7 @@ class OffsetFreeMPC:
         n, m = self.B.shape
         self.nd = self.Bd.shape[1]
         self.n, self.m = n, m
-        Q, R = failure_weights()
+        Q, R = failure_weights(**(weights or {}))
         PN = solve_discrete_are(self.A, self.B, Q, R)
 
         # --- Kalman filter on the augmented model (current-estimator form)
