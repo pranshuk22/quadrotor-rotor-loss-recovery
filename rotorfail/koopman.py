@@ -106,6 +106,10 @@ class ExcitedLQR:
         self.amp, self.hold = amp, hold
         self.t_next, self.exc = -1.0, np.zeros(3)
 
+    def reset(self, f_now):
+        """Forward to the inner failure LQR (needed when used as the capture controller of the spin-up chain)."""
+        self.lqr.reset(f_now)
+
     def __call__(self, t, x):
         if t >= self.t_next:
             self.exc = self.rng.uniform(-self.amp, self.amp, 3)
@@ -155,6 +159,49 @@ def generate(p_truth, p_nom, eq, n_episodes, T, seed, amp=0.35, ts=TS):
         fes.append(fe)
         us.append(U[:-1])
     return Dataset(xs, fes, us)
+
+
+def generate_capture(p_truth, p_nom, eq, n_episodes, T, seed, tau_max=0.02, amp=0.35, ts=TS, f_spin=2.95):
+    """Capture transients (task K8): E4-style failures on the truth plant with a random detection delay
+    tau ~ U[0, tau_max] and a random pre-failure state (E4 distribution); the spin-up at f_spin hands over at
+    |w| > 10 rad/s to the excited failure LQR; the episode records T seconds from the hand-over on.
+
+    The command filter of the controller starts at the spin-up thrusts (f_spin, 0, f_spin). Diverged episodes
+    (|n_xy| deviation above 0.6 or non-finite) are discarded; returns (Dataset, n_discarded).
+    """
+    from .control import DelaySupervisor, HealthyLQR, SpinUpThenLQR
+    rng = np.random.default_rng(seed)
+    xs, fes, us, bad = [], [], [], 0
+    for _ in range(n_episodes):
+        pt = p_truth(rng) if callable(p_truth) else p_truth
+        tau = float(rng.uniform(0.0, tau_max))
+        x0 = make_state(v=rng.normal(0, 0.3, 3), euler=rng.normal(0, np.deg2rad(3), 3), w=rng.normal(0, 0.3, 3))
+        exc = ExcitedLQR(p_nom, eq, rng, amp=amp)
+        sup = DelaySupervisor(HealthyLQR(p_nom), SpinUpThenLQR(p_nom, exc, f_spin=f_spin), t_fail=0.0, tau=tau)
+        log = simulate(x0, sup, pt, 3.0 + T, dt=1e-3, ctrl_period=1e-3, log_every=1)
+        # hand-over: first time the controller is the failure LQR (rate norm above the switch, after tau)
+        wn = np.linalg.norm(log.w, axis=1)
+        idx = np.where((log.t >= tau) & (wn > 10.0))[0]
+        if len(idx) == 0:
+            bad += 1
+            continue
+        k0 = int(idx[0])
+        step = int(round(ts / 1e-3))
+        sel = np.arange(k0, min(len(log.t), k0 + int(round(T / 1e-3)) + 1), step)
+        X = np.array([_measure(log.x[k], eq) for k in sel])
+        U = log.u[sel][:, :3] - eq.f[:3]
+        if len(sel) < 10 or not np.all(np.isfinite(X)) or np.max(np.abs(X[:, 3:5])) > 0.9:
+            bad += 1
+            continue
+        fe = np.zeros((len(U), 3))
+        fe[0] = np.array([f_spin, 0.0, f_spin]) - eq.f[:3]
+        a = ts / p_nom.sigma_mot
+        for k in range(1, len(U)):
+            fe[k] = fe[k - 1] + (1 - np.exp(-a)) * (U[k - 1] - fe[k - 1])
+        xs.append(X)
+        fes.append(fe)
+        us.append(U[:-1])
+    return Dataset(xs, fes, us), bad
 
 
 # ------------------------------------------------------------------ models
@@ -212,7 +259,9 @@ class ResidualEDMD:
     p_nom: QuadParams
 
     @classmethod
-    def fit(cls, data: Dataset, nom: NominalModel, p_nom, lam=1e-3, clip_pct=99.5):
+    def fit(cls, data: Dataset, nom: NominalModel, p_nom, lam=1e-3, clip_pct=99.5, weighting="none"):
+        """weighting "none" (default, the published E6/E7 fit) or "row": each regression row and its target are divided by
+        the norm of the dictionary row (weighted least squares; pre-registered variant of K8)."""
         F, E = [], []
         for X, fe, U in zip(data.x, data.fe, data.u):
             for k in range(len(U)):
@@ -221,7 +270,12 @@ class ResidualEDMD:
                 F.append(np.concatenate((X[k, XI_IDX], fe[k], U[k])))
         F, E = np.array(F), np.array(E)
         dic = Dictionary(F.mean(0), F.std(0) + 1e-9)
-        W = ridge(dic(F), E, lam)
+        Psi = dic(F)
+        if weighting == "row":
+            nrm = np.linalg.norm(Psi, axis=1, keepdims=True)
+            W = ridge(Psi / nrm, E / nrm, lam)
+        else:
+            W = ridge(Psi, E, lam)
         d_max = np.percentile(np.abs(E), clip_pct, axis=0)
         return cls(nom, dic, W, d_max, p_nom)
 

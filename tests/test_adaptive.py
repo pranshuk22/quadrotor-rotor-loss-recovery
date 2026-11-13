@@ -67,3 +67,25 @@ def test_adaptive_residual_equals_the_offline_residual_before_any_update_and_is_
     ref = copy.deepcopy(ad.rls)
     ref.update(phi, x2 - x1n)
     assert np.allclose(a.rls.W, ref.W)
+
+
+def test_default_fit_is_unchanged_and_row_weighting_is_a_distinct_option():
+    from rotorfail.koopman import ResidualEDMD
+    eq = relaxed_hover(P)
+    train = generate(truth_family("A"), P, eq, 4, 2.0, seed=3)
+    nom = NominalModel.build(P, eq)
+    a = ResidualEDMD.fit(train, nom, P)
+    b = ResidualEDMD.fit(train, nom, P, weighting="none")
+    c = ResidualEDMD.fit(train, nom, P, weighting="row")
+    assert np.array_equal(a.W, b.W) and not np.allclose(a.W, c.W)
+
+
+def test_capture_generator_records_transients_far_from_the_trim():
+    from rotorfail.koopman import generate_capture
+    eq = relaxed_hover(P)
+    data, bad = generate_capture(truth_family("A"), P, eq, 3, 1.0, seed=5)
+    assert len(data.x) + bad == 3 and len(data.x) >= 1
+    X0 = data.x[0][0]
+    assert np.linalg.norm(X0[:3]) > 3.0                         # hand-over: rates far from the relaxed hover
+    assert data.fe[0][0][1] < -0.9                              # rotor-2 filter estimate starts at 0 N
+    assert len(data.u[0]) == len(data.x[0]) - 1
