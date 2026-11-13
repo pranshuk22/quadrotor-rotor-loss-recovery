@@ -158,6 +158,7 @@ class OffsetFreeMPC:
 
         self.solve_times, self.qp_times = [], []
         self.d_hat_log, self.target_exact, self.clip_active, self.bad_status = [], [], [], 0
+        self.target_u_log = []        # u_s of every step (diagnostics only)
         self.reset(self.eq.f[:3])
 
     # ------------------------------------------------------------------ state
@@ -228,6 +229,7 @@ class OffsetFreeMPC:
         self.D_res_prev = D_res
         self.d_hat_log.append(d_hat)
         self.target_exact.append(exact)
+        self.target_u_log.append(us.copy())
         self.clip_active.append(bool(np.any(np.abs(self.xhat[self.n:]) >= self.d_clip - 1e-12)))
         return u
 
