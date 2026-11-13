@@ -146,10 +146,12 @@ def sample_x0(gamma, n, seed):
     return d * r * X0_SIGMA
 
 
-def coverage(c, L, devs):
+def coverage(c, L, devs, rcond=1e-6):
     """Normalised excess of each deviation with respect to the set c + L ball: min t with dev in c + t L ball
-    (via the pseudo-inverse) and the residual orthogonal to range(L) (the set is rank deficient)."""
-    Lp = np.linalg.pinv(L)
+    (via the pseudo-inverse with a relative rank tolerance `rcond`: the map has exactly zero columns for the pre-failure
+    variables the capture coordinates do not depend on, horizontal velocity and yaw angle) and the residual orthogonal to
+    range(L) (the set is rank deficient)."""
+    Lp = np.linalg.pinv(L, rcond=rcond)
     out = []
     for d in devs:
         r = d - c

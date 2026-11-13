@@ -137,3 +137,15 @@ def test_command_ranges_classification_and_exact_hover_is_unsaturated_for_small_
     L0[9:12, 6:9] = np.eye(3) * 50.0
     cls2 = command_ranges(lti, 60, L0 @ L0.T)
     assert any(c != "unsat" for row in cls2 for c in row)
+
+
+def test_coverage_ignores_numerical_noise_in_null_directions():
+    """A set with exactly null columns (variables the output does not depend on) must not blow up the excess measure."""
+    rng = np.random.default_rng(0)
+    L = np.zeros((10, 9))
+    L[:, :6] = rng.normal(size=(10, 6))
+    L[:, 6:] = 1e-12 * rng.normal(size=(10, 3))            # numerical noise in the null directions
+    c = rng.normal(size=10)
+    dev = c + L[:, :6] @ (0.5 * rng.normal(size=6) / 3)
+    ex = coverage(c, L, [dev])
+    assert ex[0, 0] < 5.0 and ex[0, 1] < 1e-8

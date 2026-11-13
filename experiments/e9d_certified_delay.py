@@ -28,6 +28,9 @@ Fixed before running (do not tune afterwards)
     (tau, w_sw). Reported: fraction inside the linearised set, worst normalised excess (min t with the sample
     inside c + t L-ball), worst orthogonal residual (the set is rank 9 in 10 dimensions), hand-over time window
     in samples, and the largest gap between the first-sample state and the interpolated state ("jitter").
+    AMENDED after run 1 (kept in results/tables/e9d_run1_coverage_pinv.md): the pseudo-inverse of the first run amplified numerical noise in the
+    exactly-null directions of the map (horizontal velocity and yaw angle of the pre-failure state do not affect the capture coordinates); it now
+    uses a relative rank tolerance of 1e-6. The containment results (alpha_c, beta, tau*) were not affected.
     A configuration is called "linearised set verified" only if every sample is inside after the set is
     inflated by max(1, worst excess) and a margin column of the size of the worst orthogonal residual is added;
     inflated results are labelled "sampling-based".
