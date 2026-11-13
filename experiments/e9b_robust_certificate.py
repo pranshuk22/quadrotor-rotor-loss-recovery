@@ -33,6 +33,16 @@ Fixed before running (do not tune afterwards)
     the ellipsoid kappa Q for a decreasing kappa in {1, 0.9, ..., 0.1, 0.07, 0.05, 0.03, 0.02, 0.01}
     (gamma recomputed on the box of the shrunk ellipsoid; mu on a log grid). The final certificate is the
     largest kappa that passes. Scaling (Q, Y) by kappa < 1 keeps all Hu-Lin conditions.
+  - METHOD CHANGE after run 1 (kept in results/tables/e9b_run1_euclidean_check.md): the Euclidean-sector
+    check above failed for every box and kappa (the sector bound in the Euclidean norm is badly matched to
+    thin ellipsoids). It is replaced by the P-norm bound: with the Hu-Lin conditions at decay 0.1,
+    V' <= -0.2 V + 2 e'P R(e) <= -2 (0.1 - g_P) V on E_kappa, where
+    g_P = max over the boundary of E_kappa of sqrt(R' P_kappa R) (e'P_kappa e = 1 on the boundary).
+    A kappa passes when g_P <= 0.05 (guaranteed decay >= 0.05 1/s). g_P is estimated by 4000 boundary
+    samples plus a local optimiser from the 5 worst; this is a numerical estimate, not a proof.
+    Second change: if the Clarabel solution fails the numerical verification (worst dynamics eigenvalue
+    >= -1e-6, linear-region minimum < -1e-8), the problem is re-solved with SCS and that solution is
+    verified; if it also fails, that nu has no certificate.
   - Objectives: (b) log det Q; (a) maximise beta such that beta * d is in E, d = the exact-hover
     hand-over deviation at tau = 0, f_spin = 2.95 N (row of results/tables/e9a_handover.csv).
   - Analytic ceiling: any ellipsoid centred at the hover that contains beta d also contains -beta d, so
@@ -129,29 +139,36 @@ def solve(nu, objective, solver="CLARABEL"):
                                       solver=solver)
 
 
-def remainder_ok(res, nu, kappa):
-    """A posteriori S-procedure check of kappa*Q with the remainder bound over its box."""
-    H, rh, nzlo = box(nu)
-    half = np.minimum(np.sqrt(kappa * np.diag(res["Q"])), H)
-    sa, sg = remainder_sup(LPV, np.maximum(half, 1e-9), scale=H, n=6000, local=4, nz_min=nzlo)
-    gamma = float(np.linalg.norm(sg / H))
-    Qs, Y = kappa * res["Qs"], kappa * res["Y"]
-    best, mu_best = np.inf, None
-    for mu in MUS * kappa:
-        w = max(float(np.max(np.linalg.eigvalsh(b))) for b in
-                _lmi_blocks(vertices(nu), LPV.B, K, H, UBAR, Qs, Y, DECAY_REM, gamma, mu))
-        if w < best:
-            best, mu_best = w, mu
-    return best, mu_best, gamma
+def gamma_p(res, nu, kappa, n=4000, seed=0):
+    """g_P = max over the boundary of kappa*E of sqrt(R' P R), P = (kappa Q)^-1 (numerical estimate)."""
+    from scipy.optimize import minimize
+    Qk = kappa * res["Q"]
+    L = np.linalg.cholesky(Qk)
+    Pk = np.linalg.inv(Qk)
+    rng = np.random.default_rng(seed)
+    U = rng.normal(size=(n, 10))
+    U /= np.linalg.norm(U, axis=1, keepdims=True)
+
+    def g(u):
+        e = L @ (u / np.linalg.norm(u))
+        r = LPV.remainder(e)
+        return float(np.sqrt(r @ Pk @ r))
+
+    vals = np.array([g(u) for u in U])
+    best = float(vals.max())
+    for k in np.argsort(-vals)[:5]:
+        res_o = minimize(lambda u: -g(u), U[k], method="Nelder-Mead", options=dict(maxiter=400, xatol=1e-6, fatol=1e-12))
+        best = max(best, -float(res_o.fun))
+    return best
 
 
 def shrink(res, nu):
-    """Largest kappa for which the remainder-augmented condition holds (None if none)."""
+    """Largest kappa with g_P <= 0.05 (None if none)."""
     for kappa in KAPPAS:
-        w, mu, gamma = remainder_ok(res, nu, kappa)
-        if w < -1e-6:
-            return kappa, w, mu, gamma
-    return None, None, None, None
+        gp = gamma_p(res, nu, kappa)
+        if gp <= 0.05:
+            return kappa, gp
+    return None, None
 
 
 def worst_over_grid(res, nu, kappa, mu, gamma, decay):
@@ -178,14 +195,20 @@ def disc_ceiling(nu, d):
 def job(args):
     nu, obj = args
     res = solve(nu, obj)
+    ver = worst_over_grid(res, nu, 1.0, 0.0, 0.0, DECAY) if res["Q"] is not None else None
+    fell_back = False
+    if ver is None or ver["worst_dynamics"] >= -1e-6 or ver["worst_linear_region"] < -1e-8:
+        res2 = solve(nu, obj, solver="SCS")
+        if res2["Q"] is not None:
+            ver2 = worst_over_grid(res2, nu, 1.0, 0.0, 0.0, DECAY)
+            if ver is None or ver2["worst_dynamics"] < ver["worst_dynamics"]:
+                res, ver, fell_back = res2, ver2, True
     out = dict(nu=nu, obj=obj, status=res["status"], Q=res["Q"], Qs=res["Qs"], Y=res["Y"], beta=res["beta"],
-               value=res["value"])
-    if res["Q"] is not None:
-        kap, w, mu, gamma = shrink(res, nu)
-        out.update(kappa=kap, w_rem=w, mu=mu, gamma=gamma)
-        out["verify"] = worst_over_grid(res, nu, 1.0, 0.0, 0.0, DECAY)
-        if kap is not None:
-            out["verify_rem"] = worst_over_grid(res, nu, kap, mu, gamma, DECAY_REM)
+               value=res["value"], verify=ver, fell_back=fell_back, kappa=None, gp=None)
+    ok = ver is not None and ver["worst_dynamics"] < -1e-6 and ver["worst_linear_region"] >= -1e-8
+    out["ok"] = bool(ok)
+    if ok:
+        out["kappa"], out["gp"] = shrink(res, nu)
     return out
 
 
@@ -251,16 +274,16 @@ def main():
          f"Hand-over direction d (exact hover, tau = 0, f_spin = 2.95 N): " + ", ".join(
              f"{n} {v:+.3f}" for n, v in zip(NAMES, d)) + ".", "",
          "## Certificate versus the size of the scheduling box (nu)", "",
-         "| nu | r range (rad/s) | n_z range | objective | solver status | kappa | final semi-axes p, q, r | n_x, n_y | z, v_z | "
+         "| nu | r range (rad/s) | n_z range | objective | solver status | kappa (remainder shrink) | final semi-axes p, q, r | n_x, n_y | z, v_z | "
          "beta to d (final) | beta ceiling: disc / box |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for nu in NUS:
         H, rh, nzlo = box(nu)
         cd, cb = disc_ceiling(nu, d)
         for o in ("b", "a"):
             r = R[(nu, o)]
-            if r["Q"] is None:
+            if r["Q"] is None or not r["ok"]:
                 L.append(f"| {nu} | [{EQ.w[2] - rh:.2f}, {EQ.w[2] + rh:.2f}] | [{nzlo:.2f}, 1] | "
-                         f"{'log det' if o == 'b' else 'toward d'} | {r['status']} | - | - | - | - | - | {cd:.3f} / {cb:.3f} |")
+                         f"{'log det' if o == 'b' else 'toward d'} | {r['status']} | not verified | - | - | - | - | {cd:.3f} / {cb:.3f} |")
                 continue
             kap = r["kappa"]
             if kap is None:
@@ -283,21 +306,21 @@ def main():
     # verification
     L += ["## Verification (section 1.4 of the plan), scaled units", "",
           "Worst (largest) eigenvalue of any dynamics block over the 4 vertices x 8 saturation patterns and the "
-          "15 x 15 grid x 8 patterns (must be below -1e-6); 'with remainder' uses the final kappa and the "
-          "S-procedure block at decay 0.05.", "",
-          "| nu | objective | worst eig, no remainder | worst eig, with remainder | linear-region min eig | min eig Q | gamma | mu |",
+          "15 x 15 grid x 8 patterns (must be below -1e-6), the smallest eigenvalue of the linear-region blocks "
+          "(PSD, accepted down to -1e-8) and of Q, and the remainder measure g_P of the final kappa "
+          "(guaranteed decay 2 (0.1 - g_P) when g_P < 0.1).", "",
+          "| nu | objective | solver used | worst eig of dynamics blocks | linear-region min eig | min eig Q | passes | g_P at final kappa |",
           "|---|---|---|---|---|---|---|---|"]
     for nu in NUS:
         for o in ("b", "a"):
             r = R[(nu, o)]
-            if r["Q"] is None:
+            if r["verify"] is None:
+                L.append(f"| {nu} | {'log det' if o == 'b' else 'toward d'} | - | no solution | | | no | |")
                 continue
             v = r["verify"]
-            vr = r.get("verify_rem")
-            L.append(f"| {nu} | {'log det' if o == 'b' else 'toward d'} | {v['worst_dynamics']:.2e} | "
-                     f"{'-' if vr is None else f'{vr['worst_dynamics']:.2e}'} | {v['worst_linear_region']:.1e} | "
-                     f"{v['min_eig_Q']:.1e} | {'-' if r['kappa'] is None else f'{r['gamma']:.3f}'} | "
-                     f"{'-' if r['kappa'] is None else f'{r['mu']:.2e}'} |")
+            L.append(f"| {nu} | {'log det' if o == 'b' else 'toward d'} | {'SCS (fallback)' if r['fell_back'] else 'Clarabel'} | "
+                     f"{v['worst_dynamics']:.2e} | {v['worst_linear_region']:.1e} | {v['min_eig_Q']:.1e} | "
+                     f"{'yes' if r['ok'] else 'NO'} | {'-' if r['gp'] is None else f'{r['gp']:.4f}'} |")
     L.append("")
 
     # cross-check
@@ -320,7 +343,7 @@ def main():
     fals = {}
     for nu in (1.0, 0.6):
         r = R[(nu, "b")]
-        if r["Q"] is None or r["kappa"] is None:
+        if r["Q"] is None or not r["ok"] or r["kappa"] is None:
             L.append(f"| {nu} | - | no certificate | | | | | |")
             continue
         Qf = r["kappa"] * r["Q"]
@@ -335,7 +358,7 @@ def main():
     best = None
     for nu in NUS:
         r = R[(nu, "b")]
-        if r["Q"] is not None and r["kappa"] is not None:
+        if r["Q"] is not None and r["ok"] and r["kappa"] is not None:
             vol = np.linalg.slogdet(r["kappa"] * r["Q"])[1]
             if best is None or vol > best[0]:
                 best = (vol, nu, r["kappa"] * r["Q"])
@@ -360,7 +383,7 @@ def main():
         ax.plot(E[0], E[1], color=SERIES[0], lw=2, label="E5 (LTI)")
         for nu, col in sel:
             r = R[(nu, "b")]
-            if r["Q"] is not None and r["kappa"] is not None:
+            if r["Q"] is not None and r["ok"] and r["kappa"] is not None:
                 Pm = np.linalg.inv(r["kappa"] * r["Q"])
                 E = slice_ellipse(Pm, i, j)
                 ax.plot(E[0], E[1], color=col, lw=1.6, label=f"robust, ν = {nu}")
