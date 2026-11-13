@@ -48,6 +48,8 @@ Fixed before running (do not tune afterwards)
 
 Outputs
   results/tables/e9c_gain_synthesis.md, results/figures/e9c_gain_synthesis.png
+  results/certificates/e9c_designs.npz  (per design: Q, K, kappa, box H, hand-over deviation d, scheduling half-width;
+                                         read by the delay-budget experiment E9d)
 """
 import os
 
@@ -258,6 +260,20 @@ def main():
     with ProcessPoolExecutor(max_workers=8) as ex:
         res = list(ex.map(job, jobs))
     R = {(r["w_sw"], r["gain"]): r for r in res}
+    (ROOT / "results/certificates").mkdir(parents=True, exist_ok=True)
+    pack = {}
+    for (w, g), r in R.items():
+        if r["res"]["Q"] is None:
+            continue
+        key = f"w{w}_g{'lqr' if g is None else g}"
+        pack[key + "_Q"] = r["res"]["Q"]
+        pack[key + "_K"] = r["K"] if r["K"] is not None else np.zeros((3, 10))
+        pack[key + "_kappa"] = np.array([np.nan if r["kappa"] is None else r["kappa"]])
+        pack[key + "_ok"] = np.array([float(accepted(r))])
+        pack[key + "_H"] = r["H"]
+        pack[key + "_d"] = r["d"]
+        pack[key + "_hr"] = np.array([r["hr"]])
+    np.savez(ROOT / "results/certificates/e9c_designs.npz", **pack)
     L = ["# E9c: capture-gain synthesis and later hand-over (redesigned capture)", "",
          "The published strategy (FailureLQR, hand-over at |w| > 10 rad/s) is the reference in every table; the "
          "synthesised gains and the later thresholds are labelled **redesigned capture**. Choices fixed in the docstring of "
