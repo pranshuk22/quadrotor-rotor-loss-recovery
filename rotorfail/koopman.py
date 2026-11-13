@@ -57,22 +57,34 @@ class NominalModel:
 # ------------------------------------------------------------------ dictionary
 @dataclass
 class Dictionary:
-    """[1, xi, all degree-2 monomials of xi], on standardized xi."""
+    """[1, xi, monomials up to `degree` (default 2: all degree-2 monomials)], on standardized xi."""
     mu: np.ndarray
     sd: np.ndarray
+    degree: int = 2
 
     def __call__(self, xi):
         xi = np.atleast_2d(xi)
         y = (xi - self.mu) / self.sd
         n = y.shape[1]
-        iu = np.triu_indices(n)
-        quad = (y[:, :, None] * y[:, None, :])[:, iu[0], iu[1]]
-        return np.hstack((np.ones((y.shape[0], 1)), y, quad))
+        blocks = [np.ones((y.shape[0], 1)), y]
+        if self.degree >= 2:
+            iu = np.triu_indices(n)
+            blocks.append((y[:, :, None] * y[:, None, :])[:, iu[0], iu[1]])
+        if self.degree >= 3:
+            import itertools
+            idx = np.array(list(itertools.combinations_with_replacement(range(n), 3)))
+            blocks.append(y[:, idx[:, 0]] * y[:, idx[:, 1]] * y[:, idx[:, 2]])
+        return np.hstack(blocks)
 
     @property
     def size(self):
         n = len(self.mu)
-        return 1 + n + n * (n + 1) // 2
+        out = 1 + n
+        if self.degree >= 2:
+            out += n * (n + 1) // 2
+        if self.degree >= 3:
+            out += n * (n + 1) * (n + 2) // 6
+        return out
 
 
 def ridge(X, Y, lam):
@@ -131,12 +143,38 @@ def initial_state(eq, rng, scale=1.0):
     return x
 
 
-def generate(p_truth, p_nom, eq, n_episodes, T, seed, amp=0.35, ts=TS):
+@dataclass(frozen=True)
+class MeasurementNoise:
+    """Gaussian sensor noise (task K9): rates (rad/s), tilt (rad, applied as a small rotation so |n| = 1 is kept),
+    altitude (m), vertical speed (m/s)."""
+    rate: float = 0.05
+    tilt: float = 0.005
+    z: float = 0.02
+    vz: float = 0.05
+
+
+def noisy_measurement(x7, spec: MeasurementNoise, rng, eq):
+    """Noisy copy of a measured 7-state deviation x7 = [p, q, r, n_x, n_y, z, v_z] (n kept on the unit sphere)."""
+    out = np.array(x7, float)
+    out[:3] += rng.normal(0, spec.rate, 3)
+    n = np.array([out[3] + eq.n[0], out[4] + eq.n[1], np.sqrt(max(1.0 - (out[3] + eq.n[0]) ** 2 - (out[4] + eq.n[1]) ** 2, 1e-12))])
+    a = rng.normal(0, spec.tilt, 3)                       # small rotation vector
+    n = n + np.cross(a, n)
+    n /= np.linalg.norm(n)
+    out[3:5] = n[:2] - eq.n[:2]
+    out[5] += rng.normal(0, spec.z)
+    out[6] += rng.normal(0, spec.vz)
+    return out
+
+
+def generate(p_truth, p_nom, eq, n_episodes, T, seed, amp=0.35, ts=TS, noise: MeasurementNoise | None = None,
+             noise_seed: int = 0):
     """Closed-loop excited episodes on the truth plant, sampled at ts.
 
     p_truth: a QuadParams, or a callable rng -> QuadParams (new draw per episode).
     """
     rng = np.random.default_rng(seed)
+    nrng = np.random.default_rng(noise_seed)
     alive = lambda t: np.array([True, True, True, False])  # noqa: E731
     xs, fes, us = [], [], []
     for _ in range(n_episodes):
@@ -155,6 +193,8 @@ def generate(p_truth, p_nom, eq, n_episodes, T, seed, amp=0.35, ts=TS):
             fe[k] = fe[k - 1] + (1 - np.exp(-a)) * (U[k - 1] - fe[k - 1])
         if not np.all(np.isfinite(X)) or np.max(np.abs(X[:, 3:5])) > 0.6:
             continue  # discard diverged episodes
+        if noise is not None:
+            X = np.array([noisy_measurement(x, noise, nrng, eq) for x in X])
         xs.append(X)
         fes.append(fe)
         us.append(U[:-1])
@@ -234,7 +274,7 @@ class FullEDMDc:
     def eigs(self):
         return np.linalg.eigvals(self.A)
 
-    def rollout(self, x0, fe0, U):
+    def rollout(self, x0, fe0, U, ts=TS):
         xi0 = np.concatenate((x0[XI_IDX], fe0))
         z = self.dic(xi0)[0]
         out = [x0.copy()]
@@ -244,7 +284,7 @@ class FullEDMDc:
             z = self.A @ z + self.B @ u
             xi = self.C @ z + self.dic.mu
             vz = xi[5]
-            zpos = zpos + TS * 0.5 * (vz_prev + vz)   # trapezoidal integration of v_z
+            zpos = zpos + ts * 0.5 * (vz_prev + vz)   # trapezoidal integration of v_z
             vz_prev = vz
             out.append(np.array([xi[0], xi[1], xi[2], xi[3], xi[4], zpos, vz]))
         return np.array(out)
@@ -259,7 +299,7 @@ class ResidualEDMD:
     p_nom: QuadParams
 
     @classmethod
-    def fit(cls, data: Dataset, nom: NominalModel, p_nom, lam=1e-3, clip_pct=99.5, weighting="none"):
+    def fit(cls, data: Dataset, nom: NominalModel, p_nom, lam=1e-3, clip_pct=99.5, weighting="none", degree=2):
         """weighting "none" (default, the published E6/E7 fit) or "row": each regression row and its target are divided by
         the norm of the dictionary row (weighted least squares; pre-registered variant of K8)."""
         F, E = [], []
@@ -269,7 +309,7 @@ class ResidualEDMD:
                 E.append(X[k + 1] - x1n)
                 F.append(np.concatenate((X[k, XI_IDX], fe[k], U[k])))
         F, E = np.array(F), np.array(E)
-        dic = Dictionary(F.mean(0), F.std(0) + 1e-9)
+        dic = Dictionary(F.mean(0), F.std(0) + 1e-9, degree)
         Psi = dic(F)
         if weighting == "row":
             nrm = np.linalg.norm(Psi, axis=1, keepdims=True)

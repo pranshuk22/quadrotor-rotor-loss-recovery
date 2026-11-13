@@ -35,9 +35,43 @@ ALIVE3 = lambda t: np.array([True, True, True, False])  # noqa: E731
 F_SPIN = 2.95
 
 
+class NoisyController:
+    """Wraps a controller: the state it sees has Gaussian sensor noise (rates, tilt, altitude, vertical speed; K9)."""
+
+    def __init__(self, ctrl, noise, seed, eq):
+        self._c, self._noise, self._rng, self._eq = ctrl, noise, np.random.default_rng(seed), eq
+
+    def __getattr__(self, name):
+        return getattr(self._c, name)
+
+    def reset(self, f_now):
+        self._c.reset(f_now)
+
+    def __call__(self, t, x):
+        from rotorfail.dynamics import E3, quat_to_rot
+        x = np.array(x, float)
+        R = quat_to_rot(x[IDX_Q])
+        n = R.T @ E3
+        sp = self._noise
+        x[10:13] += self._rng.normal(0, sp.rate, 3)
+        a = self._rng.normal(0, sp.tilt, 3)                      # tilt noise as a small rotation of the body frame
+        n2 = n + np.cross(a, n)
+        x[IDX_Q] = quat_from_n(n2 / np.linalg.norm(n2))
+        x[2] += self._rng.normal(0, sp.z)
+        x[5] += self._rng.normal(0, sp.vz)
+        return self._c(t, x)
+
+
 def make_ctrl(spec, eq):
     kind, kw = spec
     kw = dict(kw)
+    noise = kw.pop("noise", None)
+    nseed = kw.pop("noise_seed", 0)
+    c = _make_ctrl(kind, kw, eq)
+    return NoisyController(c, noise, nseed, eq) if noise is not None else c
+
+
+def _make_ctrl(kind, kw, eq):
     res = kw.pop("residual", None)
     if res is not None:
         res = copy.deepcopy(res)
@@ -76,7 +110,8 @@ def run_regulation(args):
     x0[2] = -1.0
     c = make_ctrl(spec, eq)
     c.reset(x0[13:16])
-    log = simulate(x0, c, PT, 8.0, dt=1e-3, ctrl_period=TS, alive_fn=ALIVE3, log_every=5)
+    ts = spec[1].get("ts", TS)
+    log = simulate(x0, c, PT, 8.0, dt=1e-3, ctrl_period=ts, alive_fn=ALIVE3, log_every=max(1, int(round(5e-3 / 1e-3))))
     late = log.t >= 6.0
     r = getattr(c, "residual", None)
     trace = list(r.rls.trace_log) if r is not None and hasattr(r, "rls") else None

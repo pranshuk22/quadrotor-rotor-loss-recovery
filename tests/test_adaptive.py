@@ -89,3 +89,43 @@ def test_capture_generator_records_transients_far_from_the_trim():
     assert np.linalg.norm(X0[:3]) > 3.0                         # hand-over: rates far from the relaxed hover
     assert data.fe[0][0][1] < -0.9                              # rotor-2 filter estimate starts at 0 N
     assert len(data.u[0]) == len(data.x[0]) - 1
+
+
+def test_dictionary_sizes_and_default_degree_unchanged():
+    from rotorfail.koopman import Dictionary
+    mu, sd = np.zeros(12), np.ones(12)
+    assert Dictionary(mu, sd).size == 91 == Dictionary(mu, sd, 2)(np.ones(12)).shape[1]
+    assert Dictionary(mu, sd, 1).size == 13 == Dictionary(mu, sd, 1)(np.ones(12)).shape[1]
+    assert Dictionary(mu, sd, 3).size == 455 == Dictionary(mu, sd, 3)(np.ones(12)).shape[1]
+    x = np.random.default_rng(0).normal(size=(3, 12))
+    assert np.array_equal(Dictionary(mu, sd, 2)(x)[:, :91], Dictionary(mu, sd, 3)(x)[:, :91])      # nested
+
+
+def test_ts_dependent_code_paths_respect_the_argument():
+    from rotorfail.koopman import generate
+    eq = relaxed_hover(P)
+    n5, n10 = NominalModel.build(P, eq, 0.005), NominalModel.build(P, eq, 0.010)
+    # exact ZOH semigroup: two 5 ms steps equal one 10 ms step
+    assert np.allclose(n5.Ad @ n5.Ad, n10.Ad, atol=1e-10)
+    assert np.allclose(n5.Ad @ n5.Bd + n5.Bd, n10.Bd, atol=1e-10)
+    d5 = generate(truth_family("A"), P, eq, 1, 1.0, seed=2, ts=0.005)
+    d10 = generate(truth_family("A"), P, eq, 1, 1.0, seed=2, ts=0.010)
+    assert len(d5.x[0]) == 201 and len(d10.x[0]) == 101
+    # the command filter of the data uses the sampling period: one step moves fe by 1 - exp(-ts/sigma) of the gap
+    a = 1 - np.exp(-0.010 / P.sigma_mot)
+    k = 5
+    assert np.allclose(d10.fe[0][k], d10.fe[0][k - 1] + a * (d10.u[0][k - 1] - d10.fe[0][k - 1]))
+
+
+def test_measurement_noise_keeps_the_tilt_on_the_unit_sphere_and_default_generate_is_noise_free():
+    from rotorfail.koopman import MeasurementNoise, noisy_measurement
+    eq = relaxed_hover(P)
+    rng = np.random.default_rng(0)
+    x7 = np.zeros(7)
+    for _ in range(100):
+        y = noisy_measurement(x7, MeasurementNoise(), rng, eq)
+        n = np.array([y[3] + eq.n[0], y[4] + eq.n[1]])
+        assert n @ n < 1.0
+    a = generate(truth_family("A"), P, eq, 1, 0.5, seed=4)
+    b = generate(truth_family("A"), P, eq, 1, 0.5, seed=4, noise=None)
+    assert np.array_equal(a.x[0], b.x[0])
