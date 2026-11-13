@@ -49,7 +49,7 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 
 ## E8b: MPC on the full-state Koopman model
 - Set-up: `LiftedKoopmanMPC` (55 lifted states plus altitude, re-lifted at every step, DARE terminal cost without the constant coordinate); E7 protocols; divergence rule |w| > 100 rad/s or |z| > 100 m.
-- Result: stable near the hover with steady errors close to the residual MPC's; capture fails earlier than the other MPCs (runs stopped from 20 ms on family A); the lifting leaves the training range during capture (up to 350 standard deviations); 53 to 316 ms per step.
+- Result: stable near the hover with steady errors close to the residual MPC's; capture fails earlier than the other MPCs (runs stopped from 20 ms on family A); the lifting leaves the training range during capture (up to 350 standard deviations); 55 to 319 ms per step.
 
 ## Known comparability issues
 - E4 uses the nominal plant; E7 part 2 uses truth family A. Absolute delay numbers differ between them.

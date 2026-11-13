@@ -67,7 +67,7 @@ Offset-free MPC (`OffsetFreeMPC`): nominal 10-state model plus a constant distur
 
 The state model removes the bias and the integrator LQR reduces it to at most 0.024 m, both without learning (the integrator LQR keeps the LQR's capture performance and is the best trade-off tested); the thrust model does not, because the steady-state innovation need not vanish with three disturbance states for seven physical rows. The state model fails capture after delay at every tested delay (the estimator reads the capture transient as a constant disturbance), a negative result reported as is.
 
-Full-state Koopman MPC (`LiftedKoopmanMPC`, `results/tables/e8_full_koopman_mpc.md`): 55 lifted states plus altitude, re-lifted from the measurement at every step, DARE terminal cost without the constant coordinate (checks passed, spectral radius 0.9949). Steady error on A: -0.186 m (residual MPC -0.193 m). Capture: safe at 0 ms, unsafe from 10 ms on A, runs diverge from 20 ms on A; 53 to 316 ms per step.
+Full-state Koopman MPC (`LiftedKoopmanMPC`, `results/tables/e8_full_koopman_mpc.md`): 55 lifted states plus altitude, re-lifted from the measurement at every step, DARE terminal cost without the constant coordinate (checks passed, spectral radius 0.9949). Steady error on A: -0.186 m (residual MPC -0.193 m). Capture: safe at 0 ms, unsafe from 10 ms on A, runs diverge from 20 ms on A; 55 to 319 ms per step.
 
 ## 5.7 Not done yet
 - Online adaptation of the residual (K7), spin-up training data (K8), MPC tuning (K10), ablations (K9).

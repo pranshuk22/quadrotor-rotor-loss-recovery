@@ -79,7 +79,7 @@ Prediction (RQ1) & Residual model best from 100\,ms to 1\,s (1\,s error 0.64 vs 
 Generalization (RQ1) & Learned models fail on a plant with different parameters & \ref{sec:koopman} \\
 MPC (RQ1) & Residual Koopman MPC cuts the steady altitude error by 32\% on the training plant; on one held-out variant (plant B without its thrust loss) the error is 47\% larger & \ref{sec:mpc} \\
 Offset-free baselines (RQ1) & An offset-free MPC with a disturbance on all physical states removes the steady altitude error and an LQR with an integrator reduces it to at most 0.024\,m, both without learning (the integrator LQR is the best trade-off: capture unchanged); the first pre-registered thrust-offset disturbance model does not; the state-model MPC fails the capture even at 0\,ms of delay & \ref{sec:offsetfree} \\
-Full-state Koopman MPC (RQ1) & Stable near the hover when re-lifted at every step, with steady errors close to the residual MPC's; fails capture earlier than the other MPCs and needs 53 to 316\,ms per step & \ref{sec:fullkoopmanmpc} \\
+Full-state Koopman MPC (RQ1) & Stable near the hover when re-lifted at every step, with steady errors close to the residual MPC's; fails capture earlier than the other MPCs and needs 55 to 319\,ms per step & \ref{sec:fullkoopmanmpc} \\
 Detection delay (RQ2) & Safe-recovery probability below 0.9 from 12\,ms and below 0.5 from 19\,ms of delay & \ref{sec:delay} \\
 Certificate (RQ2) & For the linearized model with thrust limits: certified 22\% of the way to the failure state; simulation recovers up to 70\% & \ref{sec:certificate} \\
 \bottomrule
