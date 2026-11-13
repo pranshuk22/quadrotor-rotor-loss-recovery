@@ -29,21 +29,21 @@ RQ1 = residual Koopman MPC (the presented proposal). RQ2 = certified detection-d
 - [x] ✅★ K4 MPC: analytical vs residual Koopman (measured disturbance), regulation under mismatch + capture after delay (E7, H3)
 - [x] ✅ K5 MPC on the full-state Koopman model (PDF controller 2) (E8b)
 - [x] ✅ K6 Offset-free MPC / integral action baseline (E8a)
-- [ ] 🔜 K7 Online residual adaptation (recursive least squares on W), to answer the generalization failure in E6
-- [ ] ⬜ K8 Residual trained on spin-up transients (capture far from the equilibrium)
-- [ ] ⬜ K9 Ablations: dictionary, regularization, sampling period, sensor noise
-- [ ] ⬜ K10 Longer MPC horizon / tuning study for capture (E7 part 2 showed no gain over LQR)
-- [ ] 🔜 K11 Add air-relative thrust (IJRR 2016 eq. 4) and quadratic drag to the truth plant (validated in `rotorfail/validation.py`); retrain and re-test RQ1
+- [x] ✅ K7 Online residual adaptation (recursive least squares on W), to answer the generalization failure in E6
+- [x] ✅ K8 Residual trained on spin-up transients (capture far from the equilibrium)
+- [x] ✅ K9 Ablations: dictionary, regularization, sampling period, sensor noise
+- [x] ✅ K10 Longer MPC horizon / tuning study for capture (E7 part 2 showed no gain over LQR)
+- [x] ✅ K11 Add air-relative thrust (IJRR 2016 eq. 4) and quadratic drag to the truth plant (validated in `rotorfail/validation.py`); retrain and re-test RQ1
 
 ## Track RQ2: certified delay budget
 - [x] ✅★ D1 Detection-delay supervisor + M&D spin-up baseline; τ sweep + Monte Carlo P(safe) with Wilson intervals at two spin-up thrusts (E4)
 - [x] ✅★ D2 First saturation-aware LMI certificate (LTI) + nonlinear conservatism (E5)
-- [ ] 🔜 D3 LPV reduced-attitude model in r: A(r), B(r), trims x̄(r)
-- [ ] 🔜 D4 r-robust capture LMIs (common P, then P(r)); moving-trim disturbance term; gate: contains hover onset?
-- [ ] ⬜ D5 Gain-scheduled capture controller K(r), certified
+- [x] ✅ D3 LPV reduced-attitude model in r: A(r), B(r), trims x̄(r)
+- [x] ✅ D4 r-robust capture LMIs (common P, then P(r)); moving-trim disturbance term; gate: contains hover onset?
+- [x] ✅ D5 Capture-gain synthesis (result: infeasible for a certified hand-over; the gain-scheduled variant was not attempted)
 - [ ] ⬜ D6 Reachable set of the undetected phase; switch map; containment LMI; τ\* by bisection
 - [ ] ⬜ D7 Trade study: τ\* vs healthy tuning, idle thrust f_min, thrust-to-weight, motor lag, sampling, **spin-up thrust** (E4 shows a strong effect: τ₉₀ = 12 ms at 2.95 N vs 7 ms at mg/2)
-- [ ] ⬜ D8 Certificate for the residual-Koopman MPC loop: bound the true plant mismatch over the plant family (d_max is only a training percentile) and handle the MPC constraints (unconstrained-region or terminal-set argument); τ\* per capture controller
+- [x] ✅ D8 Certificate for the residual-Koopman MPC loop (result: not certifiable): bound the true plant mismatch over the plant family (d_max is only a training percentile) and handle the MPC constraints (unconstrained-region or terminal-set argument); τ\* per capture controller
 - [ ] ⬜ D9 Monte Carlo tightness (certified vs empirical τ\*); LQG / output feedback
 
 ## Phase 5: Write-up
