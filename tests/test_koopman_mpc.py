@@ -79,3 +79,53 @@ def test_mpc_solves_and_matches_lqr_near_trim(setup):
     u_lqr = eq.f[:3] - Kd @ s0
     assert np.allclose(u[:3], u_lqr, atol=1e-3)
     assert u[3] == 0.0
+
+
+# ------------------------------------------------------------------ K5: MPC on the lifted model
+class _EmbeddedNominal:
+    """The exact nominal linear model written in lifted form (dictionary = identity on xi, quadratic rows 0)."""
+
+    def __init__(self, nom):
+        from rotorfail.koopman import Dictionary
+        idx = [0, 1, 2, 3, 4, 6, 7, 8, 9]
+        n = 9
+        self.dic = Dictionary(np.zeros(n), np.ones(n))
+        nz = self.dic.size
+        self.A = np.zeros((nz, nz))
+        self.A[0, 0] = 1.0
+        self.A[1:1 + n, 1:1 + n] = nom.Ad[np.ix_(idx, idx)]
+        self.B = np.zeros((nz, 3))
+        self.B[1:1 + n] = nom.Bd[idx]
+        self.C = np.zeros((n, nz))
+        self.C[:, 1:1 + n] = np.eye(n)
+
+
+def test_lifted_mpc_matches_failure_mpc_on_the_embedded_nominal_model():
+    """With the exact nominal model embedded in lifted form, the first move equals FailureMPC's up to
+    the altitude integration rule (rectangle in the lifted model, ZOH in FailureMPC)."""
+    from rotorfail.dynamics import IDX_Q, make_state, quat_from_n
+    from rotorfail.mpc import LiftedKoopmanMPC
+    eq = relaxed_hover(P)
+    ref = FailureMPC(P, eq, horizon=10)
+    lm = LiftedKoopmanMPC(P, eq, _EmbeddedNominal(ref.nom), horizon=10)
+    assert lm.dare["kind"] == "dare"
+    x = make_state(w=eq.w + np.array([0.2, -0.1, 0.3]), d=(0, 0, 0.05), f=np.concatenate((eq.f[:3], [0.0])))
+    x[IDX_Q] = quat_from_n(eq.n + np.array([0.01, -0.01, 0.0]))
+    ref.reset(x[13:16])
+    lm.reset(x[13:16])
+    u_ref, u_lm = ref(0.0, x), lm(0.0, x)
+    assert lm.prob.status == "optimal"
+    assert np.allclose(u_ref, u_lm, atol=5e-3)
+
+
+def test_lifted_mpc_qp_is_optimal_on_random_near_trim_states(setup):
+    from rotorfail.mpc import LiftedKoopmanMPC
+    eq, data, nom = setup
+    full = FullEDMDc.fit(data)
+    lm = LiftedKoopmanMPC(P, eq, full, horizon=10)
+    rng = np.random.default_rng(1)
+    for _ in range(100):
+        x7 = np.concatenate((rng.normal(0, 0.3, 3), rng.normal(0, 0.03, 2), rng.normal(0, 0.1, 2)))
+        u = lm.act(x7)
+        assert np.all(np.isfinite(u))
+    assert lm.n_bad == 0
