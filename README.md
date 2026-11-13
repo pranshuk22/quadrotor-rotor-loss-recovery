@@ -91,7 +91,7 @@ history/       Earlier versions of the proposal
 
 - [Detailed report](docs/report/report.pdf) (LaTeX source in `docs/report/`)
 - [Slide deck](docs/deck/final-presentation.pdf) ([PPTX](docs/deck/final-presentation.pptx))
-- [Short paper](docs/paper/paper.pdf)
+- [Short paper (summary of the report)](docs/paper/paper.pdf)
 - [Technical documentation](docs/README.md): model and equations, validation, methods, experiments, code reference and reproducibility
 - [Project proposal](proposal/proposal.md)
 
