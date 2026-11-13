@@ -1,7 +1,7 @@
 %=====================================================================
 \section{Model predictive control with the learned residual}\label{sec:mpc}
 %=====================================================================
-This section answers the control half of our research question and tests hypothesis \textbf{H3}: a residual Koopman MPC removes the steady error that model mismatch causes in a controller designed on the physics model (experiment E7). It then adds the two controllers that were still missing: the classical offset-free baselines (E8a, Section~\ref{sec:offsetfree}) and the MPC on the full-state Koopman model, the second controller of our proposal (E8b, Section~\ref{sec:fullkoopmanmpc}).
+This section answers the control half of our research question and tests hypothesis \textbf{H3}: a residual Koopman MPC removes the steady error that model mismatch causes in a controller designed on the physics model. It then adds the two controllers that were still missing: the classical offset-free baselines (Section~\ref{sec:offsetfree}) and the MPC on the full-state Koopman model, the second controller of our proposal (E8b, Section~\ref{sec:fullkoopmanmpc}).
 
 \subsection{The MPC problem}
 At every sample (5\,ms) the controller measures the current state, builds $\vect s_0 = (\vect x, \hat{\vect f})$ and solves
@@ -78,7 +78,7 @@ The residual reduces the error but does not remove it. The classical way to remo
 
 \paragraph{Computation time.} The QP solver needs a median of 0.73\,ms per sample. Through the CVXPY modelling layer the median wall-clock time is 4.4\,ms, which leaves almost no margin to the 5\,ms sample period. A real-time version would call the solver directly.
 
-\subsection{Offset-free baselines (E8a)}\label{sec:offsetfree}
+\subsection{Offset-free baselines}\label{sec:offsetfree}
 \begin{plain}
 An offset-free MPC adds to the model a constant, unknown push $\vect\delta$, estimates it from the measurements with a filter, and plans around it: it asks for the steady state in which the estimated push is cancelled and the height and tilt are exactly at their set-points. Integral action does the same job in a cheaper way: the LQR adds the accumulated height error as a state.
 \end{plain}
@@ -93,7 +93,7 @@ Both are also combined with the residual (the residual enters the prediction, th
 
 \begin{table}[H]
 \centering\scriptsize\setlength{\tabcolsep}{3pt}
-\caption{Steady altitude error (m) near the relaxed hover, protocol of E7 (Table~\ref{tab:mpc}). Res.\ = residual Koopman MPC, OF = offset-free MPC (thr.\ = thrust disturbance model, st.\ = state model), R.+OF = residual and offset-free, Int.\ = LQR with integrator. Source: \texttt{results/tables/e8\_offset\_free.md}.}\label{tab:e8a}
+\caption{Steady altitude error (m) near the relaxed hover, protocol of Section~\ref{sec:mpc} (Table~\ref{tab:mpc}). Res.\ = residual Koopman MPC, OF = offset-free MPC (thr.\ = thrust disturbance model, st.\ = state model), R.+OF = residual and offset-free, Int.\ = LQR with integrator. Source: \texttt{results/tables/e8\_offset\_free.md}.}\label{tab:e8a}
 \begin{tabular}{l r r r r r r r}
 \toprule
 Plant & LQR & Res. & OF thr. & OF st. & R.+OF thr. & R.+OF st. & Int. \\
@@ -111,20 +111,20 @@ Nominal + B's thrust loss & $-0.174$ & $-0.107$ & $-0.011$ & $-0.000$ & $+0.194$
 \begin{figure}[h]
 \centering
 \includegraphics[width=\linewidth]{figures/e8_altitude.png}
-\caption{Height of the failed drone under model mismatch, all controllers of E8a. The curves of the two state-model controllers coincide.}\label{fig:e8a}
+\caption{Height of the failed drone under model mismatch, all controllers of this section. The curves of the two state-model controllers coincide.}\label{fig:e8a}
 \end{figure}
 
 \paragraph{Results near the hover.} The state-model offset-free MPC removes the steady height error on all six plants (0.000\,m at three decimals), with a steady tilt error of at most $10^{-4}$ (the LQR leaves 0.005 to 0.035) and settling to $\pm5$\,cm in 1.77 to 1.82\,s, whereas the LQR does not settle within 8\,s on five of the six plants. The LQR with an integrator also removes the error (at most 0.024\,m after 8\,s; it settles slower, in 1.46 to 5.45\,s, and leaves the tilt error of the LQR unchanged, because only the height is integrated). The thrust-model offset-free MPC does \emph{not} remove it on the full plants: $-0.239$\,m on A and $+0.165$\,m on B, worse than the LQR on B; its combination with the residual removes the error on A and on A without thrust loss and leaves $0.19$ to $0.35$\,m on the other four plants. These two variants are therefore not a fair offset-free baseline, and we report them only as the first pre-registered design and as the evidence for the structural argument above. Against the state-model baseline the residual Koopman MPC is clearly not the best way to remove the bias: its $-0.193$\,m on plant A compares with $0.000$\,m. This settles the open question of the previous section: H3 is supported only in the weak sense that the residual reduces the error; integral action or an offset-free MPC removes it without any learning. The combination of the residual and the state-model filter changes nothing visible (0.000\,m again), since the filter removes what the residual leaves.
 
-\paragraph{Capture after a detection delay.} Table~\ref{tab:e8a2} shows the capture experiment of E7 with the new controllers (exact hover start, family A). The integrator LQR behaves like the LQR (safe up to 10\,ms); the thrust-model offset-free MPC and its residual variant behave like the other MPCs (safe only at 0\,ms, with a minimum $n_z$ of 0.03 and 0.01). The two \textbf{state-model controllers fail at every tested delay, including 0\,ms}: the drone turns over (14.3\,m and 10.7\,m of height loss). The same happens on the nominal plant (state model: unsafe from 0\,ms; every other controller except the LQR and its integrator version is unsafe from 20\,ms). E8a ran without a divergence rule, so large height losses are not meaningful beyond about 100\,m and are printed as ``$>$100'' in Table~\ref{tab:e8a2}.
+\paragraph{Capture after a detection delay.} Table~\ref{tab:e8a2} shows the capture experiment of Section~\ref{sec:mpc} with the new controllers (exact hover start, family A). The integrator LQR behaves like the LQR (safe up to 10\,ms); the thrust-model offset-free MPC and its residual variant behave like the other MPCs (safe only at 0\,ms, with a minimum $n_z$ of 0.03 and 0.01). The two \textbf{state-model controllers fail at every tested delay, including 0\,ms}: the drone turns over (14.3\,m and 10.7\,m of height loss). The same happens on the nominal plant (state model: unsafe from 0\,ms; every other controller except the LQR and its integrator version is unsafe from 20\,ms). This experiment ran without a divergence rule, so large height losses are not meaningful beyond about 100\,m and are printed as ``$>$100'' in Table~\ref{tab:e8a2}.
 
-\emph{Diagnostic (a single run, \texttt{results/tables/e8a\_diag\_state\_capture.md}).} We logged one capture of the state-model controller (nominal plant, $\tau = 0$, no parameter changed). The controller takes over at 0.650\,s with $r-\bar r = -8.81$\,rad/s, and the drone first has $n_z<0$ at 0.865\,s, 0.215\,s later. Before that, the exact target was feasible in all 43 samples, so the explanation that the target leaves the thrust limits does \emph{not} hold at 0\,ms (the 83 to 99.5\% of inexact targets logged in E8a from 10\,ms on are shares over whole runs that include the tumbling after the inversion). What the log does show: the disturbance estimates before the inversion are small in absolute terms (at most 0.13\,rad/s for $q$, 0.036 for $n_y$), but those of $n_y$ and $v_z$ are 73\% and 59\% of the largest one-step change of the corresponding measured state, so the filter attributes a large part of the fast motion to a constant disturbance; the target input then moves away from the trim within 0.22\,s (from 0 to $+1.72$, $+1.06$, $+0.88$\,N at 0.875\,s) and the commands sit at their limits (rotor 3 at 3.80\,N from the first sample, all three rotors at a limit at times afterwards). The first command equals the analytical MPC's by construction, because the estimate starts at zero. The log does not show why the estimate grows; we suspect the mismatch of the linear model far from the relaxed hover (for example the dependence of $n_z$ on the tilt), but we did not test this, and the unit tests give no sign of a sign error (the same code removes the height error at the hover and recovers an injected disturbance on the linear model). We did not modify the controller, because a fix would be a new controller to be evaluated on new seeds. The result stands as a negative one: the estimator that makes the controller offset-free at the hover hurts the capture. Switching the estimator on only after the capture is an untested suggestion (Section~\ref{sec:discussion}).
+\emph{Diagnostic (a single run, \texttt{results/tables/e8a\_diag\_state\_capture.md}).} We logged one capture of the state-model controller (nominal plant, $\tau = 0$, no parameter changed). The controller takes over at 0.650\,s with $r-\bar r = -8.81$\,rad/s, and the drone first has $n_z<0$ at 0.865\,s, 0.215\,s later. Before that, the exact target was feasible in all 43 samples, so the explanation that the target leaves the thrust limits does \emph{not} hold at 0\,ms (the 83 to 99.5\% of inexact targets logged in this experiment from 10\,ms on are shares over whole runs that include the tumbling after the inversion). What the log does show: the disturbance estimates before the inversion are small in absolute terms (at most 0.13\,rad/s for $q$, 0.036 for $n_y$), but those of $n_y$ and $v_z$ are 73\% and 59\% of the largest one-step change of the corresponding measured state, so the filter attributes a large part of the fast motion to a constant disturbance; the target input then moves away from the trim within 0.22\,s (from 0 to $+1.72$, $+1.06$, $+0.88$\,N at 0.875\,s) and the commands sit at their limits (rotor 3 at 3.80\,N from the first sample, all three rotors at a limit at times afterwards). The first command equals the analytical MPC's by construction, because the estimate starts at zero. The log does not show why the estimate grows; we suspect the mismatch of the linear model far from the relaxed hover (for example the dependence of $n_z$ on the tilt), but we did not test this, and the unit tests give no sign of a sign error (the same code removes the height error at the hover and recovers an injected disturbance on the linear model). We did not modify the controller, because a fix would be a new controller to be evaluated on new seeds. The result stands as a negative one: the estimator that makes the controller offset-free at the hover hurts the capture. Switching the estimator on only after the capture is an untested suggestion (Section~\ref{sec:discussion}).
 
 Among all controllers tested in this experiment, the \textbf{LQR with an integrator is the best trade-off}: it brings the steady height error down to at most 0.024\,m on all six plants and keeps the capture performance of the LQR (safe up to 10\,ms), and it does better than the residual Koopman MPC on both counts (the residual MPC leaves up to 0.19\,m on plant A and is safe only at 0\,ms).
 
 \begin{table}[H]
 \centering\footnotesize
-\caption{Capture after a detection delay, family A, exact hover start, spin-up 2.95\,N. Height loss in metres; an asterisk marks SAFE; $>$100 marks a run that had inverted and kept falling (no divergence rule in E8a, values beyond about 100\,m are not meaningful); column names as in Table~\ref{tab:e8a}. Source: \texttt{results/tables/e8\_offset\_free.md}.}\label{tab:e8a2}
+\caption{Capture after a detection delay, family A, exact hover start, spin-up 2.95\,N. Height loss in metres; an asterisk marks SAFE; $>$100 marks a run that had inverted and kept falling (no divergence rule here, values beyond about 100\,m are not meaningful); column names as in Table~\ref{tab:e8a}. Source: \texttt{results/tables/e8\_offset\_free.md}.}\label{tab:e8a2}
 \begin{tabular}{r r r r r r r r}
 \toprule
 $\tau$ (ms) & LQR & Res. & OF thr. & OF st. & R.+OF thr. & R.+OF st. & Int. \\
@@ -139,7 +139,7 @@ $\tau$ (ms) & LQR & Res. & OF thr. & OF st. & R.+OF thr. & R.+OF st. & Int. \\
 
 \paragraph{Computation time.} The offset-free MPC costs a median of 4.2 to 4.6\,ms per step through CVXPY (0.7 to 0.9\,ms inside OSQP), the same as the analytical MPC. All QPs were solved to optimality.
 
-\subsection{MPC on the full-state Koopman model (E8b)}\label{sec:fullkoopmanmpc}
+\subsection{MPC on the full-state Koopman model}\label{sec:fullkoopmanmpc}
 \begin{plain}
 The third kind of controller in our proposal does not keep the physics model: it plans with the lifted linear model learned from data (Section~\ref{sec:koopman}). At every sample it lifts the measured state, predicts the next 100\,ms with the lifted model, and chooses the thrusts that minimize the same cost as the other MPCs.
 \end{plain}
@@ -147,7 +147,7 @@ The third kind of controller in our proposal does not keep the physics model: it
 
 \begin{table}[H]
 \centering\small
-\caption{Steady altitude error (m) of the three MPCs of the proposal (analytical, full-state Koopman, residual Koopman) and the LQR, protocol of E7. Source: \texttt{results/tables/e8\_full\_koopman\_mpc.md}.}\label{tab:e8b}
+\caption{Steady altitude error (m) of the three MPCs of the proposal (analytical, full-state Koopman, residual Koopman) and the LQR, protocol of Section~\ref{sec:mpc}. Source: \texttt{results/tables/e8\_full\_koopman\_mpc.md}.}\label{tab:e8b}
 \begin{tabular}{l r r r r}
 \toprule
 Plant & LQR & Analytical & Full-state & Residual \\

@@ -2,7 +2,7 @@
 \section{Linear analysis and LQR controllers}\label{sec:linear}
 %=====================================================================
 \subsection{Controllability: can three rotors steer the failed drone?}
-\paragraph{Method.} For both linear models we computed three things (experiment E2, \texttt{analysis.py}):
+\paragraph{Method.} For both linear models we computed three things (\texttt{analysis.py}):
 \begin{enumerate}
   \item The rank of the controllability matrix $\mathcal C = [B, AB, \dots, A^{n-1}B]$. Its columns differ in size by many orders of magnitude (each multiplication by $A$ scales them by about 20), which can make a numerical rank test unreliable. We therefore divide every column by its length before computing the singular values (``scaled rank'').
   \item The PBH test for every eigenvalue $\lambda$ of $A$: the smallest singular value of $[\lambda I - A,\; \tilde B]$, where $\tilde B$ is $B$ rescaled to the size of $A$. A value near zero would mark an uncontrollable mode.
@@ -57,7 +57,7 @@ def __call__(self, t, x):
 
 \begin{table}[h]
 \centering\small
-\caption{LQR designs (experiment E3).}\label{tab:lqr}
+\caption{LQR designs.}\label{tab:lqr}
 \begin{tabular}{lll}
 \toprule
 Controller & Slowest closed-loop poles & Delay margin \\
