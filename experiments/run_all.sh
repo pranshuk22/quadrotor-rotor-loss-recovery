@@ -3,6 +3,7 @@
 # figures to the report and the paper. Usage (from the repository root, with the virtual environment created):
 #   bash experiments/run_all.sh            # full run (hours on 8 cores)
 #   bash experiments/run_all.sh --quick    # tests and the fast experiments only (v0, E1 to E3)
+#   bash experiments/run_all.sh --report   # tests and every experiment the report uses (v0, E1 to E3, E6, E7, E8a to E8g)
 # The ordering matters: E9c writes results/certificates/e9c_designs.npz (read by E9d), E9d writes results/tables/e9d_certified_delay.csv
 # (read by E10a).
 set -euo pipefail
@@ -21,7 +22,18 @@ step $PY experiments/v0_validation_report.py
 step $PY experiments/e1_equilibrium.py
 step $PY experiments/e2_structure.py
 step $PY experiments/e3_lqr.py
-if [ "${1:-}" != "--quick" ]; then
+if [ "${1:-}" = "--report" ]; then
+  step $PY experiments/e6_koopman_prediction.py
+  step $PY experiments/e7_mpc_closed_loop.py
+  step $PY experiments/e8_offset_free.py
+  step $PY experiments/e8a_diag_state_capture.py
+  step $PY experiments/e8_full_koopman_mpc.py
+  step $PY experiments/e8c_adaptive_residual.py
+  step $PY experiments/e8d_spinup_residual.py
+  step $PY experiments/e8e_mpc_tuning.py
+  step $PY experiments/e8f_ablations.py
+  step $PY experiments/e8g_realistic_plant.py
+elif [ "${1:-}" != "--quick" ]; then
   step $PY experiments/e4_delay_sweep.py
   step $PY experiments/e5_first_certificate.py
   step $PY experiments/e6_koopman_prediction.py
