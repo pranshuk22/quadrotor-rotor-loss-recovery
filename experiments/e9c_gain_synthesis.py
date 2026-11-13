@@ -47,7 +47,7 @@ Fixed before running (do not tune afterwards)
     capture rate, median capture time, max |z|.
 
 Outputs
-  results/tables/e9c_gain_synthesis.md, results/figures/e9c_gain_synthesis.png
+  results/tables/e9c_gain_synthesis.md (the figure was removed: its second panel was empty)
   results/certificates/e9c_designs.npz  (per design: Q, K, kappa, box H, hand-over deviation d, scheduling half-width;
                                          read by the delay-budget experiment E9d)
 """
@@ -69,12 +69,11 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "experiments"))
 warnings.filterwarnings("ignore")
 
-import matplotlib.pyplot as plt  # noqa: E402
 
 from e4_delay_sweep import crossing, x0_hover  # noqa: E402
 from e5_first_certificate import state_from_dev  # noqa: E402
 from e9b_robust_certificate import gamma_p, sample_points  # noqa: E402
-from rotorfail.certify import (robust_invariant_ellipsoid, slice_ellipse, synthesize_gain,  # noqa: E402
+from rotorfail.certify import (robust_invariant_ellipsoid, synthesize_gain,  # noqa: E402
                                verify_design, verify_robust)
 from rotorfail.control import (CertifiedCaptureController, DelaySupervisor, FailureLQR, HealthyLQR,  # noqa: E402
                                SpinUpThenLQR)
@@ -83,7 +82,6 @@ from rotorfail.equilibrium import relaxed_hover  # noqa: E402
 from rotorfail.lpv import QuasiLPV  # noqa: E402
 from rotorfail.metrics import evaluate  # noqa: E402
 from rotorfail.params import DEFAULT as P  # noqa: E402
-from rotorfail.plotting import REF, SERIES, apply_style, save  # noqa: E402
 from rotorfail.sim import simulate  # noqa: E402
 
 F_SPIN = 2.95
@@ -254,8 +252,7 @@ def run_reg(args):
 
 
 def main():
-    apply_style()
-    out_t, out_f = ROOT / "results/tables", ROOT / "results/figures"
+    out_t = ROOT / "results/tables"
     jobs = [(w, g) for w in W_SWS for g in (None,) + GAINS]
     with ProcessPoolExecutor(max_workers=8) as ex:
         res = list(ex.map(job, jobs))
@@ -410,30 +407,6 @@ def main():
         L.append("")
     (out_t / "e9c_gain_synthesis.md").write_text("\n".join(L))
     print("\n".join(L))
-
-    fig, axs = plt.subplots(1, 2, figsize=(12, 4.6))
-    for k, c in enumerate(chains):
-        p, _, _ = stats[c["name"]]
-        axs[0].plot([t * 1e3 for t in TAUS], p, marker="o", ms=3, color=SERIES[k % 8], ls="-" if c["K"] is None else "--", label=c["name"])
-    axs[0].set_xlabel("detection delay τ (ms)")
-    axs[0].set_ylabel("P(SAFE), 40 new starts")
-    axs[0].set_title("E9c · empirical recovery, published vs redesigned capture")
-    axs[0].legend(fontsize=6.5, ncol=2)
-    if best is not None:
-        Pm = np.linalg.inv(best["kappa"] * best["res"]["Q"])
-        E = slice_ellipse(Pm, 2, 4)
-        axs[1].plot(E[0], E[1], color=SERIES[0], lw=2, label=f"certificate, w_sw {best['w_sw']}")
-        for w in W_SWS:
-            d, _, _ = box(w)
-            axs[1].scatter([d[2]], [d[4]], marker="*", s=70, color=SERIES[(w * 3) % 8], label=f"hand-over, w_sw {w}")
-        axs[1].axhline(0, color=REF, lw=0.6)
-        axs[1].axvline(0, color=REF, lw=0.6)
-        axs[1].set_xlabel("Δr = r − r̄ (rad/s)")
-        axs[1].set_ylabel("Δn_y")
-        axs[1].set_title("E9c · best redesigned certificate, slice (Δr, Δn_y)")
-        axs[1].legend(fontsize=7)
-    fig.tight_layout()
-    save(fig, out_f / "e9c_gain_synthesis.png")
 
 
 if __name__ == "__main__":
