@@ -45,7 +45,7 @@ Each experiment is one script in `experiments/`. It writes a markdown table to `
 
 ## E8a: offset-free baselines
 - Set-up: settings fixed in the script docstring before the runs. Disturbance models: "thrust" (3 states, offset on the produced thrust of rotors 1 to 3) and "state" (7 states, one per physical state); steady-state Kalman filter; target calculation; E7 protocols (steady error on six plants, capture after delay on family A and the nominal plant).
-- Result: the state-model offset-free MPC and the LQR with integrator remove the steady altitude error (0.000 m and at most 0.024 m); the thrust model does not (-0.239 m on A, +0.165 m on B) because three disturbance states cannot absorb the mismatch of seven physical states. The state model fails capture after delay at every tested delay (including 0 ms); the others behave like the LQR or the other MPCs.
+- Result: the state-model offset-free MPC removes the steady altitude error (0.000 m) and the LQR with integrator reduces it to at most 0.024 m; the thrust model does not (-0.239 m on A, +0.165 m on B) because three disturbance states cannot absorb the mismatch of seven physical states. The state model fails capture after delay at every tested delay (including 0 ms); the others behave like the LQR or the other MPCs.
 
 ## E8b: MPC on the full-state Koopman model
 - Set-up: `LiftedKoopmanMPC` (55 lifted states plus altitude, re-lifted at every step, DARE terminal cost without the constant coordinate); E7 protocols; divergence rule |w| > 100 rad/s or |z| > 100 m.

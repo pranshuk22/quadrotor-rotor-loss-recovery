@@ -10,7 +10,7 @@ The first phase is complete: simulator, validation, linear analysis, LQR baselin
 | Simulator, equilibria, linear models, LQR | ✅ validated |
 | RQ1: data, full-state EDMDc, residual EDMDc, analytical + residual-Koopman MPC | ✅ first version |
 | RQ1: MPC on the full-state Koopman model (proposal controller 2) | ✅ done (K5, E8b); stable near hover, fails capture earlier |
-| RQ1: offset-free MPC baseline | ✅ done (K6, E8a); state-disturbance model and integral LQR remove the bias, thrust-offset model does not |
+| RQ1: offset-free MPC baseline | ✅ done (K6, E8a); state-disturbance MPC removes the bias but fails capture; integral LQR reduces it to <= 0.024 m with unchanged capture (best trade-off); thrust-offset model does not |
 | RQ1: online residual adaptation | ❌ not started (K7) |
 | RQ2: P(safe) versus delay (Monte Carlo), first LTI LMI certificate | ✅ |
 | RQ2: r-robust (LPV) certificate, reachable sets, **certified τ\*** (the main contribution) | ❌ not started (D3–D6) |
