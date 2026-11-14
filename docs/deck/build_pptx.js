@@ -325,7 +325,7 @@ function slide(id, title) {
   ], [
     "Noisy measurements in the training data are harmful: bias +2.8 m in closed loop. The clean-trained residual and the offset-free MPC tolerate noise.",
     "Air-relative thrust and drag (plants A+ and B+) leave the conclusions unchanged.",
-    "Steady bias: LQR -0.412 m, residual MPC -0.273 m, offset-free MPC 0.000 m.",
+    "Steady bias on plant A+: LQR -0.412 m, residual MPC -0.273 m, offset-free MPC 0.000 m.",
   ], ["Dictionary degree, test plant A", "Dictionary degree, test plant B"]);
 }
 
