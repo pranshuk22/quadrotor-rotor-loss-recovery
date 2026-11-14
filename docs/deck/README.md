@@ -10,6 +10,7 @@ To rebuild (Node.js with pptxgenjs installed in some folder, and LibreOffice for
 
 ```bash
 .venv/bin/python docs/deck/prepare_figures.py
+.venv/bin/python docs/deck/make_altitude_figure.py      # slide 13: four controllers, re-runs the regulation runs (about 1 min)
 NODE_PATH=<folder>/node_modules node docs/deck/build_pptx.js
 soffice --headless --convert-to pdf --outdir docs/deck docs/deck/final-presentation.pptx
 ```

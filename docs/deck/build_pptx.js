@@ -42,7 +42,7 @@ pres.defineSlideMaster({
 const FIGSIZE = {
   "e1_rho_sweep.png": [1780, 1115], "e3_failed_lqr_nonlinear.png": [2159, 567],
   "e6_data_efficiency.png": [1098, 634], "e6_multistep_error.png": [2179, 1311], "e7_altitude.png": [1981, 645],
-  "e8_altitude.png": [2181, 684], "e8_full_koopman.png": [1981, 645], "e8c_adaptive.png": [2173, 678],
+  "e8_altitude.png": [2181, 684], "e8_altitude_selected.png": [2181, 680], "e8_full_koopman.png": [1981, 645], "e8c_adaptive.png": [2173, 678],
   "e8d_spinup.png": [2179, 677], "e8f_ablations.png": [2179, 677],
 };
 function figure(slide, file, x, y, w) {
@@ -264,20 +264,19 @@ function slide(id, title) {
 // 13 offset-free
 {
   const s = slide("offsetfree", "Offset-free MPC and integral action");
-  figure(s, "e8_altitude.png", 0.6, 1.5, 7.2);
+  figure(s, "e8_altitude_selected.png", 1.15, 1.45, 11.0);
   table(s, [
     ["Controller", "Bias, plant A", "Capture"],
     ["LQR", "-0.285 m", "safe to 10 ms"],
     ["Residual MPC", "-0.193 m", "safe at 0 ms"],
-    ["Offset-free, thrust offset", "-0.239 m", "safe at 0 ms"],
-    ["Offset-free, state offset", "0.000 m", "fails at 0 ms"],
+    ["Offset-free MPC, state model", "0.000 m", "fails at 0 ms"],
     ["LQR + integrator", "at most 0.024 m", "safe to 10 ms"],
-  ], { x: 8.1, y: 1.55, w: 4.6, colW: [2.0, 1.4, 1.2], rowH: 0.5, fontSize: 12 });
+  ], { x: 0.6, y: 5.15, w: 6.2, colW: [2.8, 1.8, 1.6], rowH: 0.34, fontSize: 12 });
   bullets(s, [
     "The LQR with an integrator removes the steady error on all six plants and keeps the capture of the LQR.",
-    "The state-model offset-free MPC also removes it but fails the capture. In one diagnostic run its estimator attributes the fast transient to a constant disturbance.",
-    "The thrust-offset model has only 3 disturbance states for 7 physical states and leaves an error.",
-  ], { x: 0.6, y: 4.95, w: 12.1, h: 1.95, fontSize: 16 });
+    "The state-model offset-free MPC also removes the error but fails the capture: its estimator treats the fast transient as a constant disturbance.",
+    "An offset-free MPC with a thrust-offset model (3 disturbance states for 7 physical states) leaves an error of -0.239 m.",
+  ], { x: 7.1, y: 5.1, w: 5.6, h: 1.85, fontSize: 12 });
 }
 
 // 14 full-state koopman MPC
