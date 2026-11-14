@@ -36,13 +36,13 @@ On plant A the residual model is the best predictor from 100 ms to 1 s. At one s
 The residual model needs less data: with 10 episodes it beats the full-state model trained on 40. But on plant B both learned models are worse than the analytical model. Training on randomized plants helps on B only up to about 100 ms and hurts on A. So the residual is a calibration for one vehicle.
 
 ## mpc
-In closed loop we use an MPC on the physics model, with and without the residual. On plant A the LQR and the plain MPC settle 29 cm low, and the residual MPC 19 cm, which is a third less. On one variant of plant B the residual makes it worse, 0.164 m against 0.112 for the LQR. The solver itself takes 0.7 ms per step.
+In closed loop we use an MPC on the physics model, with and without the residual. On plant A the LQR and the plain MPC settle 29 cm low, and the residual MPC 19 cm, which is a third less. On one variant of plant B the residual makes it worse, 0.164 m against 0.112 for the LQR. The solver itself takes 0.7 ms per step. We also test every controller on catching the drone after a failure: the failure is detected after a delay, the drone spins up on two rotors, and then the controller takes over. The LQR survives up to 10 ms of delay, both MPCs only zero delay.
 
 ## offsetfree
-Next we tried the obvious classical alternatives. An LQR with an integrator removes the error on all six plants, to at most 2.4 cm, and keeps the capture of the LQR. An offset-free MPC with a disturbance on every physical state also removes it, but it fails the capture even without delay. In one diagnostic run its estimator treats the fast transient as a constant disturbance. The first design, with a three-dimensional thrust offset, leaves an error because three disturbance states cannot absorb the mismatch of seven.
+Next we tried the obvious classical alternatives. An LQR with an integrator removes the error on all six plants, to at most 2.4 cm, and keeps the capture of the LQR. An offset-free MPC with a disturbance on every physical state removes it completely, but it loses the drone in the capture even without delay. When we logged one such run, its estimator read the fast motion after the failure as a constant disturbance. The first design, with a three-dimensional thrust offset, leaves an error because three disturbance states cannot absorb the mismatch of seven.
 
 ## fullstate
-The third controller in our proposal plans with the full-state Koopman model. It is stable near the hover because we recompute the lifted state from the measurement at every step. The steady error is similar to the residual MPC. Capture already fails at 10 ms of delay on plant A, and the runs diverge from 20 ms, because the features leave the training range during capture. It also needs 55 to 319 ms per step, so it is not real-time.
+The third MPC plans with the full-state Koopman model and no physics at all. It is stable near the hover because we recompute the lifted state from the measurement at every step, and its steady error is similar to the residual MPC's. In the capture it is safe without delay, like the other MPCs, but from 20 ms of delay the runs diverge completely, because the state leaves the range of the training data. It also needs 55 to 319 ms per step, so it is far too slow for real time.
 
 ## adapt
 To deal with generalization we adapted the residual online with recursive least squares. On plant B the prediction error is about halved, and the worst closed-loop case goes from +0.164 to +0.084 m. On plant A it is not better than the fixed residual. The covariance sits at its cap because most weights are not excited near the hover.
@@ -51,7 +51,7 @@ To deal with generalization we adapted the residual online with recursive least 
 We trained the residual on capture transients, since the capture starts far from the equilibrium. Predictions of those transients improve a lot: 0.57 against 8.2 at 100 ms. But the MPC built on it is not safe even at zero delay. We did not find out why. Changing the MPC horizon from 10 to 80 steps changes nothing, a heavier attitude weight gives one more safe delay, and no setting beats the LQR.
 
 ## ablations
-Cubic features reduce the long-horizon error on plant B but are worse on A. The ridge parameter and the sampling period do not matter. Noisy training data are harmful, with a closed-loop bias of 2.8 m. The clean-trained residual and the offset-free MPC tolerate noise. With air-relative thrust and drag in the truth plant, the conclusions do not change.
+Cubic features reduce the long-horizon error on plant B but are worse on A. The ridge parameter and the sampling period do not matter. Training on noisy data is harmful: the MPC then ends about 2.8 m from the set-point. The clean-trained residual and the offset-free MPC tolerate noise. With air-relative thrust and drag in the truth plant, the conclusions do not change.
 
 ## hypotheses
 H1 and H4 are supported. H2 is supported on the training plant only. H3 is only partly supported: a third less error on the training plant, worse on one held-out plant, and integral action does better.

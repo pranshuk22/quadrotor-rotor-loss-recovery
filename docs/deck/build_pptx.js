@@ -133,7 +133,7 @@ function slide(id, title) {
     "6-DOF rigid body with quaternion attitude and the gyroscopic terms of the propellers",
     "Thrust per rotor 0.2 to 3.8 N; a motor can be stopped",
     "First-order motor lag, 15 ms",
-    "RK4 integration; controllers sampled every 1 to 5 ms",
+    "RK4 integration at 1 ms; controllers run every 5 ms",
     "Truth plants for the learning data: the same simulator with effects the design model lacks (thrust loss at high spin rate, inertia error, slower motors; later also air-relative thrust and drag)",
   ], { x: 0.6, y: 1.6, w: 6.5, h: 5.2, fontSize: 18 });
   table(s, [
@@ -169,7 +169,7 @@ function slide(id, title) {
   bullets(s, [
     "Rotor 4 lost. Thrusts f1 = f3; f2 belongs to the rotor opposite the failed one. The ratio rho = f2/f1 is 0.5.",
     "Thrusts (2.04, 1.02, 2.04) N, spin 19.6 rad/s, axis tilted 16 degrees.",
-    "Thrusts, yaw rate and the vertical axis component agree with the paper within 0.5 %; pitch rate and tilt are about 5 % lower.",
+    "Thrusts, yaw rate and n_z agree with the paper within 0.5 %; pitch rate and tilt are about 5 % lower.",
     "The figure reproduces Fig. 3 of the paper (minimum spin 18.6 against 19.0 rad/s).",
   ], { x: 8.5, y: 1.6, w: 4.2, h: 5.2, fontSize: 16 });
 }
@@ -253,11 +253,11 @@ function slide(id, title) {
 {
   const s = slide("mpc", "MPC with the residual");
   wide(s, "e7_altitude.png", [
-    "Horizon 20 steps of 5 ms, DARE terminal cost, thrust limits, OSQP.",
+    "Horizon 20 steps of 5 ms, DARE terminal cost, thrust limits; the QP solver needs 0.7 ms per step.",
     "Plant A: steady altitude error 0.29 m (LQR) and 0.19 m (residual MPC), a reduction of 32 %.",
   ], [
     "Plant B without its thrust loss: the residual MPC is worse than the LQR (+0.164 against +0.112 m).",
-    "QP solver 0.7 ms per step; 4.4 ms including the CVXPY layer.",
+    "Capture test (failure detected after a delay, spin-up on two rotors, then the controller takes over): the LQR is safe up to 10 ms of delay, both MPCs only at 0 ms.",
   ]);
 }
 
@@ -274,7 +274,7 @@ function slide(id, title) {
   ], { x: 0.6, y: 5.15, w: 6.2, colW: [2.8, 1.8, 1.6], rowH: 0.34, fontSize: 12 });
   bullets(s, [
     "The LQR with an integrator removes the steady error on all six plants and keeps the capture of the LQR.",
-    "The state-model offset-free MPC also removes the error but fails the capture: its estimator treats the fast transient as a constant disturbance.",
+    "The offset-free MPC (one disturbance per state) removes the error completely but fails the capture even at 0 ms: in a logged run its estimator reads the fast transient as a constant disturbance.",
     "An offset-free MPC with a thrust-offset model (3 disturbance states for 7 physical states) leaves an error of -0.239 m.",
   ], { x: 7.1, y: 5.1, w: 5.6, h: 1.85, fontSize: 12 });
 }
@@ -284,10 +284,10 @@ function slide(id, title) {
   const s = slide("fullstate", "MPC on the full-state Koopman model");
   wide(s, "e8_full_koopman.png", [
     "Steady error on plant A: -0.186 m (residual MPC -0.193, LQR -0.285).",
-    "Stable near the hover only because the lifted state is recomputed from the measurement at every step; 4 of the 55 modes are unstable.",
+    "Stable near the hover because the lifted state is recomputed from the measurement at every step, although 4 of the 55 modes are unstable.",
   ], [
-    "Capture fails already at 10 ms of delay on plant A and the runs diverge from 20 ms. The features leave the training range during capture (up to 350 standard deviations).",
-    "55 to 319 ms per MPC step against a 5 ms period: an analysis result, not a real-time controller.",
+    "Capture on plant A: safe at 0 ms like the other MPCs, but from 20 ms the runs diverge completely. The features leave the training range (up to 350 standard deviations).",
+    "55 to 319 ms per MPC step against a 5 ms period: far too slow for real time.",
   ]);
 }
 
@@ -323,7 +323,7 @@ function slide(id, title) {
     "Cubic features: 3 s error on plant B 5.9 against 30.6, but worse on A at 100 ms.",
     "Ridge parameter (1e-6 to 0.1) and sampling period (2, 5, 10 ms): no effect.",
   ], [
-    "Noisy measurements in the training data are harmful: bias +2.8 m in closed loop. The clean-trained residual and the offset-free MPC tolerate noise.",
+    "Training on noisy measurements is harmful: the MPC then ends about 2.8 m from the set-point. The clean-trained residual and the offset-free MPC tolerate noise.",
     "Air-relative thrust and drag (plants A+ and B+) leave the conclusions unchanged.",
     "Steady bias on plant A+: LQR -0.412 m, residual MPC -0.273 m, offset-free MPC 0.000 m.",
   ], ["Dictionary degree, test plant A", "Dictionary degree, test plant B"]);

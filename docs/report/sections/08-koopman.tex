@@ -3,13 +3,7 @@
 %=====================================================================
 This section answers the prediction half of our research question: which model best predicts how the failed drone will move? We compare three predictors trained and tested on exactly the same data.
 
-\subsection{Hypotheses}
-Before running the experiment we wrote down what we expected (from the proposal):
-\begin{description}[leftmargin=1.2em]
-  \item[H1.] A Koopman model of the full dynamics, learned from failed-drone data, has eigenvalues outside the unit circle and loses to a trivial ``nothing changes'' predictor at long horizons. (Our proposal found this for a healthy drone.)
-  \item[H2.] The residual model has a lower multi-step prediction error than both the physics model and the full Koopman model.
-  \item[H4.] The residual model reaches a given error with less data than the full Koopman model. (H3 concerns MPC and is tested in Section~\ref{sec:mpc}.)
-\end{description}
+It tests hypotheses H1, H2 and H4 of Section~\ref{sec:intro}; H3 concerns control and is tested in Section~\ref{sec:mpc}. We expected H1 because we had seen the same instability in a preliminary study of a healthy drone.
 
 \subsection{Data}
 \paragraph{Why a separate truth plant.} The data come from truth plant A (Section~\ref{sec:truth}), not from the nominal model. Otherwise the physics model would already be perfect and there would be nothing to learn.
@@ -105,7 +99,7 @@ No change & 0.81 & 2.42 & 2.38 & 2.51 & 2.51 & 2.44 & 2.41 \\
 
 \paragraph{H2 (residual is best): supported on the training plant.} On new episodes from plant A, the residual model is the most accurate of the three models at every horizon from 100\,ms on, and the most accurate predictor overall from 100\,ms to 1\,s (Table~\ref{tab:pred}, Figure~\ref{fig:pred} top left). At 1\,s its error is 0.64, against 0.91 for full-state EDMDc and 7.09 for the physics model. At short horizons (5 to 50\,ms) the full-state model is better, by a factor of 2.5 at 20\,ms (0.04 against 0.10). The physics model is worse than the no-change baseline from about 100\,ms on: its undamped modes and the unmodelled thrust loss make it drift away. At 2\,s even the residual model is behind the no-change baseline, so long open-loop horizons need feedback, which is what MPC provides by re-planning every 5\,ms.
 
-\paragraph{H1 (full model is unstable): supported.} The learned $55\times55$ matrix $A$ of the full-state model has 4 eigenvalues outside the unit circle (spectral radius 1.0070, Figure~\ref{fig:eigs}). The true open-loop model has undamped modes that lie exactly on the unit circle in discrete time, so this is a small outward push of modes that are only marginally stable in reality, not a qualitatively different defect. Over many steps, however, it makes errors grow, and the model falls behind the no-change baseline by 2\,s and explodes at 3\,s (error 14.1). This repeats, in the failed regime, what our proposal found for a healthy drone (with full-state EDMDc, 10 of 22 eigenvalues were outside the unit circle).
+\paragraph{H1 (full model is unstable): supported.} The learned $55\times55$ matrix $A$ of the full-state model has 4 eigenvalues outside the unit circle (spectral radius 1.0070, Figure~\ref{fig:eigs}). The true open-loop model has undamped modes that lie exactly on the unit circle in discrete time, so this is a small outward push of modes that are only marginally stable in reality, not a qualitatively different defect. Over many steps, however, it makes errors grow, and the model falls behind the no-change baseline by 2\,s and explodes at 3\,s (error 14.1). This repeats, in the failed regime, what we had seen in a preliminary study of a healthy drone (there, 10 of 22 eigenvalues of a full-state EDMDc model were outside the unit circle).
 
 \begin{figure}[h]
 \centering
@@ -121,7 +115,7 @@ No change & 0.81 & 2.42 & 2.38 & 2.51 & 2.51 & 2.44 & 2.41 \\
 \caption{Prediction error at 0.5\,s against the number of training episodes (family A). The flat line is the physics model, which uses no data.}\label{fig:eff}
 \end{figure}
 
-\paragraph{Generalization: not achieved.} On the held-out plant B, both models trained on plant A are \emph{worse} than the physics model (Table~\ref{tab:pred}, right). The learned correction is specific to the plant it saw: it ``corrects'' B as if it were A, which makes things worse. Training on randomized plants, one random plant per episode, does not solve this. It helps the residual model on B only up to about 100\,ms (error 3.68 against 4.31 for the physics model) and makes both learned models worse on A (the full-state model trained this way even diverges, spectral radius 1.028). The likely reason is that a single state sample does not reveal which plant the drone is: the motor time constant and the thrust loss show only in how the state changes over several steps. A static regression then learns an average correction that fits no plant well. This points to online adaptation: because the residual is linear in $W$, it can be updated during flight by recursive least squares. Online-adapted Koopman models exist for healthy quadrotors~\cite{jin2025dekc} and for loss-of-effectiveness faults~\cite{lee2024koopmanftmpc}.
+\paragraph{Generalization: not achieved.} On the held-out plant B, both models trained on plant A are \emph{worse} than the physics model (Table~\ref{tab:pred}, right). The learned correction is specific to the plant it saw: it ``corrects'' B as if it were A, which makes things worse. Training on randomized plants, one random plant per episode, does not solve this. It helps the residual model on B only up to about 100\,ms (error 3.68 against 4.31 for the physics model) and makes both learned models worse on A (the full-state model trained this way even diverges, spectral radius 1.028). The likely reason is that a single state sample does not reveal which plant the drone is: the motor time constant and the thrust loss show only in how the state changes over several steps. A static regression then learns an average correction that fits no plant well. This points to online adaptation: because the residual is linear in $W$, it can be updated during flight by recursive least squares. Online-adapted Koopman models exist for healthy quadrotors~\cite{jin2025dekc} and for loss-of-effectiveness faults~\cite{lee2024koopmanftmpc}; Section~\ref{sec:adaptive} tests this idea.
 
 \subsection{What this means}
 \begin{plain}

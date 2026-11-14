@@ -1,37 +1,36 @@
 %=====================================================================
 \section{Software and reproducibility}\label{app:repro}
 %=====================================================================
-The simulator, analysis and experiments are written in Python with NumPy~\cite{harris2020numpy}, SciPy~\cite{virtanen2020scipy} and Matplotlib~\cite{hunter2007matplotlib}. Convex problems are modelled with CVXPY~\cite{diamond2016cvxpy} and solved with Clarabel~\cite{goulart2024clarabel}, SCS~\cite{odonoghue2016scs} and OSQP~\cite{stellato2020osqp}; tests use pytest~\cite{pytest}. Package versions are pinned in \texttt{requirements.txt}. The code is available at \url{https://github.com/pranshuk22/quadrotor-rotor-loss-recovery}.
+The simulator, analysis and experiments are written in Python with NumPy~\cite{harris2020numpy}, SciPy~\cite{virtanen2020scipy} and Matplotlib~\cite{hunter2007matplotlib}. Quadratic programs are modelled with CVXPY~\cite{diamond2016cvxpy} and solved with OSQP~\cite{stellato2020osqp}; tests use pytest~\cite{pytest}. Package versions are pinned in \texttt{requirements.txt}. The code is available at \url{https://github.com/pranshuk22/quadrotor-rotor-loss-recovery}.
 
 \begin{verbatim}
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest -q        # 122 pass + 1 expected failure
 .venv/bin/python experiments/v0_validation_report.py
-.venv/bin/python experiments/e1_equilibrium.py   # and e2 ... e8g
-bash experiments/run_all.sh    # tests and all experiments
-.venv/bin/python experiments/audit_numbers.py FILE.tex
+.venv/bin/python experiments/e1_equilibrium.py   # one experiment
+bash experiments/run_all.sh --report  # all tests and experiments
 \end{verbatim}
 
 \begin{table}[h]
 \centering\small
 \begin{tabularx}{\linewidth}{l l L l}
 \toprule
-ID & Script & Question & Runtime \\
+Script & Section & Question & Runtime \\
 \midrule
-V0 & \texttt{v0\_validation\_report.py} & Does the model match published numbers and flight data? & seconds \\
-E1 & \texttt{e1\_equilibrium.py} & Relaxed hover against the paper; $\rho$ sweep & seconds \\
-E2 & \texttt{e2\_structure.py} & Eigenvalues, controllability, observability by sensor set & seconds \\
-E3 & \texttt{e3\_lqr.py} & LQR designs, delay margins, nonlinear checks & about 15\,s \\
-E6 & \texttt{e6\_koopman\_prediction.py} & Physics vs full-state vs residual EDMDc & about 2.5\,min \\
-E7 & \texttt{e7\_mpc\_closed\_loop.py} & LQR vs analytical MPC vs residual Koopman MPC & about 3\,min \\
-E8a & \texttt{e8\_offset\_free.py} & Offset-free MPC variants and LQR with integrator vs residual Koopman MPC & about 9\,min \\
-E8b & \texttt{e8\_full\_koopman\_mpc.py} & MPC on the full-state Koopman model vs the other proposal controllers & about 18\,min \\
-E8c & \texttt{e8c\_adaptive\_residual.py} & Online RLS adaptation of the residual & about 25\,min \\
-E8d & \texttt{e8d\_spinup\_residual.py} & Residual trained on spin-up transients & about 15\,min \\
-E8e & \texttt{e8e\_mpc\_tuning.py} & MPC horizon and weights for the capture & about 1\,h \\
-E8f & \texttt{e8f\_ablations.py} & Dictionary degree, ridge, sampling period, sensor noise & about 1.5\,h \\
-E8g & \texttt{e8g\_realistic\_plant.py} & Air-relative thrust and quadratic drag in the truth plant & about 12\,min \\
+\texttt{v0\_validation\_report.py} & \ref{sec:validation} & Does the model match published numbers and flight data? & seconds \\
+\texttt{e1\_equilibrium.py} & \ref{sec:validation} & Relaxed hover against the paper; $\rho$ sweep & seconds \\
+\texttt{e2\_structure.py} & \ref{sec:linear} & Eigenvalues, controllability, observability by sensor set & seconds \\
+\texttt{e3\_lqr.py} & \ref{sec:linear} & LQR designs, delay margins, nonlinear checks & about 15\,s \\
+\texttt{e6\_koopman\_prediction.py} & \ref{sec:koopman} & Physics vs full-state vs residual EDMDc & about 2.5\,min \\
+\texttt{e7\_mpc\_closed\_loop.py} & \ref{sec:mpc} & LQR vs analytical MPC vs residual Koopman MPC & about 3\,min \\
+\texttt{e8\_offset\_free.py} & \ref{sec:offsetfree} & Offset-free MPC variants and LQR with integrator vs residual Koopman MPC & about 9\,min \\
+\texttt{e8\_full\_koopman\_mpc.py} & \ref{sec:fullkoopmanmpc} & MPC on the full-state Koopman model vs the other MPCs & about 18\,min \\
+\texttt{e8c\_adaptive\_residual.py} & \ref{sec:adaptive} & Online RLS adaptation of the residual & about 25\,min \\
+\texttt{e8d\_spinup\_residual.py} & \ref{sec:transient} & Residual trained on spin-up transients & about 15\,min \\
+\texttt{e8e\_mpc\_tuning.py} & \ref{sec:tuning} & MPC horizon and weights for the capture & about 1\,h \\
+\texttt{e8f\_ablations.py} & \ref{sec:ablations} & Dictionary degree, ridge, sampling period, sensor noise & about 1.5\,h \\
+\texttt{e8g\_realistic\_plant.py} & \ref{sec:realistic} & Air-relative thrust and quadratic drag in the truth plant & about 12\,min \\
 \bottomrule
 \end{tabularx}
 \end{table}
-Each script writes a table to \texttt{results/tables/} and figures to \texttt{results/figures/}; all random seeds are fixed in the scripts (for example seeds 11, 12, 13 and 21 for the training, test and randomized data of E6). Runtimes are for an 8-core laptop without power throttling. Experiments E8a to E8g were pre-registered: the fixed choices are in the script docstring and the script was committed before its first run; the one place where a first attempt was changed is described at the end of Section~\ref{sec:depth}.
+Each script writes a table to \texttt{results/tables/} and figures to \texttt{results/figures/}. All random seeds are fixed in the scripts (for example seeds 11, 12, 13 and 21 for the training, test and randomized data of Section~\ref{sec:koopman}), and the settings of each experiment are written at the top of its script and were fixed before it was first run. Runtimes are for an 8-core laptop.

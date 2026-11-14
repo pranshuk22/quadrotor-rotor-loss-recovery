@@ -193,7 +193,7 @@ Every entry can be traced to the physics:
 \end{itemize}
 The eigenvalues of $A$ are $\pm10.10j$ (the $p$--$q$ gyroscopic oscillation), $\pm19.56j$ (the tilt of the spin axis seen from the spinning body; its frequency equals $\|\bar{\vect\omega}\|$), $-0.51$ (yaw drag) and a double zero (altitude: height is the integral of vertical speed, which is the integral of the vertical force). No eigenvalue has a positive real part, but the open loop is not stable: the two oscillations are undamped and the altitude double integrator drifts (its height error grows linearly). Feedback is needed.
 
-\paragraph{Adding the motors.} The motors are added as three more states with $\dot{\vect f} = (\vect u - \vect f)/\sigma$; the thrusts in $B$ then act through these states. This gives the 10-state model used by the failure LQR, the MPC.
+\paragraph{Adding the motors.} The motors are added as three more states with $\dot{\vect f} = (\vect u - \vect f)/\sigma$; the thrusts in $B$ then act through these states. This gives the 10-state model used by the failure LQR and by the MPC controllers.
 
 \subsection{Truth plants for learning}\label{sec:truth}
 If we generated learning data with the same model that the controller uses, a learned correction would have nothing to learn, and any improvement would be an artefact. We therefore generate data from \emph{truth plants} that contain effects the nominal model lacks (Table~\ref{tab:params}). Family A is used for training, family B (different magnitudes, in different directions) only for testing. A third, randomized family draws new values for every training episode; its ranges cover A but not B.

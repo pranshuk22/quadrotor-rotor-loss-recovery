@@ -73,7 +73,4 @@ The position of a ball on a curved track changes in a nonlinear way. If its spee
 \emph{Residual learning} keeps a trusted model and learns only what it gets wrong. If the physics model predicts $\vect x^{\text{nom}}_{k+1}$ and the truth is $\vect x_{k+1}$, the learned part predicts the \emph{residual} $\vect e_{k+1} = \vect x_{k+1} - \vect x^{\text{nom}}_{k+1}$. The hope is that the residual is small and simple, so it can be learned from little data.
 
 \subsection{Statistics used}
-\begin{itemize}
-  \item \textbf{Monte Carlo simulation}: run the same experiment many times from random starting conditions and count outcomes.
-  \item \textbf{RMSE}: root mean square error, $\sqrt{\text{mean of squared errors}}$. We divide each state by its typical size before averaging, so that states with different units can be combined (\emph{normalized} RMSE).
-\end{itemize}
+The prediction error is measured as a \emph{root mean square error} (RMSE), $\sqrt{\text{mean of squared errors}}$. We divide each state by its typical size before averaging, so that states with different units can be combined (\emph{normalized} RMSE).

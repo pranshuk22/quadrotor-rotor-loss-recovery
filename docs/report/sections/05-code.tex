@@ -18,8 +18,9 @@ Module & What it contains \\
 \texttt{analysis.py} & Controllability and observability tests, Gramians, delay margin \\
 \texttt{control.py} & Healthy LQR, failure LQR, spin-up strategy, detection-delay supervisor \\
 \texttt{metrics.py} & The success criterion, fixed before the experiments \\
-\texttt{koopman.py} & Data generation, dictionary, full-state and residual EDMDc, error evaluation \\
-\texttt{mpc.py} & Linear MPC with an optional learned residual \\
+\texttt{koopman.py} & Data generation, dictionary, full-state and residual EDMDc, online adaptation, error evaluation \\
+\texttt{mpc.py} & Linear MPC with an optional learned residual; MPC on the full-state Koopman model \\
+\texttt{offset\_free.py} & Offset-free MPC and the LQR with an integrator \\
 \texttt{validation.py} & Independent implementation of the IJRR 2016 model, used only for validation \\
 \bottomrule
 \end{tabularx}

@@ -20,10 +20,8 @@ Bryson's rule & Choosing LQR weights as $1/(\text{largest acceptable value})^2$ 
 Capture & Bringing the drone into the relaxed hover after a failure; a ``capture controller'' does this (\ref{sec:delay}). \\
 Central differences & Numerical derivative $(f(x+\epsilon) - f(x-\epsilon))/2\epsilon$ (\ref{sec:background}). \\
 Closed loop & The system together with its feedback controller. \\
-Closed-loop identification bias & Error in a model fitted to data recorded under feedback, because the regressors are correlated with the disturbance the model should explain (\ref{sec:depth}). \\
 Controllability & Whether the inputs can steer the state anywhere; tested by the rank of $[B, AB, \dots]$ or the PBH test (\ref{sec:linear}). \\
 Convex problem & An optimization problem in which every local minimum is a global one, so solvers find the best solution reliably; QPs with positive semidefinite cost are convex. With a strictly convex cost the solution is unique. \\
-Covariance wind-up & Unbounded growth of the covariance in recursive least squares when the data do not excite some directions (\ref{sec:depth}). \\
 CVXPY & A Python library for writing convex optimization problems; it passes them to solvers such as OSQP or Clarabel. \\
 Damping ratio $\zeta$ & How quickly an oscillation dies out; 0 means never, 1 means no overshoot. \\
 Delay margin & The largest pure input delay a feedback loop tolerates before becoming unstable (\ref{sec:linear}). \\
@@ -46,7 +44,6 @@ $H_\infty$ loop shaping & A robust linear control design that shapes the loop's 
 Horizon & How far ahead MPC predicts (here 20 steps, 100\,ms). \\
 INDI & Incremental nonlinear dynamic inversion: a nonlinear control method that uses measured accelerations. \\
 Inertia matrix & How hard it is to change the rotation of a body about each axis. \\
-Innovation & The difference between a measurement and the model's prediction of it; a filter uses it to correct its estimate (\ref{sec:offsetfree}). \\
 Integral action & Adding the accumulated error to the controller state so that a constant error is driven to zero; used by the LQR with an integrator (\ref{sec:offsetfree}). \\
 Jacobian & Matrix of partial derivatives; the linearization of a nonlinear function (\ref{sec:background}). \\
 Kalman filter & An estimator that combines a model and measurements using assumed noise levels; here a steady-state version estimates the constant disturbance of the offset-free MPC (\ref{sec:offsetfree}). \\
@@ -55,7 +52,6 @@ Lifted state & The vector of dictionary functions $\vect z = \psi(\vect x)$. \\
 LQR & Linear-quadratic regulator: the state-feedback gain minimizing a quadratic cost (\ref{sec:background}). \\
 LTI & Linear time-invariant: a model $\dot{\vect x} = A\vect x + B\vect u$ with constant matrices. \\
 Measured disturbance & A known, additive term in an MPC prediction model; used here for the learned residual (\ref{sec:mpc}). \\
-Monte Carlo & Repeating a simulation from many random starts to estimate probabilities (\ref{sec:background}). \\
 Motor lag & Delay of the motor thrust behind its command, modelled as a first-order lag with time constant $\sigma$ (\ref{sec:model}). \\
 MPC & Model predictive control: repeatedly optimize the inputs over a short future horizon and apply the first one (\ref{sec:background}, \ref{sec:mpc}). \\
 NMPC & Nonlinear MPC: MPC with a nonlinear prediction model (no longer a QP). \\
